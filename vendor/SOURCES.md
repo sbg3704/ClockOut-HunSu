@@ -11,7 +11,7 @@
 ## 사용자 결정 (2026-11-12)
 1. **틀은 최신 장기지원(LTS)판 .NET으로 만든다.** 2026-11-12 현재 최신 LTS는 .NET 10이다(2025-11 출시, 이 세션에서 공식 문서로 다시 확인하지는 않았다). 칼퇴 본체는 .NET 8로 남고, 훈수꾼 틀이 `ClockOut.Core`(net8.0)를 패키지로 받는 것은 net10에서 된다(앞선 버전을 참조하는 것은 허용).
 2. **용량은 신경쓰지 않는다.** 이 표의 "크기" 칸은 참고용이고 고르는 기준이 아니다.
-3. **라이선스가 중요하다.** 받는 라이브러리의 라이선스는 아래 "라이선스 고지"에 모은다. 칼퇴·훈수꾼 자체의 라이선스는 사용자가 정하는 중이다(HANDOFF 참고).
+3. **라이선스가 중요하다.** 받는 라이브러리의 라이선스는 아래 "라이선스 고지"에 모은다. 칼퇴·훈수꾼 자체 라이선스는 "모든 권리 보유(비공개)"로 정했다.
 
 ## 결론 먼저
 1. **.NET 10으로 가면 SkiaSharp는 최신 안정판 4.156.0을 쓴다.** `SkiaSharp`, `SkiaSharp.Views.WPF`, `SkiaSharp.Skottie` 세 패키지 모두 `net10.0-windows10.0.19041` 빌드가 있다. (.NET 8을 유지했다면 `net8.0-windows` 빌드가 있는 마지막 판 3.119.2로 고정해야 했다. 결정 1로 이 문제는 없어졌다.)
@@ -46,7 +46,7 @@
 | OFL 1.1 | Pretendard, SUIT, IBM Plex Sans KR | `OFL-*.txt`를 함께 넣는다. 글꼴 파일만 따로 팔지 않는다. 고쳐서 낼 때는 예약된 글꼴 이름을 쓰지 않는다. 칼퇴는 원본 그대로 쓴다. |
 | 미확인 | HandyControl | 종류를 읽기 전에는 쓰지 않는다. |
 
-받아 둔 라이브러리의 라이선스 파일은 `vendor/<이름>/`에 원본 그대로 둔다. 칼퇴·훈수꾼 **자체의 라이선스**는 아직 정해지지 않았다(패키지 `ClockOut.Core`에도 표기 없음).
+받아 둔 라이브러리의 라이선스 파일은 `vendor/<이름>/`에 원본 그대로 둔다. 칼퇴·훈수꾼 **자체의 라이선스는 "모든 권리 보유(비공개)"**로 정했다(사용자 결정 2026-11-12: 한번 공개하면 되돌릴 수 없으니 필요할 때 연다). 칼퇴 저장소 루트의 `LICENSE.txt`가 기준이고 `ClockOut.Core` 패키지에 들어 있다. 이 저장소에도 코드가 생기면 같은 `LICENSE.txt`를 둔다.
 
 ## 남은 확인 (PC나 접근 권한이 있을 때)
 - GitHub 저장소 상태(마지막 커밋일, 열린 이슈, 보관 여부): `lepoco/wpfui`, `MaterialDesignInXAML/MaterialDesignInXamlToolkit`, `HandyOrg/HandyControl`, `microsoft/CsWin32`, `mono/SkiaSharp`, `microsoft/automatic-graph-layout`, `microsoft/fluentui-system-icons`.
