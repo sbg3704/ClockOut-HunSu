@@ -1,4 +1,4 @@
-// 기능: 알림 영역(작업 표시줄 오른쪽) 아이콘과 메뉴: 부르기·닫기, 전부 숨기기·다시 보이기, 끄기. 끄는 단추가 없다는 0단계 지적을 메운다.
+// 기능: 알림 영역(작업 표시줄 오른쪽) 아이콘과 메뉴: 부르기·닫기, 전부 숨기기·다시 보이기, 모듈 관리, 끄기. 끄는 단추가 없다는 0단계 지적을 메운다.
 // 사용법: using var tray = new TrayIcon(); tray.SummonClicked += ...; tray.HideAllClicked += ...; tray.QuitClicked += ...
 // 의존: WinForms NotifyIcon(WPF에 없음), System.Drawing(아이콘을 그림 파일 없이 그려 만든다). 이름은 다 적어 쓴다(WPF 이름과 겹치지 않게).
 namespace ClockOut.Hunsu.Shell;
@@ -16,6 +16,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add("부르기 · 닫기\tCtrl+Alt+H", null, (_, _) => SummonClicked?.Invoke());
         _hideItem = new System.Windows.Forms.ToolStripMenuItem("전부 숨기기\tCtrl+Alt+Shift+H", null, (_, _) => HideAllClicked?.Invoke());
         menu.Items.Add(_hideItem);
+        menu.Items.Add("모듈 관리…", null, (_, _) => ManagerClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("훈수꾼 끄기", null, (_, _) => QuitClicked?.Invoke());
         _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = "훈수꾼", ContextMenuStrip = menu, Visible = true };
@@ -25,6 +26,7 @@ internal sealed class TrayIcon : IDisposable
     public event Action? SummonClicked;
     public event Action? HideAllClicked;
     public event Action? QuitClicked;
+    public event Action? ManagerClicked;
 
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";
 

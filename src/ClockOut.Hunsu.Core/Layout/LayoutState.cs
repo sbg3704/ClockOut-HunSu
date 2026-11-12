@@ -15,6 +15,9 @@ public sealed record ModulePlacement
     public int Opacity { get; init; }
     public PixelRect? PinRect { get; init; }
     public bool Hidden { get; init; }
+
+    /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
+    public bool? Enabled { get; init; }
 }
 
 /// <summary>선언과 사용자 값을 합친 결과.</summary>
@@ -55,11 +58,11 @@ public sealed class LayoutState
 
     public void Update(string id, Func<ModulePlacement, ModulePlacement> change) => Modules[id] = change(Get(id));
 
-    /// <summary>사용자 값 > 선언 값. 저장된 자리가 지금 선언의 모양으로 놓을 수 없는 자리면 선언 자리로 되돌린다.</summary>
-    public EffectivePlacement Effective(string id, string declaredPlace, int declaredOrder, IReadOnlyCollection<string> shapes)
+    /// <summary>사용자 값 > 선언 값. Hidden은 "꺼짐"(관리자에서 끈 것, 또는 아직 정하지 않았고 기본값이 꺼짐). 저장된 자리가 지금 선언의 모양으로 놓을 수 없는 자리면 선언 자리로 되돌린다.</summary>
+    public EffectivePlacement Effective(string id, string declaredPlace, int declaredOrder, IReadOnlyCollection<string> shapes, bool enabledByDefault = true)
     {
         var p = Get(id);
         string place = p.Place != null && Places.CanPlace(p.Place, shapes) ? p.Place : declaredPlace;
-        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, p.Hidden);
+        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault));
     }
 }

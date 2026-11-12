@@ -26,6 +26,7 @@
             <MenuItem x:Name="MenuToggleAll" Header="패널 모두 접기" Click="MenuToggleAll_Click" />
             <MenuItem Header="부르기 · 닫기" InputGestureText="Ctrl+Alt+H" Click="MenuSummon_Click" />
             <MenuItem Header="전부 숨기기" InputGestureText="Ctrl+Alt+Shift+H" Click="MenuHideAll_Click" />
+            <MenuItem Header="모듈 관리…" Click="MenuManager_Click" />
             <Separator />
             <MenuItem Header="훈수꾼 끄기" Click="MenuQuit_Click" />
           </ContextMenu>

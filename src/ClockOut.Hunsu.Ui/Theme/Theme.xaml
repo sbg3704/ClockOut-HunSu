@@ -7,6 +7,7 @@
   <!-- 색: docs/03 3장 -->
   <Color x:Key="Hunsu.GlassColor">#EB111B29</Color>
   <SolidColorBrush x:Key="Hunsu.Glass" Color="{StaticResource Hunsu.GlassColor}" />
+  <SolidColorBrush x:Key="Hunsu.Surface" Color="#111B29" />
   <SolidColorBrush x:Key="Hunsu.GlassAlt" Color="#0FFFFFFF" />
   <SolidColorBrush x:Key="Hunsu.GlassHover" Color="#1AFFFFFF" />
   <SolidColorBrush x:Key="Hunsu.Line" Color="#24FFFFFF" />

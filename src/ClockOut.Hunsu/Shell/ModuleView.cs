@@ -26,6 +26,7 @@ internal sealed class ModuleView
         Module = module;
         Placement = placement;
         _renderer = new ViewRenderer(module.View);
+        _renderer.CommandRequested += (command, args) => CommandRequested?.Invoke(command, args);
         Frame = new PanelFrame { Title = module.Manifest.Name, Body = _renderer.Root };
         Frame.SetOpacityLevel(placement.Opacity);
         Tab = new DockTab { HorizontalAlignment = HorizontalAlignment.Right };
@@ -35,6 +36,9 @@ internal sealed class ModuleView
         Refresh();
         ApplyCollapsed(placement.Collapsed, animate: false, done: null);
     }
+
+    /// <summary>단추나 목록 줄을 눌렀다(명령 이름, 인자 JSON). 허용 여부는 ShellController가 확인한다.</summary>
+    public event Action<string, string>? CommandRequested;
 
     public LoadedModule Module { get; }
     public string Id => Module.Manifest.Id;

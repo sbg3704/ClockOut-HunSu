@@ -24,8 +24,8 @@ public sealed record ViewSpec(ShapeSpec? Tab, ShapeSpec? Chip, IReadOnlyList<Vie
         "stat", "list", "text", "badge", "button", "toggle", "input", "bar", "spark", "flow", "tabs", "divider",
     };
 
-    /// <summary>1단계에서 실제로 그리는 부품(나머지는 이름만 받아 두고 "준비 중"으로 그린다).</summary>
-    public static readonly IReadOnlySet<string> RenderedItems = new HashSet<string> { "stat", "text", "badge", "divider" };
+    /// <summary>실제로 그리는 부품(나머지는 이름만 받아 두고 "준비 중"으로 그린다). list·button은 2단계에서 더했다(docs/07).</summary>
+    public static readonly IReadOnlySet<string> RenderedItems = new HashSet<string> { "stat", "text", "badge", "divider", "list", "button" };
 
     public static readonly IReadOnlySet<string> Tones = new HashSet<string> { "info", "good", "warn", "bad", "muted" };
 

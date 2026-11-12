@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Threading;
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Core.Settings;
+using ClockOut.Hunsu.Ui.Controls;
 using ClockOut.Hunsu.Diagnostics;
 using ClockOut.Hunsu.Excel;
 using ClockOut.Hunsu.Native;
@@ -20,6 +22,8 @@ internal sealed partial class ShellController : IDisposable
     private readonly AppOptions _options;
     private readonly RunLog _log;
     private readonly LayoutStore _store;
+    private readonly HunsuSettings _settings;
+    private ManagerWindow? _manager;
     private readonly SignalWindow _signal;
     private readonly InstanceRegistry _registry;
     private readonly HotkeyService _hotkeys;
@@ -41,9 +45,12 @@ internal sealed partial class ShellController : IDisposable
         _log = new RunLog(options.LogPath);
         _log.Write("start", ("pid", Environment.ProcessId), ("badArgs", options.Errors.Count));
         _store = new LayoutStore(options.LayoutPath, _log);
-        _registry = new InstanceRegistry(_log);
+        _settings = SettingsStore.Load(SettingsStore.PathFor(options.LayoutPath), _log);
+        Parts.ListMaxRows = _settings.ListMaxRows;
+        _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
+        _registry.TopicReady += OnTopic;
         _registry.SummaryReady += OnSummary;
-        _registry.Slow += _ => ForTopic("selection.summary", m => m.SetStale(true));
+        _registry.Stale += (_, topic) => ForTopic(topic, m => m.SetStale(true)); // 오래 걸릴 때만 흐리게(settings.staleAfterMs)
         _signal = new SignalWindow(_log);
         _signal.Signal += (hwnd, code, seq, at) =>
         {
@@ -60,6 +67,7 @@ internal sealed partial class ShellController : IDisposable
         _tray.SummonClicked += ToggleSummon;
         _tray.HideAllClicked += ToggleHideAll;
         _tray.QuitClicked += Quit;
+        _tray.ManagerClicked += OpenManager;
         foreach (var d in new[] { _right, _left })
         {
             d.PillClicked += ToggleAllCollapsed;
@@ -67,6 +75,7 @@ internal sealed partial class ShellController : IDisposable
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;
             d.QuitRequested += Quit;
+            d.ManagerRequested += OpenManager;
             var side = d.Side;
             d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }
@@ -80,6 +89,7 @@ internal sealed partial class ShellController : IDisposable
         _right.Show();
         _left.Show();
         _right.ContentRendered += (_, _) => OnReady();
+        if (_settings.ManagerOnStart) OpenManager();
     }
 
     private void OnReady()
@@ -147,7 +157,7 @@ internal sealed partial class ShellController : IDisposable
             if (hwnd == IntPtr.Zero) return;
             _finder!.Stop();
             Follow(hwnd);
-            if (!_hiddenAll) foreach (var p in _pins.Values) p.Reappear();
+            if (!_hiddenAll) foreach (var p in ActivePins()) p.Reappear();
         }, Application.Current.Dispatcher);
         _finder.Start();
     }
@@ -185,7 +195,7 @@ internal sealed partial class ShellController : IDisposable
         foreach (var f in _followers) f.Suspended = _hiddenAll;
         if (_followers.Count > 0) _followers[0].Sync("show");
         UpdateLeftVisibility();
-        foreach (var p in _pins.Values) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
+        foreach (var p in ActivePins()) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
         _tray.SetHidden(_hiddenAll);
         _log.Write("hide_all", ("on", _hiddenAll));
     }

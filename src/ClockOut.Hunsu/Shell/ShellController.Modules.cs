@@ -1,10 +1,11 @@
-// 기능: 모듈 동작(ShellController의 일부). 모듈 화면 만들기, 데이터 넣기, 접기·펼치기, 투명도, 도크 ↔ 핀 창, 왼쪽·오른쪽 도크 옮기기, 배치 저장.
+// 기능: 모듈 동작(ShellController의 일부). 모듈 화면 만들기, 데이터 넣기, 접기·펼치기, 투명도, 도크 ↔ 핀 창, 왼쪽·오른쪽 도크 옮기기, 배치 저장, 켜기·끄기, 순서, 명령 보내기.
 // 사용법: ShellController 안에서만 쓴다. 바뀐 배치는 모두 _store.State.Update(...) 후 _store.SaveSoon().
 // 의존: Shell/ModuleView, Overlay/PinWindow, Overlay/DockWindow, Core/Layout(Places, PinPlacement, LayoutState).
 using System.Windows;
 using System.Windows.Controls;
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Diagnostics;
 using ClockOut.Hunsu.Excel;
 using ClockOut.Hunsu.Native;
@@ -17,7 +18,8 @@ internal sealed partial class ShellController
     private ModuleView CreateView(LoadedModule lm)
     {
         var man = lm.Manifest;
-        var mv = new ModuleView(lm, _store.State.Effective(man.Id, man.Place, man.Order, man.Shapes));
+        var mv = new ModuleView(lm, _store.State.Effective(man.Id, man.Place, man.Order, man.Shapes, _settings.IsEnabledByDefault(man.Id)));
+        mv.CommandRequested += (command, args) => OnCommand(mv, command, args);
         mv.Frame.PinClicked += () => { if (mv.InDock) Pin(mv, null); else Unpin(mv, null); };
         mv.Frame.CollapseClicked += () => SetCollapsed(mv, true, null);
         mv.Tab.Clicked += () => SetCollapsed(mv, false, null);
@@ -47,24 +49,25 @@ internal sealed partial class ShellController
     /// <summary>저장된 배치대로 모든 모듈을 도크나 핀 창에 놓는다.</summary>
     private void PlaceAll()
     {
-        foreach (var mv in _modules.Where(m => m.Placement.Place == Places.Pin)) Pin(mv, null, restoring: true);
+        foreach (var mv in _modules.Where(m => m.Placement.Place == Places.Pin && !m.Placement.Hidden)) Pin(mv, null, restoring: true);
         RefreshDocks();
     }
 
     private void RefreshDocks()
     {
-        _right.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeRight));
-        _left.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeLeft));
+        _right.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeRight && !m.Placement.Hidden));
+        _left.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeLeft && !m.Placement.Hidden));
         UpdateLeftVisibility();
-        bool allCollapsed = _modules.Where(m => m.InDock).All(m => m.Placement.Collapsed);
+        bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
         _right.SetAllCollapsedLabel(allCollapsed);
+        ModulesChanged?.Invoke();
     }
 
     private void Save(ModuleView mv, Func<ModulePlacement, ModulePlacement> change)
     {
         _store.State.Update(mv.Id, change);
         var man = mv.Module.Manifest;
-        mv.Placement = _store.State.Effective(mv.Id, man.Place, man.Order, man.Shapes);
+        mv.Placement = _store.State.Effective(mv.Id, man.Place, man.Order, man.Shapes, _settings.IsEnabledByDefault(man.Id));
         _store.SaveSoon();
         LogPlacement(mv);
     }
@@ -84,7 +87,7 @@ internal sealed partial class ShellController
 
     private void ToggleAllCollapsed()
     {
-        var docked = _modules.Where(m => m.InDock).ToList();
+        var docked = _modules.Where(m => m.InDock && !m.Placement.Hidden).ToList();
         bool expand = docked.All(m => m.Placement.Collapsed);
         foreach (var m in docked) SetCollapsed(m, !expand, null);
     }
@@ -157,13 +160,39 @@ internal sealed partial class ShellController
 
     private void ForTopic(string topic, Action<ModuleView> act)
     {
-        foreach (var m in _modules.Where(m => m.Wants(topic))) act(m);
+        foreach (var m in _modules.Where(m => !m.Placement.Hidden && m.Wants(topic))) act(m);
+    }
+
+    /// <summary>조회 결과를 그 주제를 구독한(켜진) 모듈에 넣는다. 실패하면 마지막 내용을 흐리게 둔다(docs/04 6장).</summary>
+    private void OnTopic(TopicResult r)
+    {
+        if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); });
+        else ForTopic(r.Topic, m => m.SetStale(true));
+    }
+
+    /// <summary>다리 신호 하나가 왔을 때 다시 조회할 주제: 켜진 모듈의 구독만(꺼진 모듈은 엑셀을 바쁘게 하지 않는다).</summary>
+    private IReadOnlyList<string> TopicsForSignal(int code) =>
+        TopicRouting.TopicsFor(code, _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data));
+
+    private IReadOnlyList<string> AllEnabledTopics() =>
+        TopicRouting.AllTopics(_modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data));
+
+    /// <summary>단추나 목록 줄을 눌렀다. 모듈 선언의 commands에 있는 이름만 다리로 보낸다(없으면 거절하고 기록).</summary>
+    private async void OnCommand(ModuleView mv, string command, string argsJson)
+    {
+        if (!mv.Module.Manifest.Commands.Contains(command))
+        {
+            _log.Write("command_denied", ("module", mv.Id), ("cmd", command));
+            return;
+        }
+        if (_target == IntPtr.Zero) return;
+        var call = await _registry.DoAsync(_target, command, argsJson);
+        var resp = call.Ok ? BridgeResponse.Parse(call.Json) : BridgeResponse.Failed(call.ErrorCode, "엑셀 호출 실패");
+        _log.Write("command", ("module", mv.Id), ("cmd", command), ("ok", resp.Ok), ("code", resp.Code), ("hr", HResultNames.Name(call.HResult)), ("ms", Math.Round(call.Ms, 1)));
     }
 
     private void OnSummary(SummaryResult r)
     {
-        if (r.Response.Ok) ForTopic("selection.summary", m => { m.SetData("selection.summary", r.Response.Data); m.SetStale(false); });
-        else ForTopic("selection.summary", m => m.SetStale(true));
         Frames.Next(frame =>
         {
             _log.Write("render", ("excel", r.Excel.ToInt64()), ("seq", r.Seq), ("recv", r.SignalAt), ("qs", r.QueryStart), ("qd", r.QueryDone), ("frame", frame),

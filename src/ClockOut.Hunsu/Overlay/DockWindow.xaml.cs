@@ -43,6 +43,7 @@ public partial class DockWindow : Window
     public event Action? SummonRequested;
     public event Action? HideAllRequested;
     public event Action? QuitRequested;
+    public event Action? ManagerRequested;
 
     internal IReadOnlyList<ModuleView> Modules => _modules;
 
@@ -106,5 +107,6 @@ public partial class DockWindow : Window
     private void MenuToggleAll_Click(object sender, RoutedEventArgs e) => ToggleAllRequested?.Invoke();
     private void MenuSummon_Click(object sender, RoutedEventArgs e) => SummonRequested?.Invoke();
     private void MenuHideAll_Click(object sender, RoutedEventArgs e) => HideAllRequested?.Invoke();
+    private void MenuManager_Click(object sender, RoutedEventArgs e) => ManagerRequested?.Invoke();
     private void MenuQuit_Click(object sender, RoutedEventArgs e) => QuitRequested?.Invoke();
 }

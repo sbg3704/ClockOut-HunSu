@@ -19,7 +19,7 @@ public sealed class ViewRenderer
         Root = new StackPanel();
         foreach (var item in spec.Panel)
         {
-            var (element, fill) = Parts.Create(item);
+            var (element, fill) = Parts.Create(item, (command, args) => CommandRequested?.Invoke(command, args));
             _parts.Add((item, element, fill));
             Root.Children.Add(element);
         }
@@ -27,6 +27,9 @@ public sealed class ViewRenderer
     }
 
     public ViewSpec Spec { get; }
+
+    /// <summary>단추나 목록 줄을 눌렀다: 명령 이름, 인자 JSON. 명령이 이 모듈 선언에 있는지는 받는 쪽이 확인한다.</summary>
+    public event Action<string, string>? CommandRequested;
 
     public StackPanel Root { get; }
 

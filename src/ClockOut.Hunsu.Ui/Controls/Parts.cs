@@ -1,5 +1,6 @@
-// 기능: 1단계 부품 네 가지(stat 큰 숫자, text, badge, divider)와 "준비 중" 자리표시. 크기와 색은 Theme 이름으로만 쓴다(docs/03 7장).
-// 사용법: var (element, fill) = Parts.Create(viewItem); fill(scope) 로 값 채우기
+// 기능: 부품 여섯 가지(stat 큰 숫자, text, badge, divider, list 목록, button 단추)와 "준비 중" 자리표시. 크기와 색은 Theme 이름으로만 쓴다(docs/03 7장).
+//       list·button 코드는 ListParts.cs(같은 클래스의 일부).
+// 사용법: var (element, fill) = Parts.Create(viewItem, onCommand); fill(scope) 로 값 채우기. onCommand(명령 이름, 인자 JSON)은 단추·줄을 눌렀을 때 불린다.
 // 의존: Theme, Core/View(Template). 부품은 자기 모양만 그리고 데이터를 직접 구하지 않는다(docs/01 3.4장 4번).
 using System.Windows;
 using System.Windows.Controls;
@@ -10,10 +11,12 @@ using ClockOut.Hunsu.Ui.Theme;
 
 namespace ClockOut.Hunsu.Ui.Controls;
 
-public static class Parts
+public static partial class Parts
 {
-    public static (FrameworkElement Element, Action<DataScope> Fill) Create(ViewItem item) => item.Type switch
+    public static (FrameworkElement Element, Action<DataScope> Fill) Create(ViewItem item, Action<string, string>? onCommand = null) => item.Type switch
     {
+        "list" => ListPart(item, onCommand),
+        "button" => ButtonPart(item, onCommand),
         "stat" => Stat(item),
         "text" => Text(item),
         "badge" => Badge(item),
