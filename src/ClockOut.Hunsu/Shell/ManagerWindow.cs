@@ -42,8 +42,30 @@ internal sealed class ManagerWindow : Window
     private UIElement BuildLayout()
     {
         var dock = new DockPanel();
-        var header = new StackPanel { Margin = new Thickness(22, 18, 22, 8) };
-        header.Children.Add(new TextBlock
+        var header = new Grid { Margin = new Thickness(22, 18, 22, 8) };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var logo = new Border
+        {
+            Width = 40,
+            Height = 40,
+            CornerRadius = new CornerRadius(20),
+            Background = (Brush)FindResource("Hunsu.Accent"),
+            Margin = new Thickness(0, 0, 14, 0),
+            Child = new TextBlock
+            {
+                Text = "훈",
+                FontWeight = FontWeights.Bold,
+                FontSize = (double)FindResource("Hunsu.FontTitleSize") + 3,
+                Foreground = (Brush)FindResource("Hunsu.AccentInk"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        header.Children.Add(logo);
+        var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        titles.Children.Add(new TextBlock
         {
             Text = "모듈 관리",
             FontFamily = (FontFamily)FindResource("Hunsu.FontTitle"),
@@ -51,8 +73,15 @@ internal sealed class ManagerWindow : Window
             FontWeight = FontWeights.SemiBold,
         });
         _summary.Foreground = (Brush)FindResource(ThemeKeys.Muted);
-        _summary.Margin = new Thickness(0, 4, 0, 0);
-        header.Children.Add(_summary);
+        _summary.Margin = new Thickness(0, 2, 0, 0);
+        titles.Children.Add(_summary);
+        Grid.SetColumn(titles, 1);
+        header.Children.Add(titles);
+        var bulk = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        bulk.Children.Add(Chip("모두 켜기", false, () => _shell.SetAllEnabled(true)));
+        bulk.Children.Add(Chip("모두 끄기", false, () => _shell.SetAllEnabled(false)));
+        Grid.SetColumn(bulk, 2);
+        header.Children.Add(bulk);
         DockPanel.SetDock(header, Dock.Top);
         dock.Children.Add(header);
 
@@ -86,7 +115,40 @@ internal sealed class ManagerWindow : Window
         int on = list.Count(m => !m.Placement.Hidden);
         _summary.Text = $"설치된 모듈 {list.Count}개 · 켜짐 {on}개";
         if (list.Count == 0) _cards.Children.Add(new TextBlock { Text = "설치된 모듈이 없습니다. modules 폴더를 확인하세요.", Foreground = (Brush)FindResource(ThemeKeys.Muted), Margin = new Thickness(0, 12, 0, 0) });
-        foreach (var mv in list) _cards.Children.Add(Card(mv));
+        bool? lastOn = null;
+        foreach (var mv in list)
+        {
+            bool isOn = !mv.Placement.Hidden;
+            if (lastOn != isOn)
+            {
+                _cards.Children.Add(SectionTitle(isOn ? "켜짐" : "꺼짐"));
+                lastOn = isOn;
+            }
+            _cards.Children.Add(Card(mv));
+        }
+    }
+
+    private TextBlock SectionTitle(string text) => new()
+    {
+        Text = text,
+        Margin = new Thickness(2, 10, 0, 8),
+        FontSize = (double)FindResource("Hunsu.FontCaption"),
+        FontWeight = FontWeights.SemiBold,
+        Foreground = (Brush)FindResource(ThemeKeys.Muted),
+    };
+
+    /// <summary>분류 알약(점검, 이동 등). 톤 색 15% 바탕.</summary>
+    private Border CategoryPill(string text)
+    {
+        var accent = (SolidColorBrush)FindResource("Hunsu.Accent");
+        return new Border
+        {
+            Child = new TextBlock { Text = text, FontSize = (double)FindResource("Hunsu.FontCaption"), Foreground = accent, Margin = new Thickness(8, 1, 8, 1) },
+            Background = new SolidColorBrush(Color.FromArgb(0x26, accent.Color.R, accent.Color.G, accent.Color.B)),
+            CornerRadius = (CornerRadius)FindResource("Hunsu.PillRadius"),
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
     }
 
     private UIElement Card(ModuleView mv)
@@ -106,20 +168,21 @@ internal sealed class ManagerWindow : Window
         var info = new StackPanel();
         var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
         titleRow.Children.Add(new TextBlock { Text = man.Name, FontWeight = FontWeights.SemiBold });
-        titleRow.Children.Add(new TextBlock { Text = $"  v{man.Version} · {man.Category}", FontSize = (double)FindResource("Hunsu.FontCaption"), Foreground = (Brush)FindResource(ThemeKeys.Muted), VerticalAlignment = VerticalAlignment.Center });
+        titleRow.Children.Add(CategoryPill(man.Category));
+        titleRow.Children.Add(new TextBlock { Text = $"  v{man.Version}", FontSize = (double)FindResource("Hunsu.FontCaption"), Foreground = (Brush)FindResource(ThemeKeys.Muted), VerticalAlignment = VerticalAlignment.Center });
         info.Children.Add(titleRow);
         info.Children.Add(new TextBlock { Text = man.Description, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 3, 0, 3), FontSize = (double)FindResource("Hunsu.FontSmall"), Foreground = (Brush)FindResource(ThemeKeys.Muted) });
-        info.Children.Add(new TextBlock { Text = man.Id, FontSize = (double)FindResource("Hunsu.FontCaption"), Foreground = (Brush)FindResource(ThemeKeys.Muted), Opacity = 0.7 });
+        info.Children.Add(new TextBlock { Text = man.Id + " · " + PlaceName(mv.Placement.Place), FontSize = (double)FindResource("Hunsu.FontCaption"), Foreground = (Brush)FindResource(ThemeKeys.Muted), Opacity = 0.7 });
         Grid.SetColumn(info, 1);
         grid.Children.Add(info);
 
         var controls = new StackPanel { Margin = new Thickness(12, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Right };
         string place = mv.Placement.Place;
-        var where = new StackPanel { Orientation = Orientation.Horizontal };
-        where.Children.Add(Chip("왼쪽", place == Places.EdgeLeft, () => _shell.PlaceFromManager(mv, Places.EdgeLeft)));
-        where.Children.Add(Chip("오른쪽", place == Places.EdgeRight, () => _shell.PlaceFromManager(mv, Places.EdgeRight)));
-        where.Children.Add(Chip("떼기", place == Places.Pin, () => _shell.PlaceFromManager(mv, Places.Pin)));
-        controls.Children.Add(where);
+        var placeRow = new StackPanel { Orientation = Orientation.Horizontal };
+        placeRow.Children.Add(Chip("왼쪽", place == Places.EdgeLeft, () => _shell.PlaceFromManager(mv, Places.EdgeLeft)));
+        placeRow.Children.Add(Chip("오른쪽", place == Places.EdgeRight, () => _shell.PlaceFromManager(mv, Places.EdgeRight)));
+        placeRow.Children.Add(Chip("떼기", place == Places.Pin, () => _shell.PlaceFromManager(mv, Places.Pin)));
+        controls.Children.Add(placeRow);
         var order = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Right };
         order.Children.Add(Chip("▲ 위", false, () => _shell.MoveOrder(mv, -1)));
         order.Children.Add(Chip("▼ 아래", false, () => _shell.MoveOrder(mv, 1)));
@@ -139,6 +202,14 @@ internal sealed class ManagerWindow : Window
             Opacity = enabled ? 1.0 : 0.6,
         };
     }
+
+    private static string PlaceName(string place) => place switch
+    {
+        Places.EdgeLeft => "왼쪽 도크",
+        Places.EdgeRight => "오른쪽 도크",
+        Places.Pin => "떼어 낸 창",
+        _ => place,
+    };
 
     /// <summary>켜짐/꺼짐 스위치(누르면 act).</summary>
     private FrameworkElement Switch(bool on, Action act)

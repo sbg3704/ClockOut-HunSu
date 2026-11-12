@@ -37,6 +37,12 @@ internal sealed partial class ShellController
         _log.Write("module_enabled", ("id", mv.Id), ("on", enabled));
     }
 
+    /// <summary>모든 모듈을 한 번에 켜거나 끈다(관리자의 [모두 켜기] [모두 끄기]).</summary>
+    internal void SetAllEnabled(bool enabled)
+    {
+        foreach (var mv in _modules.Where(m => m.Placement.Hidden == enabled).ToList()) SetEnabled(mv, enabled);
+    }
+
     /// <summary>같은 자리 모듈들 사이에서 위(-1)나 아래(+1)로 한 칸.</summary>
     internal void MoveOrder(ModuleView mv, int delta)
     {

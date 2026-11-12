@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-audit",
+  "name": "책 점검",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "점검",
+  "author": "ClockOut",
+  "description": "숨은 시트, 보호된 시트, 외부 링크, 이름 개수를 한눈에 보여 줍니다.",
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 250,
+  "data": [{"topic": "book.audit", "on": ["book", "sheet"], "weight": "normal"}],
+  "commands": [],
+  "scope": "book",
+  "params": []
+}

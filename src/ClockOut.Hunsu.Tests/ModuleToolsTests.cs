@@ -127,7 +127,7 @@ public class ModuleToolsTests
     }
 
     public static IEnumerable<object[]> RepoModules() =>
-        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow" }.Select(id => new object[] { id });
+        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow", "hunsu-book", "hunsu-audit", "hunsu-names", "hunsu-keys" }.Select(id => new object[] { id });
 
     [Theory]
     [MemberData(nameof(RepoModules))]

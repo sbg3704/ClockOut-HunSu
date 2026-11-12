@@ -1,0 +1,7 @@
+{
+  "tab": { "title": "이름", "badge": "{names.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "list", "items": "names.items", "text": "{item.name}", "sub": "{item.where}", "command": "goto", "arg.sheet": "{item.sheet}", "arg.addr": "{item.addr}", "max": 12, "emptyText": "정의된 이름이 없습니다." },
+    { "type": "text", "text": "칸을 가리키는 이름을 누르면 그곳으로 이동합니다. '수식·상수'는 이동하지 않습니다.", "tone": "muted", "showWhen": "names.count > 0" }
+  ]
+}

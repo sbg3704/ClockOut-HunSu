@@ -1,10 +1,10 @@
 Attribute VB_Name = "CoHunsuApi"
 '==============================================================
 ' 기능: 틀(훈수꾼)이 Application.Run으로 부르는 진입점 3개(Hello, Query, Do). 이름으로 조회·명령 파일에 나눠 줄 뿐이다.
-'       조회: hello, selection.summary, bridge.stats, errors, flow.neighbors, sheets.  명령: sheet.activate, goto.
+'       조회: hello, selection.summary, bridge.stats, errors, flow.neighbors, sheets, book.info, book.audit, names.  명령: sheet.activate, goto.
 ' 사용법: Application.Run "'clockout-hunsu.xlam'!CoHunsu_Query", "selection.summary", "{}"
 '         인자와 반환은 모두 JSON 문자열. 어떤 경우에도 오류 창을 띄우지 않는다(docs/02 1장).
-' 의존: CoHunsuJson, CoHunsuEntry, CoHunsuQ_SelectionSummary, CoHunsuQ_BridgeStats, CoHunsuQ_Errors, CoHunsuQ_Flow, CoHunsuQ_Sheets
+' 의존: CoHunsuJson, CoHunsuEntry, CoHunsuQ_SelectionSummary, CoHunsuQ_BridgeStats, CoHunsuQ_Errors, CoHunsuQ_Flow, CoHunsuQ_Sheets, CoHunsuQ_Book, CoHunsuQ_Names
 ' 참고: docs/02 2장은 진입점을 .cls로 적었으나 Application.Run은 표준 모듈의 프로시저만 부를 수 있어 .bas로 둔다(0단계 확인).
 '==============================================================
 Option Explicit
@@ -36,6 +36,12 @@ Public Function CoHunsu_Query(ByVal qName As String, ByVal argsJson As String) A
             CoHunsu_Query = Query_FlowNeighbors(argsJson)
         Case "sheets"
             CoHunsu_Query = Query_Sheets(argsJson)
+        Case "book.info"
+            CoHunsu_Query = Query_BookInfo(argsJson)
+        Case "book.audit"
+            CoHunsu_Query = Query_BookAudit(argsJson)
+        Case "names"
+            CoHunsu_Query = Query_Names(argsJson)
         Case Else
             CoHunsu_Query = CoHunsuJson_Fail("query_unknown", "다리에 없는 조회: " & qName)
     End Select
@@ -68,7 +74,7 @@ Private Function HelloData() As String
 #End If
     HelloData = "{" & CoHunsuJson_Pair("version", CoHunsuJson_Str(HUNSU_VERSION)) & "," & _
         CoHunsuJson_Pair("proto", CStr(HUNSU_PROTO)) & "," & _
-        CoHunsuJson_Pair("queries", "[""hello"",""selection.summary"",""bridge.stats"",""errors"",""flow.neighbors"",""sheets""]") & "," & _
+        CoHunsuJson_Pair("queries", "[""hello"",""selection.summary"",""bridge.stats"",""errors"",""flow.neighbors"",""sheets"",""book.info"",""book.audit"",""names""]") & "," & _
         CoHunsuJson_Pair("commands", "[""sheet.activate"",""goto""]") & "," & _
         CoHunsuJson_Pair("signals", "[""sel"",""change"",""sheet"",""book"",""calc""]") & "," & _
         CoHunsuJson_Pair("office", "{" & CoHunsuJson_Pair("version", CoHunsuJson_Str(Application.Version)) & "," & _
