@@ -1,6 +1,6 @@
-<!-- 기능: 훈수꾼 실행 파일(WPF). 오버레이 창, 엑셀 창 따라가기, 신호 받기, 엑셀 조회. -->
+<!-- 기능: 훈수꾼 실행 파일(WPF). 도크·핀 창, 엑셀 창 따라가기, 신호 받기, 엑셀 조회, 모듈 불러오기, 배치 저장, 단축키, 알림 영역 아이콘. -->
 <!-- 사용법: dotnet build 뒤 ClockOut.Hunsu.exe 실행(인자 없이 = 보이는 엑셀 창을 따라감). 인자는 Core/AppOptions.cs -->
-<!-- 의존: ClockOut.Hunsu.Core -->
+<!-- 의존: ClockOut.Hunsu.Core, ClockOut.Hunsu.Ui. 알림 영역 아이콘에 WinForms NotifyIcon을 쓴다(WPF에 없음). 모듈 폴더(modules/)를 실행 파일 옆으로 복사한다. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -8,12 +8,24 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ClockOut.Hunsu</AssemblyName>
     <RootNamespace>ClockOut.Hunsu</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- WFO0003: WinForms 앱용 안내(DPI를 Application.SetHighDpiMode로). 이 앱은 WPF이고 WinForms는 알림 아이콘에만 쓰므로 매니페스트(PerMonitorV2)를 유지한다. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <!-- WinForms의 Application, MessageBox 등과 WPF 이름이 겹치지 않게 암묵 using에서 뺀다(NotifyIcon만 이름을 다 적어 쓴다). -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\ClockOut.Hunsu.Core\ClockOut.Hunsu.Core.csproj" />
+    <ProjectReference Include="..\ClockOut.Hunsu.Ui\ClockOut.Hunsu.Ui.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\modules\**\*" Link="modules\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

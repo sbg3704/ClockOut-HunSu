@@ -24,7 +24,8 @@ internal static class WindowChecks
     private static PixelRect Expected(TargetWindow t, IntPtr overlay)
     {
         var o = Win32.Rect(overlay);
-        return OverlayPlacement.TopRightInside(Win32.Rect(t.Hwnd), o.Width, o.Height);
+        var tr = Win32.Rect(t.Hwnd);
+        return OverlayPlacement.TopRightInside(tr, o.Width, OverlayPlacement.DockHeight(tr, 200)); // 도크 창은 높이도 엑셀 창을 따라 바뀐다(1단계)
     }
 
     private static void CheckPlacementAndClicks(Report rep, TargetWindow target, IntPtr overlay, PixelRect zone)
@@ -68,7 +69,7 @@ internal static class WindowChecks
             var r = new PixelRect(start.X + (i % 20) * 7, start.Y + (i % 10) * 5, start.Width - (resize ? 120 : 0), start.Height - (resize ? 60 : 0));
             long t0 = Stopwatch.GetTimestamp();
             target.Move(r);
-            var want = OverlayPlacement.TopRightInside(Win32.Rect(target.Hwnd), Win32.Rect(overlay).Width, Win32.Rect(overlay).Height);
+            var want = Expected(target, overlay);
             long deadline = t0 + Stopwatch.Frequency / 5; // 200ms
             long t1 = 0;
             while (Stopwatch.GetTimestamp() < deadline)
