@@ -24,7 +24,8 @@ internal sealed class SignalWindow : IDisposable
         _log = log;
         _proc = WndProc;
         _signalMsg = User32.RegisterWindowMessage(SignalCodec.MessageName);
-        foreach (var name in new[] { BenchMessages.OpenPanel, BenchMessages.ClosePanel, BenchMessages.Probe, BenchMessages.Quit })
+        // 칼퇴 [끄기](AppMessages.Quit)도 같은 길로 받는다.
+        foreach (var name in new[] { BenchMessages.OpenPanel, BenchMessages.ClosePanel, BenchMessages.Probe, BenchMessages.Quit, AppMessages.Quit })
             _benchMsgs[User32.RegisterWindowMessage(name)] = name;
 
         var wc = new User32.WNDCLASSEX
