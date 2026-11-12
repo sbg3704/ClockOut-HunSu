@@ -1,0 +1,26 @@
+<!-- 기능: 색, 크기, 움직임 시간 토큰(docs/03 디자인 기준의 어두운 테마 값). 화면 파일은 값을 직접 쓰지 않고 여기서 가져온다. -->
+<!-- 사용법: App.xaml이 합쳐 읽는다. {StaticResource Hunsu.Glass} 처럼 쓴다. -->
+<!-- 의존: 없음. 1단계에서 ClockOut.Hunsu.Ui 프로젝트로 옮긴다(docs/05 1장). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <Color x:Key="Hunsu.GlassColor">#EB111B29</Color>
+  <SolidColorBrush x:Key="Hunsu.Glass" Color="{StaticResource Hunsu.GlassColor}" />
+  <SolidColorBrush x:Key="Hunsu.Line" Color="#335FD4E6" />
+  <SolidColorBrush x:Key="Hunsu.Text" Color="#E9F1F7" />
+  <SolidColorBrush x:Key="Hunsu.Muted" Color="#9FB1C2" />
+  <SolidColorBrush x:Key="Hunsu.Accent" Color="#5FD4E6" />
+  <SolidColorBrush x:Key="Hunsu.AccentInk" Color="#0B1520" />
+  <SolidColorBrush x:Key="Hunsu.Good" Color="#6FCF97" />
+  <SolidColorBrush x:Key="Hunsu.Warn" Color="#FFB26B" />
+  <SolidColorBrush x:Key="Hunsu.Bad" Color="#FF7A70" />
+  <CornerRadius x:Key="Hunsu.PillRadius">16</CornerRadius>
+  <CornerRadius x:Key="Hunsu.PanelRadius">12</CornerRadius>
+  <sys:Double x:Key="Hunsu.FontBody">13</sys:Double>
+  <sys:Double x:Key="Hunsu.FontSmall">11.5</sys:Double>
+  <FontFamily x:Key="Hunsu.Font">Malgun Gothic, Segoe UI</FontFamily>
+  <!-- 움직임: fast 120ms(패널 열고 닫기 포함, 2026-11-12 결정), base 200ms, slow 320ms -->
+  <Duration x:Key="Hunsu.Fast">0:0:0.120</Duration>
+  <Duration x:Key="Hunsu.Base">0:0:0.200</Duration>
+  <Duration x:Key="Hunsu.Slow">0:0:0.320</Duration>
+</ResourceDictionary>

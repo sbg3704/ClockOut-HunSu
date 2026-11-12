@@ -1,0 +1,17 @@
+<!-- 기능: 저장소 안 모든 C# 프로젝트의 공통 설정(docs/05 2장: Nullable, ImplicitUsings, 경고를 오류로). -->
+<!-- 사용법: 각 .csproj가 자동으로 읽는다. 프로젝트마다 따로 적지 않는다. -->
+<!-- 의존: global.json(SDK 판 고정) -->
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <Company>sbg3704</Company>
+    <Product>ClockOut Hunsu</Product>
+    <Copyright>Copyright (c) 2026 sbg3704. All rights reserved.</Copyright>
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+</Project>

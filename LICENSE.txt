@@ -1,0 +1,4 @@
+Copyright (c) 2026 sbg3704 (주수리). All rights reserved.
+
+이 저장소의 소스 코드, 문서, 그림은 저작권자의 허락 없이 복제, 수정, 배포, 공개할 수 없다.
+받아 쓰는 공개 라이브러리는 각자의 라이선스를 따른다(vendor/SOURCES.md).
