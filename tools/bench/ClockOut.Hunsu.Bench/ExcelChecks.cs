@@ -75,7 +75,7 @@ internal static class ExcelChecks
             Thread.Sleep(40);
         }
         rep.Time("패널 열기: 첫 프레임(반응 시작)", first, 100);
-        rep.Time("패널 열기: 마지막 프레임(base 200ms 움직임 포함)", done, 100);
+        rep.Time("패널 열기: 마지막 프레임(fast 120ms 움직임 포함)", done, 100);
     }
 
     /// <summary>엑셀이 매크로를 도는 동안 앱이 hello를 부르게 해 거절 코드와 재시도 효과를 본다.</summary>
