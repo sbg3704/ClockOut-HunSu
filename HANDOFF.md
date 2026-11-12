@@ -14,6 +14,7 @@
 3. ~~결정: 패널 열기 100ms(마지막 프레임까지)와 `docs/03` base 200ms 충돌~~ → **사용자 결정(2026-11-12): 움직임을 fast 120ms로 줄인다.** 다시 재서 마지막 프레임 P95 94.7ms(최대 96.0ms)로 통과(`docs/04` 1장).
 
 ### 다음 할 일
+- **끄는 방법 넣기**(2026-11-12 사용자가 "어떻게 끄지?"라고 물음. 지금은 작업 관리자나 `taskkill /IM ClockOut.Hunsu.exe`뿐): 알약 우클릭 메뉴나 알림 영역 아이콘에 [끄기], 단축키 Ctrl+Alt+Shift+H(전부 숨김). 1단계 첫 일로.
 - 1단계(틀 뼈대) 시작 전: 위 결정, 사용자 눈 확인. `ClockOut.Hunsu.Ui` 프로젝트 만들고 `Theme.xaml`을 옮긴다.
 - 다리 `CoHunsuJson.bas`를 공용 라이브러리 JSON으로 바꾸기(docs/02 2장, 지금은 최소 구현), 다리 `clockout-hunsu.clockout.json` 의존 채우기.
 - 앱 `Native/User32.cs`와 bench `Win32.cs`의 겹치는 선언을 공용으로 합치거나 CsWin32로(vendor/SOURCES.md 후보).
