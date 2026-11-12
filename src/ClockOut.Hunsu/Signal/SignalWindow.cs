@@ -24,7 +24,7 @@ internal sealed class SignalWindow : IDisposable
         _log = log;
         _proc = WndProc;
         _signalMsg = User32.RegisterWindowMessage(SignalCodec.MessageName);
-        foreach (var name in BenchMessages.All)
+        foreach (var name in BenchMessages.All.Append(AppMessages.Quit))
             _benchMsgs[User32.RegisterWindowMessage(name)] = name;
 
         var wc = new User32.WNDCLASSEX
