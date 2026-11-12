@@ -1,0 +1,7 @@
+{
+  "tab": { "title": "시트", "badge": "{sheets.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{sheets.book}", "tone": "muted" },
+    { "type": "list", "items": "sheets.items", "text": "{item.name}", "sub": "{item.index}", "command": "sheet.activate", "arg.name": "{item.name}", "activeWhen": "item.active == true", "max": 40, "emptyText": "열린 통합 문서가 없습니다." }
+  ]
+}

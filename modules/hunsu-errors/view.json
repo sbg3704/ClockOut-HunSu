@@ -1,0 +1,10 @@
+{
+  "tab": { "title": "오류", "badge": "{errors.count:n0}", "tone": "warn" },
+  "panel": [
+    { "type": "stat", "value": "{errors.count:n0}", "label": "오류 셀 · {errors.sheet}", "tone": "bad", "showWhen": "errors.count > 0" },
+    { "type": "stat", "value": "0", "label": "오류 셀 · {errors.sheet}", "tone": "good", "showWhen": "errors.count == 0" },
+    { "type": "list", "items": "errors.items", "text": "{item.addr}", "sub": "{item.label}", "tone": "bad", "command": "goto", "arg.addr": "{item.addr}", "max": 8, "emptyText": "이 시트에는 오류 셀이 없습니다." },
+    { "type": "badge", "text": "앞의 {errors.shown:n0}개만 조회했습니다", "tone": "warn", "showWhen": "errors.truncated == true" },
+    { "type": "text", "text": "칸을 누르면 그곳으로 이동합니다.", "tone": "muted", "showWhen": "errors.count > 0" }
+  ]
+}
