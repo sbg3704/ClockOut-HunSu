@@ -34,8 +34,9 @@ internal sealed partial class ShellController
                 var pinProbe = Frames.StartProbe();
                 void Done(long done)
                 {
+                    double mean = pinProbe.MeanGapMs;
                     var (gap, steady, skipped, frames) = pinProbe.Stop();
-                    _log.Write(pinning ? "pin" : "unpin", ("sent", lParam.ToInt64()), ("recv", at), ("done", done), ("maxGap", gap), ("steadyGap", steady), ("skipped", skipped), ("frames", frames),
+                    _log.Write(pinning ? "pin" : "unpin", ("sent", lParam.ToInt64()), ("recv", at), ("done", done), ("maxGap", gap), ("steadyGap", steady), ("meanGap", Math.Round(mean, 2)), ("skipped", skipped), ("frames", frames),
                         ("pinHwnd", _pins.TryGetValue(first.Id, out var w) ? w.Handle.ToInt64() : 0), ("rect", w?.Rect.ToString() ?? "-"));
                 }
                 if (pinning) Pin(first, Done);

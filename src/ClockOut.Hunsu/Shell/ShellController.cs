@@ -67,6 +67,8 @@ internal sealed partial class ShellController : IDisposable
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;
             d.QuitRequested += Quit;
+            var side = d.Side;
+            d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }
     }
 

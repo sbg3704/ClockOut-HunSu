@@ -36,6 +36,9 @@ public partial class DockWindow : Window
     public IntPtr Handle { get; private set; }
 
     public event Action? PillClicked;
+
+    /// <summary>측정·문제 찾기용: 넘침 계산 입력과 결과 한 줄.</summary>
+    public event Action<string>? LayoutTraced;
     public event Action? ToggleAllRequested;
     public event Action? SummonRequested;
     public event Action? HideAllRequested;
@@ -74,7 +77,9 @@ public partial class DockWindow : Window
             double panel = m.Frame.Visibility == Visibility.Visible && m.Frame.DesiredSize.Height > 0 ? m.Frame.DesiredSize.Height : m.LastPanelHeight;
             return new DockEntry(m.Id, m.Placement.Order, m.Placement.Collapsed, panel, Math.Max(m.Tab.DesiredSize.Height, 60));
         }).ToList();
-        foreach (var slot in DockLayout.Plan(entries, available, gap))
+        var plan = DockLayout.Plan(entries, available, gap);
+        LayoutTraced?.Invoke($"available={available:0} " + string.Join(";", entries.Select(e => $"{e.Id}:{e.PanelHeight:0}/{e.TabHeight:0}")) + " forced=" + string.Join(",", plan.Where(p => p.ForcedByOverflow).Select(p => p.Id)));
+        foreach (var slot in plan)
             _modules.First(m => m.Id == slot.Id).SetForcedCollapsed(slot.ForcedByOverflow);
     }
 

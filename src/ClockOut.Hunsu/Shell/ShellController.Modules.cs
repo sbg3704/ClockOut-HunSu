@@ -109,11 +109,12 @@ internal sealed partial class ShellController
         w.Host(mv.DetachFrame());
         _pins[mv.Id] = w;
         if (!restoring) Save(mv, p => p with { Place = Places.Pin, PinRect = rect });
-        if (!_hiddenAll && _target != IntPtr.Zero) w.ShowAt(rect, done);
+        // 그림은 나타나는 움직임이 끝난 뒤에 찍는다(첫 프레임은 투명도 0이라 빈 그림).
+        Action<long> shown = t => { done?.Invoke(t); if (!restoring) Snap("pin.png", w); };
+        if (!_hiddenAll && _target != IntPtr.Zero) w.ShowAt(rect, shown);
         else { w.SetRectOnly(rect); done?.Invoke(0); }
         RefreshDocks();
         LogPlacement(mv);
-        if (!restoring) Frames.Next(_ => Snap("pin.png", w.Root));
     }
 
     /// <summary>모듈마다 핀 창을 한 번만 만든다(처음 뗄 때 빨리 뜨게 시작할 때 미리 만듦).</summary>
@@ -168,7 +169,8 @@ internal sealed partial class ShellController
             _log.Write("render", ("excel", r.Excel.ToInt64()), ("seq", r.Seq), ("recv", r.SignalAt), ("qs", r.QueryStart), ("qd", r.QueryDone), ("frame", frame),
                 ("ok", r.Response.Ok), ("code", r.Response.Code), ("hr", HResultNames.Name(r.Call.HResult)), ("retries", r.Call.Retries),
                 ("addr", r.Summary?.Addr), ("count", r.Summary?.Count), ("attach", r.Call.Attach));
-            if (r.Summary != null && !_summarySnapped) { _summarySnapped = true; Snap("dock_summary.png", _right.Root); }
+            // 측정 도구가 앱을 다시 켜도 첫 앱의 그림을 덮지 않는다.
+            if (r.Summary != null && !_summarySnapped) { _summarySnapped = true; if (_options.SnapshotDir != null && !System.IO.File.Exists(System.IO.Path.Combine(_options.SnapshotDir, "dock_summary.png"))) Snap("dock_summary.png", _right.Root); }
         });
     }
 

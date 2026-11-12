@@ -1,4 +1,4 @@
-// 기능: 접힌 패널의 손잡이(tab). 폭 28, 세로 글씨 제목 + 배지 하나, 마우스를 올리면 폭 36으로 늘어난다(docs/03 8장).
+// 기능: 접힌 패널의 손잡이(tab). 폭 28, 세로 글씨 제목(글자를 위에서 아래로 쌓음) + 배지 하나, 마우스를 올리면 폭 36으로 늘어난다(docs/03 8장).
 // 사용법: var t = new DockTab(); t.SetContent("선택", "12", "info"); t.Clicked += ...
 // 의존: Theme. 코드로만 만든다(작은 부품이라 XAML 없이).
 using System.Windows;
@@ -21,7 +21,9 @@ public sealed class DockTab : Border
         Cursor = Cursors.Hand;
         Loaded += (_, _) => ApplyTheme();
         var stack = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 8) };
-        _title.LayoutTransform = new RotateTransform(90);
+        _title.TextAlignment = TextAlignment.Center; // 한글 세로쓰기: 글자를 눕히지 않고 위에서 아래로 쌓는다(1단계 그림 확인)
+        _title.LineHeight = 15;
+        _title.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
         _title.HorizontalAlignment = HorizontalAlignment.Center;
         _badge.Child = _badgeText;
         _badge.Margin = new Thickness(0, 6, 0, 0);
@@ -40,7 +42,7 @@ public sealed class DockTab : Border
 
     public void SetContent(string title, string badge, string tone)
     {
-        _title.Text = title;
+        _title.Text = string.Join("\n", title.EnumerateRunes().Select(r => r.ToString()));
         _badgeText.Text = badge;
         _badge.Visibility = string.IsNullOrEmpty(badge) || badge == "-" ? Visibility.Collapsed : Visibility.Visible;
         if (IsLoaded) Tint(tone);
