@@ -1,5 +1,12 @@
 # 인수인계 (2026-11-12 갱신)
 
+## 2026-11-12 오후 칼퇴 레일 배포 묶음 (브랜치 `claude/h-pack-303-app-bundle`, 일#303, 사무실 PC office-host)
+- `tools\pack_app.ps1 -Version X.Y.ZZZ` → `out\pack\hunsu.zip`(self-contained win-x64 + 다리 추가기능 패키지 + `hunsu.app.json`), `.sha256`, `catalog-entry.json`(카탈로그 apps 항목 예시). 0.0.001로 62.3MB, 404파일.
+- 칼퇴 [끄기]가 보내는 `ClockOut.App.Quit`(Core/AppMessages)를 신호 창이 받아 끝낸다.
+- 칼퇴 쪽 설치 길은 칼퇴 저장소 일#205. 그 시험 도구(`tools\apptest`)로 이 묶음을 샌드박스에서 받기→해시→풀기→다리 설치→켜기→끄기까지 13개 통과.
+- **사용자 할 일**: 원하는 판으로 묶음을 만들어 `sbg3704/ClockOut-Catalog` Release `app-hunsu-<판>`에 올리고 `catalog.json`의 `apps`에 `catalog-entry.json` 내용을 더한다(Claude는 하지 않음).
+- 1단계 브랜치(`claude/h-frame-302-panel-dock`)와 `SignalWindow.cs`·`App.xaml.cs`가 겹친다. 1단계를 합칠 때 `AppMessages.Quit`을 ShellController의 끝내기로 옮긴다.
+
 ## 2026-11-12 0단계 연결 시험 (계정1, 사무실 PC office-host, 브랜치 `claude/h-stage0-301-connection-test`, 일#301)
 **결론: 0단계 구조가 실제 엑셀에서 동작하고 성능 예산 안이다.** PR을 열었고 머지는 사용자 몫.
 - 완료: `src/` 솔루션(앱 WPF, Core, Tests 22개), 오버레이(투명·클릭 통과·창 따라가기·최소화 숨김), 다리 최소판(`addins/clockout-hunsu`, CP949+CRLF), 전용 STA 스레드 + 메시지 필터, `tools/build.ps1`, `build_bridge.ps1`, `test_bridge.ps1`(COM 시험 17개 통과), `tools/bench`(측정 4번 모두 확인 항목 실패 0).
