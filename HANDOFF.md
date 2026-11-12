@@ -1,4 +1,12 @@
-# 인수인계 (2026-11-12 갱신)
+# 인수인계 (2026-11-12 밤 갱신)
+
+## 2026-11-12 밤 모듈 3종 + 모듈 관리자 + 떨림 고침 (브랜치 `claude/project-thread-8lvni7`, 클라우드 작업, **컴파일 안 함**)
+**결론: 코드는 다 썼지만 dotnet/엑셀이 없는 클라우드라서 한 번도 빌드·실행하지 못했다. PC에서 `tools\build.ps1` → 오류가 나면 고친 뒤 눈으로 확인해야 한다.** 바탕은 PR#6+#7 합본(`claude/h-merge-6-7-release`)에 main과 PR#9(떨림 문서)를 합친 것이다.
+- 설계와 스위치 표는 `docs/07_모듈_추가와_관리자.md`. 사용자 지시: "판단 없이 최대한 하고, 간단한 수정만으로 작동하게" → 열린 결정은 보수적으로 구현하고 `settings.json` 값 하나로 바꾸게 했다.
+- 된 것: 모듈 `hunsu-errors`/`hunsu-sheets`/`hunsu-flow`(선언만), 부품 `list`/`button`, 다리 조회 `errors`·`sheets`·`flow.neighbors`·명령 `goto`·`sheet.activate`·신호 change/sheet/book/calc(다리 0.0.011), 신호→켜진 모듈 주제만 조회, 모듈 관리자 창(켜기/끄기/자리/순서/초기화), 설정 파일, 조회 간격(떨림 고침 틀 쪽), `pack_app.ps1` zip 경로 `/` 고정.
+- 못 한 것/주의: ① 컴파일·시험 전(경고를 오류로 보는 설정이라 사소한 경고에도 빌드가 멈출 수 있음) ② VBA는 `tools\build_bridge.ps1`로 컴파일해야 알 수 있음 ③ 엑셀 부하·떨림이 실제로 나아졌는지 측정 안 함(`docs/06` 갱신 참고) ④ 새 모듈은 기본 꺼짐: 관리자에서 켜거나 `settings.json`의 `enabledByDefault`.
+- 다음 할 일: PC에서 빌드·시험 → 오류 수정 → `pwsh -File tools\build_bridge.ps1` → 훈수꾼 실행 후 알약 우클릭 "모듈 관리…" → 모듈 켜 보기 → 범위 끌기 떨림 재확인 → 필요하면 VBA 선택 요약을 워크시트 함수로.
+- 먼저 읽을 파일: `docs/07_모듈_추가와_관리자.md`, `src/ClockOut.Hunsu/Shell/ShellController.Modules.cs`, `src/ClockOut.Hunsu/Excel/InstanceRegistry.cs`.
 
 ## 2026-11-12 오후 1단계 틀의 뼈대 — 브랜치 `claude/h-frame-302-panel-dock`, 일#302, 사무실 PC office-host
 **결론: 도크·핀 창·배치 저장·끄기·단축키가 동작하고 성능 목표 안이다. PR을 열었고 머지는 사용자 몫.** (중간에 칼퇴 레일 설치 일#303/칼퇴 일#205를 먼저 했다)
