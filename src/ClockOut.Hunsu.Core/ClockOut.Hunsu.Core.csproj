@@ -1,0 +1,9 @@
+<!-- 기능: 화면과 엑셀 없이 시험되는 순수 계산(신호 번호, 재시도, 자리 계산, 응답 읽기, 측정 통계). -->
+<!-- 사용법: ClockOut.Hunsu(앱)와 tools/bench가 참조한다. Windows가 없어도 빌드·시험된다. -->
+<!-- 의존: 없음 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ClockOut.Hunsu.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

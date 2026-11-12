@@ -1,0 +1,16 @@
+<!-- 기능: 0단계 측정 도구. 보이지 않는 엑셀과 시험용 창으로 반응 시간, 따라가기 어긋남, 호출 거절을 잰다. -->
+<!-- 사용법: tools/bench/run_bench.ps1 (다리 xlam과 앱을 먼저 빌드) -->
+<!-- 의존: ClockOut.Hunsu.Core, 엑셀 데스크톱판(COM) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>ClockOut.Hunsu.Bench</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ClockOut.Hunsu.Core\ClockOut.Hunsu.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+# VBA 소스는 CP949 + CRLF 그대로 둔다(docs/02 9장). git이 줄바꿈이나 글자를 바꾸지 않게 한다.
+addins/**/*.bas -text diff
+addins/**/*.cls -text diff
+addins/**/ThisWorkbook_*.txt -text diff
+# 나머지 글은 UTF-8, 저장소 안에서는 LF
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.csproj text eol=crlf
+*.ps1 text eol=crlf

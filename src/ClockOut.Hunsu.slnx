@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ClockOut.Hunsu.Core/ClockOut.Hunsu.Core.csproj" />
+  <Project Path="ClockOut.Hunsu.Tests/ClockOut.Hunsu.Tests.csproj" />
+  <Project Path="ClockOut.Hunsu/ClockOut.Hunsu.csproj" />
+  <Project Path="../tools/bench/ClockOut.Hunsu.Bench/ClockOut.Hunsu.Bench.csproj" />
+</Solution>

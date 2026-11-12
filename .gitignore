@@ -1,0 +1,10 @@
+# 빌드 결과
+bin/
+obj/
+out/
+*.user
+.vs/
+TestResults/
+# 바이너리는 커밋하지 않고 Release로 올린다(docs/05 5장)
+*.xlam
+*.zip

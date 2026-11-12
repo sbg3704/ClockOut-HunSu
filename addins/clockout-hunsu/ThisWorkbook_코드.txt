@@ -1,0 +1,13 @@
+' 기능: 다리(.xlam)를 켤 때 이벤트 연결을 시작하고 닫을 때 끈다.
+' 사용법: 빌드(tools/build_bridge.ps1)가 ThisWorkbook 코드로 넣는다(ThisWorkbook은 .bas로 가져올 수 없어 텍스트로 둔다).
+' 의존: CoHunsuEntry
+
+Private Sub Workbook_Open()
+    On Error Resume Next
+    Application.OnTime Now, "'" & ThisWorkbook.Name & "'!CoHunsu_Start"
+End Sub
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+    On Error Resume Next
+    CoHunsu_Stop
+End Sub
