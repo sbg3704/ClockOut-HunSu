@@ -5,6 +5,7 @@
 - 된 것: Core(모듈 선언·view.json 읽기, `{주제.경로:형식}` 연결, 조건 한 줄, 도크 넘침 접기, 배치 저장, 핀 자리, 단축키 판단; 시험 60개), `ClockOut.Hunsu.Ui`(Theme 한 벌, 패널 틀, 세로 글씨 손잡이, stat·text·badge·divider, view.json 그리기), 앱(`Shell/ShellController` 중심: 왼·오 도크 창, 핀 창(미리 만들어 다시 씀), 배치 저장·복원, 알림 영역 아이콘·알약 우클릭 메뉴 [끄기], 단축키), 예제 모듈 `modules/hunsu-selection`, 측정 도구 확장. 그림 `docs/shots/stage1-dock.png`, `stage1-pin.png`.
 - 측정은 `docs/04` 1장 "1단계 확인 결과". 기능 확인은 모두 통과. 프레임 흔들림(움직임마다 25ms 넘는 간격 한두 번)은 원인 미확정.
 - **사용자에게 물은 것(추천대로 진행함)**: ① 화면 그리기 방식 — 1단계는 레이어드 창 유지, 2단계에서 DWM 합성과 비교(docs/01 3.7장 4번 아래). ② 투명도 단추 — 평소만 그 투명도, 마우스를 올리면 선명(docs/03 8장).
+- **예제 파일과 실행기(2026-11-12 사용자 요청)**: `pwsh -File toolsmake_example_xlsx.ps1` → `out훈수꾼_확인용.xlsx`(안내·매출·섞임·큰 표 시트, 보이지 않는 엑셀로 만들어 다리로 값 확인함). `pwsh -File tools	ry_hunsu.ps1`은 **사용자가 직접** 실행: 새 엑셀을 보이게 띄워 다리와 예제를 열고 훈수꾼을 켠다(다리는 그 엑셀 창에서만 열리고 추가기능 목록에 등록하지 않음). Claude는 실행하지 않는다.
 - **사용자가 눈으로 볼 것**: 엑셀을 켜고 `src\ClockOut.Hunsu\bin\Release\net10.0-windows\win-x64\ClockOut.Hunsu.exe`(또는 `dotnet build -c Release` 뒤) 실행 → 오른쪽에 "훈수꾼" 알약과 "선택 요약" 패널, 칸을 고르면 합계·평균, 제목줄 ◐(투명도)·핀(떼어 내기)·∧(접기), 떼어 낸 창은 Ctrl+Alt+H를 눌러야 옮길 수 있음, Ctrl+Alt+Shift+H 전부 숨김, 알림 영역 "훈" 아이콘 → 끄기. 다리를 켠 엑셀이어야 숫자가 나온다(칼퇴 레일 설치 또는 `tools\build_bridge.ps1` 결과를 엑셀에 추가).
 - 다음 할 일: 2단계(띠, 셀 위 표시층, 호출층, 배치 편집) 시작 전 DWM 합성 비교, 패널 크기 조절, 일#303(배포 묶음)과 `SignalWindow`/`App` 겹침 정리(`AppMessages.Quit`을 ShellController 끝내기로).
 - 주의: 측정 도구는 `--layout out\bench\layout.json`을 써서 사용자 배치 파일을 건드리지 않는다. 앱을 그냥 켜면 `%LOCALAPPDATA%\ClockOut\Hunsu\layout.json`에 저장한다.
