@@ -19,7 +19,7 @@
   <sys:Double x:Key="Hunsu.FontBody">13</sys:Double>
   <sys:Double x:Key="Hunsu.FontSmall">11.5</sys:Double>
   <FontFamily x:Key="Hunsu.Font">Malgun Gothic, Segoe UI</FontFamily>
-  <!-- 움직임: fast 120ms, base 200ms(패널 열고 닫기), slow 320ms -->
+  <!-- 움직임: fast 120ms(패널 열고 닫기 포함, 2026-11-12 결정), base 200ms, slow 320ms -->
   <Duration x:Key="Hunsu.Fast">0:0:0.120</Duration>
   <Duration x:Key="Hunsu.Base">0:0:0.200</Duration>
   <Duration x:Key="Hunsu.Slow">0:0:0.320</Duration>

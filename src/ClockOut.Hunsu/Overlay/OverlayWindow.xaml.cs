@@ -1,4 +1,4 @@
-// 기능: 오버레이 창의 동작. 선택 요약 넣기, 바쁨 표시(흐리게), 패널 열고 닫기(base 200ms), 다음 프레임 시각 알리기, PNG 저장.
+// 기능: 오버레이 창의 동작. 선택 요약 넣기, 바쁨 표시(흐리게), 패널 열고 닫기(fast 120ms), 다음 프레임 시각 알리기, PNG 저장.
 // 사용법: var w = new OverlayWindow(); w.Show(); w.ShowSummary(s); w.OpenPanel(t => ...); w.NextFrame(t => ...)
 // 의존: Theme/Theme.xaml, Core/SelectionSummary, Native/User32. 창은 활성화되지 않는다(WS_EX_NOACTIVATE) — 엑셀의 포커스를 뺏지 않는다.
 using System.Diagnostics;
@@ -54,7 +54,7 @@ public partial class OverlayWindow : Window
     {
         PanelOpen = true;
         Panel.Visibility = Visibility.Visible;
-        var dur = (Duration)FindResource("Hunsu.Base");
+        var dur = (Duration)FindResource("Hunsu.Fast");
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         var fade = new DoubleAnimation(1, dur) { EasingFunction = ease };
         fade.Completed += (_, _) => NextFrame(t => done?.Invoke(t));
