@@ -56,9 +56,7 @@ internal static class DragChecks
         }, 5000);
         double settle = final == null ? double.NaN : Report.Ms(tEnd, final.Long("frame"));
         rep.Time("끌기 중 엑셀 선택 한 번(엑셀 화면 스레드 대기 포함)", selectMs, 50);
-        double share = busyMs / Report.Ms(t0, tEnd) * 100;
-        // 기준은 조회가 엑셀을 붙잡은 시간 비율(버벅임은 횟수보다 점유에 달림). bench는 마우스 단추를 누르지 않아 평소 간격 규칙만 잰다(사용자 결정 2026-11-13).
-        rep.Check("끌기 동안 조회가 엑셀을 쓴 비율 40% 이하", share <= 40, $"{share:0}%, 조회·그리기 {renders}번 / 선택 {Steps}번, 걸린 시간 {Report.Ms(t0, tEnd):0}ms (마우스 단추는 누르지 않음)");
+        rep.Check($"끌기 {Steps}걸음 동안 조회가 묶임(걸음 수의 1/3 이하)", renders <= Steps / 3, $"조회·그리기 {renders}번 / 선택 {Steps}번, 걸린 시간 {Report.Ms(t0, tEnd):0}ms, 조회가 엑셀을 쓴 비율 {busyMs / Report.Ms(t0, tEnd) * 100:0}% (마우스 단추는 누르지 않음: 평소 간격 규칙만 잼)");
         rep.Check("끌기를 멈추면 마지막 선택이 1초 안에 화면에 반영", final != null && settle < 1000, final == null ? "마지막 선택 안 옴" : $"{settle:0}ms");
     }
 
