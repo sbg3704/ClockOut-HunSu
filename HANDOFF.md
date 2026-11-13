@@ -10,6 +10,13 @@
 - 다음 할 일: 2단계(띠, 셀 위 표시층, 호출층, 배치 편집) 시작 전 DWM 합성 비교, 패널 크기 조절, 일#303(배포 묶음)과 `SignalWindow`/`App` 겹침 정리(`AppMessages.Quit`을 ShellController 끝내기로).
 - 주의: 측정 도구는 `--layout out\bench\layout.json`을 써서 사용자 배치 파일을 건드리지 않는다. 앱을 그냥 켜면 `%LOCALAPPDATA%\ClockOut\Hunsu\layout.json`에 저장한다.
 
+## 2026-11-12 오후 칼퇴 레일 배포 묶음 (브랜치 `claude/h-pack-303-app-bundle`, 일#303, 사무실 PC office-host)
+- `tools\pack_app.ps1 -Version X.Y.ZZZ` → `out\pack\hunsu.zip`(self-contained win-x64 + 다리 추가기능 패키지 + `hunsu.app.json`), `.sha256`, `catalog-entry.json`(카탈로그 apps 항목 예시). 0.0.001로 62.3MB, 404파일.
+- 칼퇴 [끄기]가 보내는 `ClockOut.App.Quit`(Core/AppMessages)를 신호 창이 받아 끝낸다.
+- 칼퇴 쪽 설치 길은 칼퇴 저장소 일#205. 그 시험 도구(`tools\apptest`)로 이 묶음을 샌드박스에서 받기→해시→풀기→다리 설치→켜기→끄기까지 13개 통과.
+- **사용자 할 일**: 원하는 판으로 묶음을 만들어 `sbg3704/ClockOut-Catalog` Release `app-hunsu-<판>`에 올리고 `catalog.json`의 `apps`에 `catalog-entry.json` 내용을 더한다(Claude는 하지 않음).
+- 1단계 브랜치(`claude/h-frame-302-panel-dock`)와 `SignalWindow.cs`·`App.xaml.cs`가 겹친다. 1단계를 합칠 때 `AppMessages.Quit`을 ShellController의 끝내기로 옮긴다.
+
 ## 2026-11-12 0단계 연결 시험 (계정1, 사무실 PC office-host, 브랜치 `claude/h-stage0-301-connection-test`, 일#301)
 **결론: 0단계 구조가 실제 엑셀에서 동작하고 성능 예산 안이다.** PR을 열었고 머지는 사용자 몫.
 - 완료: `src/` 솔루션(앱 WPF, Core, Tests 22개), 오버레이(투명·클릭 통과·창 따라가기·최소화 숨김), 다리 최소판(`addins/clockout-hunsu`, CP949+CRLF), 전용 STA 스레드 + 메시지 필터, `tools/build.ps1`, `build_bridge.ps1`, `test_bridge.ps1`(COM 시험 17개 통과), `tools/bench`(측정 4번 모두 확인 항목 실패 0).
@@ -76,3 +83,10 @@
 
 ## 2026-11-12 오후 사용자 결정
 - 패널 열기 목표(입력→마지막 프레임 100ms)는 유지하고, 패널 열고 닫기 움직임을 `base` 200ms에서 `fast` 120ms로 줄였다(docs/03 6장, docs/04 1장). 코드는 `Hunsu.Fast`를 쓰게 바꿨다. **PC에서 다시 재야 한다**(클라우드에서는 빌드 못 함).
+
+## 2026-11-12 저녁 (사무실 PC 사용자 시험 결과, 코드 변경 없음)
+- 칼퇴 v0.1.121로 훈수꾼 0.0.001(레일 [받기]→[켜기]→엑셀 작동)까지 확인됐다. 설치 중 찾은 문제 2건:
+  1. `tools/pack_app.ps1`을 Windows PowerShell 5.1로 돌리면 zip 항목 이름이 역슬래시로 들어가 칼퇴가 "안전하지 않은 경로"로 거부한다. `pwsh`로 다시 묶어 해결(카탈로그 PR sbg3704/ClockOut-Catalog#34). 코드 고침은 아직 안 함.
+  2. **범위를 끌어 선택하면 패널이 떨리고 엑셀이 버벅인다.** 원인 추정과 고칠 방향은 `docs/06_알려진_문제_범위선택_떨림.md`. PC 측정으로 순서를 확인한 뒤 고친다.
+- 사용자 결정(2026-11-12): 배포 판이 아니므로 우선 **버그와 방향만 문서로 남기고** 코드는 나중에 고친다.
+- 주의: 이 PR은 HANDOFF.md 끝에만 덧붙인다. PR #6·#7도 HANDOFF.md를 바꾸므로 머지 순서에 따라 충돌이 날 수 있다(끝부분 덧붙임이라 손으로 풀기 쉽다).

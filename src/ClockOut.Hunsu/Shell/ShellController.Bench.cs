@@ -48,6 +48,7 @@ internal sealed partial class ShellController
                     ("code", call.ErrorCode), ("retries", call.Retries), ("reject", call.RejectType), ("ms", Math.Round(call.Ms, 2)), ("attach", call.Attach));
                 break;
             case BenchMessages.Quit:
+            case AppMessages.Quit:
                 Quit();
                 break;
         }
