@@ -35,7 +35,6 @@ internal sealed class InstanceRegistry : IDisposable
         public Dictionary<string, TopicState> Topics { get; } = new(StringComparer.Ordinal);
     }
 
-    private const int VK_LBUTTON = 0x01;
     private readonly Dictionary<IntPtr, Instance> _items = [];
     private readonly RunLog _log;
     private HunsuSettings _settings;
@@ -64,8 +63,8 @@ internal sealed class InstanceRegistry : IDisposable
     /// <summary>켜진 모듈이 구독한 모든 주제. 엑셀에서 처음 신호가 왔을 때 아직 한 번도 못 채운 주제들도 함께 채운다(예: 시트 목록).</summary>
     public Func<IReadOnlyList<string>> AllTopics { get; set; } = () => Array.Empty<string>();
 
-    /// <summary>마우스 왼쪽 단추가 눌려 있는가(범위 끌기 판단). 시험에서 바꿔 끼울 수 있다.</summary>
-    public Func<bool> MouseDown { get; set; } = () => (User32.GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    /// <summary>주 마우스 단추가 눌려 있는가(범위 끌기 판단, 왼손잡이 설정 반영). 시험에서 바꿔 끼울 수 있다.</summary>
+    public Func<bool> MouseDown { get; set; } = User32.PrimaryButtonDown;
 
     public int Count => _items.Count;
 

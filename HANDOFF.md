@@ -1,4 +1,11 @@
-# 인수인계 (2026-11-12 밤 갱신)
+# 인수인계 (2026-11-13 갱신)
+
+## 2026-11-13 떨림 고침 마무리 (브랜치 `claude/h-perf-305-on-pr10`, PR #10 위, 일#305)
+- 사용자 결정(2026-11-13): 고도화 첫 일은 범위 선택 떨림 버그, 같은 고침이 든 PR #10 위에 얹는다(내 PR #11은 닫음).
+- **PR #10은 클라우드(.NET 10.0.1xx, EnableWindowsTargeting)에서 컴파일되고 Core 시험 80개 통과**를 확인했다(앱·bench도 빌드 성공). 실행·엑셀 확인은 아직.
+- 더한 것: 다리 `selection.summary` 큰 영역은 워크시트 함수(다리 0.0.012), 흐림 서서히, 왼손잡이 단추, bench `DragChecks`. 자세히는 docs/06 끝.
+- 다음: PC에서 `tools\build.ps1` → `test_bridge.ps1` → `bench\run_bench.ps1`(큰 범위 끌기 포함). 사무실 PC의 보이지 않는 엑셀이 Office 첫 실행 "개인 정보" 안내창에 막혀 있었다(2026-11-13, 사용자가 닫아야 함).
+- 클라우드에서도 `apt-get install dotnet-sdk-10.0` 뒤 global.json 판만 임시로 바꾸면 Core 시험과 WPF 컴파일 확인이 된다(저장소의 global.json은 바꾸지 않는다).
 
 ## 2026-11-12 밤 모듈 3종 + 모듈 관리자 + 떨림 고침 (브랜치 `claude/project-thread-8lvni7`, 클라우드 작업, **컴파일 안 함**)
 **결론: 코드는 다 썼지만 dotnet/엑셀이 없는 클라우드라서 한 번도 빌드·실행하지 못했다. PC에서 `tools\build.ps1` → 오류가 나면 고친 뒤 눈으로 확인해야 한다.** 바탕은 PR#6+#7 합본(`claude/h-merge-6-7-release`)에 main과 PR#9(떨림 문서)를 합친 것이다.

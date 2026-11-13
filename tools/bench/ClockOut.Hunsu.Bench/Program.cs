@@ -69,6 +69,8 @@ internal static class Program
             Stage("바쁨 시험");
             ExcelChecks.Instances(rep, xl, app, Path.GetFullPath(xlam));
             Stage("엑셀 여러 개 시험");
+            DragChecks.Run(rep, xl, app);
+            Stage("큰 범위 끌기 시험");
             rep.Check("측정 중 앱이 죽지 않음", app.Alive);
         }
         catch (Exception ex)
