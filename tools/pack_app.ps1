@@ -6,7 +6,7 @@
         addins\clockout-hunsu.zip      다리 추가기능 패키지(clockout-hunsu.xlam + clockout-hunsu.clockout.json). 칼퇴가 기존 추가기능 흐름으로 설치
         LICENSE.txt, README.txt
       끝나면 SHA-256과 크기, 카탈로그 apps 항목 예시를 출력한다(out\pack\hunsu.zip, .sha256, catalog-entry.json).
-사용법: pwsh -File tools\pack_app.ps1 -Version 0.1.000 [-SkipBridge]
+사용법: pwsh -File tools\pack_app.ps1 -Version 0.1.000 [-SkipBridge]   (Windows PowerShell 5.1로 돌려도 같은 zip이 나온다)
         -SkipBridge: 엑셀 없이(이미 만든 out\clockout-hunsu.xlam을 그대로 씀)
 의존: .NET 10 SDK, tools\build_bridge.ps1(엑셀 데스크톱판). 공개 Release·카탈로그 수정은 하지 않는다(사용자가 직접).
 #>
@@ -54,7 +54,19 @@ Copy-Item (Join-Path $repo 'LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
 Write-Host "== 4) zip과 SHA-256"
 $zip = Join-Path $out 'hunsu.zip'
 Remove-Item $zip -ErrorAction SilentlyContinue
-[IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
+# CreateFromDirectory는 Windows PowerShell 5.1(.NET Framework)에서 항목 이름을 역슬래시(app\x.dll)로 넣어
+# 칼퇴가 "안전하지 않은 경로"로 거부한다(docs/06, 2026-11-12). 항목 이름을 직접 '/'로 만들어 어떤 PowerShell에서도 같게 한다.
+$stageFull = (Resolve-Path $stage).Path.TrimEnd('\') + '\'
+$zz = [IO.Compression.ZipFile]::Open($zip, 'Create')
+try {
+    foreach ($f in Get-ChildItem $stage -Recurse -File) {
+        $name = $f.FullName.Substring($stageFull.Length).Replace('\', '/')
+        [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zz, $f.FullName, $name, [IO.Compression.CompressionLevel]::Optimal)
+    }
+} finally { $zz.Dispose() }
+$za = [IO.Compression.ZipFile]::OpenRead($zip)
+try { $badNames = @($za.Entries | Where-Object { $_.FullName.Contains('\') }).Count } finally { $za.Dispose() }
+if ($badNames -gt 0) { Write-Host "[중단] zip 항목 이름에 역슬래시가 $badNames 개 있습니다." -ForegroundColor Red; exit 1 }
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $size = (Get-Item $zip).Length
 "$sha  hunsu.zip" | Set-Content -Encoding ascii (Join-Path $out 'hunsu.zip.sha256')

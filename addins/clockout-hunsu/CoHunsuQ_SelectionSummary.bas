@@ -3,11 +3,14 @@ Attribute VB_Name = "CoHunsuQ_SelectionSummary"
 ' 기능: 조회 selection.summary. 지금 선택의 주소, 개수, 합, 평균, 최소, 최대, 오류 수, 종류별 수(docs/02 5장).
 ' 사용법: CoHunsu_Query "selection.summary", "{}"
 ' 의존: CoHunsuJson. 읽기 전용: 선택, 활성 시트, 엑셀 설정을 바꾸지 않는다(docs/04 3장).
-'       큰 선택은 사용 범위(UsedRange)와 겹치는 곳만 배열로 한 번에 읽는다. 그래도 100만 칸이 넘으면 워크시트 함수로 세고 truncated:true.
+'       사용 범위(UsedRange)와 겹치는 곳만 본다. 영역이 1만 칸 이하면 배열로 한 번에 읽어 VBA로 세고,
+'       그보다 크면 워크시트 함수(Count, CountBlank, AGGREGATE)와 SpecialCells로 센다(VBA 칸 돌기는 큰 범위에서 수 초 걸림, docs/06).
+'       겹치는 곳이 100만 칸을 넘으면 수식 수 세기를 건너뛰고 truncated:true.
 '==============================================================
 Option Explicit
 
-Private Const CELL_LIMIT As Double = 1000000#
+Private Const CELL_LIMIT As Double = 1000000#  ' 이보다 크면 수식 수 세기 생략(truncated)
+Private Const LOOP_LIMIT As Double = 10000#     ' 영역이 이보다 크면 VBA로 돌지 않고 워크시트 함수로 센다
 
 Private mNum As Double, mText As Double, mErr As Double, mNonEmpty As Double
 Private mSum As Double, mMin As Double, mMax As Double
@@ -26,15 +29,15 @@ Public Function Query_SelectionSummary(ByVal argsJson As String) As String
     mNum = 0: mText = 0: mErr = 0: mNonEmpty = 0: mSum = 0: mMin = 0: mMax = 0
     Set used = Application.Intersect(sel, ws.UsedRange)
     If Not used Is Nothing Then
-        If used.CountLarge > CELL_LIMIT Then
-            truncated = True
-            CountByFunctions used
-        Else
-            For Each area In used.Areas
+        truncated = used.CountLarge > CELL_LIMIT
+        For Each area In used.Areas
+            If area.CountLarge > LOOP_LIMIT Then
+                CountByFunctions area
+            Else
                 CountValues area.Value2
-                formulas = formulas + CountFormulas(area)
-            Next area
-        End If
+            End If
+            If Not truncated Then formulas = formulas + CountFormulas(area)
+        Next area
     End If
     Query_SelectionSummary = CoHunsuJson_Ok(BuildData(sel, ws, totalCells, formulas, truncated))
     Exit Function
@@ -90,19 +93,49 @@ Private Function CountFormulas(ByVal area As Range) As Double
     Err.Clear
 End Function
 
-Private Sub CountByFunctions(ByVal used As Range)
+' 큰 영역 하나(한 덩어리)를 워크시트 함수로 센다. 합·최소·최대는 오류 칸을 건너뛰는 AGGREGATE(9, 5, 4, 옵션 6)로.
+' 글자 수 = 빈 칸 아닌 것 - 숫자 - 오류. 배열로 셀 때처럼 ""(빈 글자)는 빈 칸으로 본다(CountBlank).
+Private Sub CountByFunctions(ByVal area As Range)
+    Dim n As Double, s As Double, lo As Double, hi As Double, filled As Double, errs As Double
     On Error Resume Next
     With Application.WorksheetFunction
-        mNum = .Count(used)
-        mNonEmpty = .CountA(used)
-        If mNum > 0 Then
-            mSum = .Sum(used)
-            mMin = .Min(used)
-            mMax = .Max(used)
+        n = .Count(area)
+        filled = area.CountLarge - .CountBlank(area)
+        If n > 0 Then
+            s = .Aggregate(9, 6, area)
+            lo = .Aggregate(5, 6, area)
+            hi = .Aggregate(4, 6, area)
         End If
     End With
-    mText = mNonEmpty - mNum
+    errs = CountErrors(area)
+    On Error GoTo 0
+    If n > 0 Then
+        If mNum = 0 Then
+            mMin = lo: mMax = hi
+        Else
+            If lo < mMin Then mMin = lo
+            If hi > mMax Then mMax = hi
+        End If
+        mNum = mNum + n
+        mSum = mSum + s
+    End If
+    mErr = mErr + errs
+    mNonEmpty = mNonEmpty + filled
+    If filled - n - errs > 0 Then mText = mText + (filled - n - errs)
 End Sub
+
+' 오류 값(#N/A 등)이 든 칸 수: 수식 결과 오류 + 직접 입력한 오류. 없으면 SpecialCells가 오류를 내므로 0으로 본다.
+Private Function CountErrors(ByVal area As Range) As Double
+    Dim found As Range
+    On Error Resume Next
+    Set found = area.SpecialCells(xlCellTypeFormulas, xlErrors)
+    If Err.Number = 0 And Not found Is Nothing Then CountErrors = found.CountLarge
+    Err.Clear
+    Set found = Nothing
+    Set found = area.SpecialCells(xlCellTypeConstants, xlErrors)
+    If Err.Number = 0 And Not found Is Nothing Then CountErrors = CountErrors + found.CountLarge
+    Err.Clear
+End Function
 
 Private Function BuildData(ByVal sel As Range, ByVal ws As Worksheet, ByVal totalCells As Double, ByVal formulas As Double, ByVal truncated As Boolean) As String
     Dim nums As String

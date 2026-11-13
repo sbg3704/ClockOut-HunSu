@@ -112,6 +112,17 @@ internal static class User32
     public static void ApplyStyleChange(IntPtr hwnd) =>
         SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 
+    [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vk);
+    [DllImport("user32.dll")] public static extern int GetSystemMetrics(int index);
+    public const int VK_LBUTTON = 0x01, VK_RBUTTON = 0x02, SM_SWAPBUTTON = 23;
+
+    /// <summary>주 마우스 단추(왼손잡이 설정이면 오른쪽)가 지금 눌려 있나. 범위를 끄는 중인지 볼 때 쓴다.</summary>
+    public static bool PrimaryButtonDown()
+    {
+        int vk = GetSystemMetrics(SM_SWAPBUTTON) != 0 ? VK_RBUTTON : VK_LBUTTON;
+        return (GetAsyncKeyState(vk) & 0x8000) != 0;
+    }
+
     public static Core.PixelRect WindowBounds(IntPtr hwnd) =>
         GetWindowRect(hwnd, out var r) ? Core.PixelRect.FromLtrb(r.Left, r.Top, r.Right, r.Bottom) : default;
 }

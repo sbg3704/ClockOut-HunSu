@@ -63,8 +63,20 @@ internal sealed class ModuleView
         Refresh();
     }
 
-    /// <summary>엑셀이 바쁘거나 조회가 실패하면 마지막 내용을 흐리게 둔다(docs/04 6장).</summary>
-    public void SetStale(bool stale) => _renderer.Root.Opacity = stale ? 0.5 : 1.0;
+    private bool _stale;
+
+    /// <summary>
+    /// 엑셀이 바쁘거나 조회가 실패하면 마지막 내용을 흐리게 둔다(docs/04 6장). 같은 상태면 아무것도 안 하고,
+    /// 바뀔 때는 fast(120ms)로 천천히 바꿔 깜빡임처럼 보이지 않게 한다(docs/06, 일#304).
+    /// </summary>
+    public void SetStale(bool stale)
+    {
+        if (_stale == stale) return;
+        _stale = stale;
+        var root = _renderer.Root;
+        var dur = ThemeKeys.Get<Duration>(Frame, ThemeKeys.Fast);
+        root.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(stale ? 0.5 : 1.0, dur) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+    }
 
     private void Refresh()
     {

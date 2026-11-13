@@ -75,6 +75,19 @@ internal sealed class HiddenExcel : IDisposable
 
     public void Select(string addr) => Call(Get(_sheet!, "Range", addr)!, "Select");
 
+    /// <summary>끌기 시험용 큰 표: N열부터 cols열 × rows행(숫자, 열마다 글자 몇 개, 오류 몇 개). 작은 표(A1:J20)와 겹치지 않는다.</summary>
+    public void FillBig(int rows, int cols)
+    {
+        var data = new object[rows, cols];
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                data[r, c] = r % 97 == 0 ? "글" + r : (object)(r * 0.5 + c);
+        var start = Get(_sheet!, "Range", "N1")!;
+        var range = Get(start, "Resize", rows, cols)!;
+        Set(range, "Value2", data);
+        Set(Get(_sheet!, "Range", "N2")!, "Formula", "=NA()");
+    }
+
     public object? Run(string macro, params object[] args)
     {
         var all = new object[args.Length + 1];

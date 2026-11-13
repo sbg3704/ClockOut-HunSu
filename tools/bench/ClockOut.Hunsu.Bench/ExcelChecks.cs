@@ -88,13 +88,13 @@ internal static class ExcelChecks
             }
             Thread.Sleep(100);
         }
-        // 2) 매크로 안에서 칸을 고르고 600ms 바쁨: 신호는 오지만 조회는 기다린다 → 앱이 250ms 뒤 "바쁨"으로 흐리게, 끝나면 갱신.
+        // 2) 매크로 안에서 칸을 고르고 1200ms 바쁨: 신호는 오지만 조회는 기다린다 → 앱이 600ms(SlowCallMs) 뒤 "바쁨"으로 흐리게, 끝나면 갱신.
         app.Drain();
         long s0 = Stopwatch.GetTimestamp();
-        xl.Run("BenchBusy.HunsuBenchSelectBusy", "G7", 600);
-        var slow = app.WaitFor(l => l.Name == "query_slow", 2000);
+        xl.Run("BenchBusy.HunsuBenchSelectBusy", "G7", 1200);
+        var slow = app.WaitFor(l => l.Name == "query_slow", 2500);
         var done = app.WaitFor(l => l.Name == "render", 3000);
-        rep.Check("바쁜 엑셀: 250ms 뒤 '바쁨' 표시, 끝나면 바로 갱신", slow != null && done != null && done.Get("ok") == "True" && SameAddress(done.Get("addr"), "G7"),
+        rep.Check("바쁜 엑셀: 600ms 뒤 '바쁨' 표시, 끝나면 바로 갱신", slow != null && done != null && done.Get("ok") == "True" && SameAddress(done.Get("addr"), "G7"),
             slow == null ? "바쁨 표시 없음" : $"바쁨 표시 {Report.Ms(s0, slow.Long("at")):0}ms, 갱신 {(done == null ? "없음" : Report.Ms(s0, done.Long("frame")).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "ms")}");
     }
 
