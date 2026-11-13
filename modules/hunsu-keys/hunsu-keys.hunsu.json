@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-keys",
+  "name": "단축키 표",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "참고",
+  "author": "ClockOut",
+  "description": "훈수꾼과 엑셀의 자주 쓰는 단축키를 모아 보여 줍니다. 엑셀에 묻지 않으므로 다리가 필요 없습니다.",
+  "dependencies": [],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 900,
+  "data": [],
+  "commands": [],
+  "scope": "selection",
+  "params": []
+}

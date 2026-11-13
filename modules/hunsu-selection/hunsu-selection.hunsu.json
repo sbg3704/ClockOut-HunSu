@@ -1,0 +1,22 @@
+{
+  "spec": 0,
+  "id": "hunsu-selection",
+  "name": "선택 요약",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "상태",
+  "author": "ClockOut",
+  "description": "고른 칸의 합계, 평균, 개수를 큰 숫자로 보여 줍니다. 칸을 고를 때마다 바로 바뀝니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.001", "reason": "선택 요약 조회(selection.summary)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 100,
+  "data": [
+    {"topic": "selection.summary", "on": ["sel"], "weight": "light"}
+  ],
+  "commands": [],
+  "scope": "selection",
+  "params": []
+}

@@ -1,11 +1,22 @@
-# 인수인계 (2026-11-12 갱신)
+# 인수인계 (2026-11-12 밤 갱신)
 
-## 2026-11-12 오후 칼퇴 레일 배포 묶음 (브랜치 `claude/h-pack-303-app-bundle`, 일#303, 사무실 PC office-host)
-- `tools\pack_app.ps1 -Version X.Y.ZZZ` → `out\pack\hunsu.zip`(self-contained win-x64 + 다리 추가기능 패키지 + `hunsu.app.json`), `.sha256`, `catalog-entry.json`(카탈로그 apps 항목 예시). 0.0.001로 62.3MB, 404파일.
-- 칼퇴 [끄기]가 보내는 `ClockOut.App.Quit`(Core/AppMessages)를 신호 창이 받아 끝낸다.
-- 칼퇴 쪽 설치 길은 칼퇴 저장소 일#205. 그 시험 도구(`tools\apptest`)로 이 묶음을 샌드박스에서 받기→해시→풀기→다리 설치→켜기→끄기까지 13개 통과.
-- **사용자 할 일**: 원하는 판으로 묶음을 만들어 `sbg3704/ClockOut-Catalog` Release `app-hunsu-<판>`에 올리고 `catalog.json`의 `apps`에 `catalog-entry.json` 내용을 더한다(Claude는 하지 않음).
-- 1단계 브랜치(`claude/h-frame-302-panel-dock`)와 `SignalWindow.cs`·`App.xaml.cs`가 겹친다. 1단계를 합칠 때 `AppMessages.Quit`을 ShellController의 끝내기로 옮긴다.
+## 2026-11-12 밤 모듈 3종 + 모듈 관리자 + 떨림 고침 (브랜치 `claude/project-thread-8lvni7`, 클라우드 작업, **컴파일 안 함**)
+**결론: 코드는 다 썼지만 dotnet/엑셀이 없는 클라우드라서 한 번도 빌드·실행하지 못했다. PC에서 `tools\build.ps1` → 오류가 나면 고친 뒤 눈으로 확인해야 한다.** 바탕은 PR#6+#7 합본(`claude/h-merge-6-7-release`)에 main과 PR#9(떨림 문서)를 합친 것이다.
+- 설계와 스위치 표는 `docs/07_모듈_추가와_관리자.md`. 사용자 지시: "판단 없이 최대한 하고, 간단한 수정만으로 작동하게" → 열린 결정은 보수적으로 구현하고 `settings.json` 값 하나로 바꾸게 했다.
+- 된 것: 모듈 `hunsu-errors`/`hunsu-sheets`/`hunsu-flow`(선언만), 부품 `list`/`button`, 다리 조회 `errors`·`sheets`·`flow.neighbors`·명령 `goto`·`sheet.activate`·신호 change/sheet/book/calc(다리 0.0.011), 신호→켜진 모듈 주제만 조회, 모듈 관리자 창(켜기/끄기/자리/순서/초기화), 설정 파일, 조회 간격(떨림 고침 틀 쪽), `pack_app.ps1` zip 경로 `/` 고정.
+- 못 한 것/주의: ① 컴파일·시험 전(경고를 오류로 보는 설정이라 사소한 경고에도 빌드가 멈출 수 있음) ② VBA는 `tools\build_bridge.ps1`로 컴파일해야 알 수 있음 ③ 엑셀 부하·떨림이 실제로 나아졌는지 측정 안 함(`docs/06` 갱신 참고) ④ 새 모듈은 기본 꺼짐: 관리자에서 켜거나 `settings.json`의 `enabledByDefault`.
+- 다음 할 일: PC에서 빌드·시험 → 오류 수정 → `pwsh -File tools\build_bridge.ps1` → 훈수꾼 실행 후 알약 우클릭 "모듈 관리…" → 모듈 켜 보기 → 범위 끌기 떨림 재확인 → 필요하면 VBA 선택 요약을 워크시트 함수로.
+- 먼저 읽을 파일: `docs/07_모듈_추가와_관리자.md`, `src/ClockOut.Hunsu/Shell/ShellController.Modules.cs`, `src/ClockOut.Hunsu/Excel/InstanceRegistry.cs`.
+
+## 2026-11-12 오후 1단계 틀의 뼈대 — 브랜치 `claude/h-frame-302-panel-dock`, 일#302, 사무실 PC office-host
+**결론: 도크·핀 창·배치 저장·끄기·단축키가 동작하고 성능 목표 안이다. PR을 열었고 머지는 사용자 몫.** (중간에 칼퇴 레일 설치 일#303/칼퇴 일#205를 먼저 했다)
+- 된 것: Core(모듈 선언·view.json 읽기, `{주제.경로:형식}` 연결, 조건 한 줄, 도크 넘침 접기, 배치 저장, 핀 자리, 단축키 판단; 시험 60개), `ClockOut.Hunsu.Ui`(Theme 한 벌, 패널 틀, 세로 글씨 손잡이, stat·text·badge·divider, view.json 그리기), 앱(`Shell/ShellController` 중심: 왼·오 도크 창, 핀 창(미리 만들어 다시 씀), 배치 저장·복원, 알림 영역 아이콘·알약 우클릭 메뉴 [끄기], 단축키), 예제 모듈 `modules/hunsu-selection`, 측정 도구 확장. 그림 `docs/shots/stage1-dock.png`, `stage1-pin.png`.
+- 측정은 `docs/04` 1장 "1단계 확인 결과". 기능 확인은 모두 통과. 프레임 흔들림(움직임마다 25ms 넘는 간격 한두 번)은 원인 미확정.
+- **사용자에게 물은 것(추천대로 진행함)**: ① 화면 그리기 방식 — 1단계는 레이어드 창 유지, 2단계에서 DWM 합성과 비교(docs/01 3.7장 4번 아래). ② 투명도 단추 — 평소만 그 투명도, 마우스를 올리면 선명(docs/03 8장).
+- **예제 파일과 실행기(2026-11-12 사용자 요청)**: `pwsh -File tools\make_example_xlsx.ps1` → `out\훈수꾼_확인용.xlsx`(안내·매출·섞임·큰 표 시트, 보이지 않는 엑셀로 만들어 다리로 값 확인함). `pwsh -File tools\try_hunsu.ps1`은 **사용자가 직접** 실행: 새 엑셀을 보이게 띄워 다리와 예제를 열고 훈수꾼을 켠다(다리는 그 엑셀 창에서만 열리고 추가기능 목록에 등록하지 않음). Claude는 실행하지 않는다.
+- **사용자가 눈으로 볼 것**: 엑셀을 켜고 `src\ClockOut.Hunsu\bin\Release\net10.0-windows\win-x64\ClockOut.Hunsu.exe`(또는 `dotnet build -c Release` 뒤) 실행 → 오른쪽에 "훈수꾼" 알약과 "선택 요약" 패널, 칸을 고르면 합계·평균, 제목줄 ◐(투명도)·핀(떼어 내기)·∧(접기), 떼어 낸 창은 Ctrl+Alt+H를 눌러야 옮길 수 있음, Ctrl+Alt+Shift+H 전부 숨김, 알림 영역 "훈" 아이콘 → 끄기. 다리를 켠 엑셀이어야 숫자가 나온다(칼퇴 레일 설치 또는 `tools\build_bridge.ps1` 결과를 엑셀에 추가).
+- 다음 할 일: 2단계(띠, 셀 위 표시층, 호출층, 배치 편집) 시작 전 DWM 합성 비교, 패널 크기 조절, 일#303(배포 묶음)과 `SignalWindow`/`App` 겹침 정리(`AppMessages.Quit`을 ShellController 끝내기로).
+- 주의: 측정 도구는 `--layout out\bench\layout.json`을 써서 사용자 배치 파일을 건드리지 않는다. 앱을 그냥 켜면 `%LOCALAPPDATA%\ClockOut\Hunsu\layout.json`에 저장한다.
 
 ## 2026-11-12 0단계 연결 시험 (계정1, 사무실 PC office-host, 브랜치 `claude/h-stage0-301-connection-test`, 일#301)
 **결론: 0단계 구조가 실제 엑셀에서 동작하고 성능 예산 안이다.** PR을 열었고 머지는 사용자 몫.
@@ -73,3 +84,10 @@
 
 ## 2026-11-12 오후 사용자 결정
 - 패널 열기 목표(입력→마지막 프레임 100ms)는 유지하고, 패널 열고 닫기 움직임을 `base` 200ms에서 `fast` 120ms로 줄였다(docs/03 6장, docs/04 1장). 코드는 `Hunsu.Fast`를 쓰게 바꿨다. **PC에서 다시 재야 한다**(클라우드에서는 빌드 못 함).
+
+## 2026-11-12 저녁 (사무실 PC 사용자 시험 결과, 코드 변경 없음)
+- 칼퇴 v0.1.121로 훈수꾼 0.0.001(레일 [받기]→[켜기]→엑셀 작동)까지 확인됐다. 설치 중 찾은 문제 2건:
+  1. `tools/pack_app.ps1`을 Windows PowerShell 5.1로 돌리면 zip 항목 이름이 역슬래시로 들어가 칼퇴가 "안전하지 않은 경로"로 거부한다. `pwsh`로 다시 묶어 해결(카탈로그 PR sbg3704/ClockOut-Catalog#34). 코드 고침은 아직 안 함.
+  2. **범위를 끌어 선택하면 패널이 떨리고 엑셀이 버벅인다.** 원인 추정과 고칠 방향은 `docs/06_알려진_문제_범위선택_떨림.md`. PC 측정으로 순서를 확인한 뒤 고친다.
+- 사용자 결정(2026-11-12): 배포 판이 아니므로 우선 **버그와 방향만 문서로 남기고** 코드는 나중에 고친다.
+- 주의: 이 PR은 HANDOFF.md 끝에만 덧붙인다. PR #6·#7도 HANDOFF.md를 바꾸므로 머지 순서에 따라 충돌이 날 수 있다(끝부분 덧붙임이라 손으로 풀기 쉽다).

@@ -24,8 +24,7 @@ internal sealed class SignalWindow : IDisposable
         _log = log;
         _proc = WndProc;
         _signalMsg = User32.RegisterWindowMessage(SignalCodec.MessageName);
-        // 칼퇴 [끄기](AppMessages.Quit)도 같은 길로 받는다.
-        foreach (var name in new[] { BenchMessages.OpenPanel, BenchMessages.ClosePanel, BenchMessages.Probe, BenchMessages.Quit, AppMessages.Quit })
+        foreach (var name in BenchMessages.All.Append(AppMessages.Quit))
             _benchMsgs[User32.RegisterWindowMessage(name)] = name;
 
         var wc = new User32.WNDCLASSEX
@@ -49,6 +48,9 @@ internal sealed class SignalWindow : IDisposable
     /// <summary>다리 신호: 엑셀 창 핸들, 신호 번호, 순번, 받은 시각(Stopwatch 눈금).</summary>
     public event Action<IntPtr, int, int, long>? Signal;
 
+    /// <summary>전역 단축키(WM_HOTKEY): 등록 번호(Shell/HotkeyService).</summary>
+    public event Action<int>? Hotkey;
+
     /// <summary>측정 도구 메시지: 이름, wParam, lParam, 받은 시각.</summary>
     public event Action<string, IntPtr, IntPtr, long>? Bench;
 
@@ -59,6 +61,11 @@ internal sealed class SignalWindow : IDisposable
             long at = Stopwatch.GetTimestamp();
             var (code, seq) = SignalCodec.Decode(lParam.ToInt64());
             Signal?.Invoke(wParam, code, seq, at);
+            return IntPtr.Zero;
+        }
+        if (msg == User32.WM_HOTKEY)
+        {
+            Hotkey?.Invoke(wParam.ToInt32());
             return IntPtr.Zero;
         }
         if (_benchMsgs.TryGetValue(msg, out var name))

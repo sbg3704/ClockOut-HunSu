@@ -1,0 +1,86 @@
+<!-- 기능: 디자인 값 한 벌(docs/03 어두운 테마). 색, 글꼴, 크기, 간격, 모서리, 그림자, 움직임 시간. 화면 파일은 값을 직접 쓰지 않고 여기서 가져온다. -->
+<!-- 사용법: 앱 App.xaml이 /ClockOut.Hunsu.Ui;component/Theme/Theme.xaml 로 합친다. {StaticResource Hunsu.Glass} 처럼 쓴다. 톤 색은 ThemeKeys.Tone(...)으로. -->
+<!-- 의존: 없음. 밝은 테마는 같은 이름으로 다른 파일을 두어 바꿔 끼운다(나중 단계). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <!-- 색: docs/03 3장 -->
+  <Color x:Key="Hunsu.GlassColor">#EB111B29</Color>
+  <SolidColorBrush x:Key="Hunsu.Glass" Color="{StaticResource Hunsu.GlassColor}" />
+  <SolidColorBrush x:Key="Hunsu.Surface" Color="#111B29" />
+  <SolidColorBrush x:Key="Hunsu.GlassAlt" Color="#0FFFFFFF" />
+  <SolidColorBrush x:Key="Hunsu.GlassHover" Color="#1AFFFFFF" />
+  <SolidColorBrush x:Key="Hunsu.Line" Color="#24FFFFFF" />
+  <SolidColorBrush x:Key="Hunsu.Text" Color="#E9F1F7" />
+  <SolidColorBrush x:Key="Hunsu.Muted" Color="#9FB1C2" />
+  <SolidColorBrush x:Key="Hunsu.Accent" Color="#5FD4E6" />
+  <SolidColorBrush x:Key="Hunsu.AccentInk" Color="#0B1520" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Info" Color="#5FD4E6" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Good" Color="#6FCF97" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Warn" Color="#FFB26B" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Bad" Color="#FF7A70" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Muted" Color="#9FB1C2" />
+
+  <!-- 글꼴과 크기: docs/03 4장(Pretendard, SUIT, IBM Plex Sans KR이 없으면 맑은 고딕) -->
+  <FontFamily x:Key="Hunsu.Font">Pretendard, Malgun Gothic, Segoe UI</FontFamily>
+  <FontFamily x:Key="Hunsu.FontTitle">SUIT, Pretendard, Malgun Gothic, Segoe UI</FontFamily>
+  <FontFamily x:Key="Hunsu.FontNumber">IBM Plex Sans KR, Segoe UI, Malgun Gothic</FontFamily>
+  <FontFamily x:Key="Hunsu.FontIcon">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+  <sys:Double x:Key="Hunsu.FontCaption">11</sys:Double>
+  <sys:Double x:Key="Hunsu.FontSmall">12</sys:Double>
+  <sys:Double x:Key="Hunsu.FontBody">13</sys:Double>
+  <sys:Double x:Key="Hunsu.FontTitleSize">15</sys:Double>
+  <sys:Double x:Key="Hunsu.FontStat">28</sys:Double>
+
+  <!-- 간격, 모서리, 크기: docs/03 5장, 7장, 8장 -->
+  <Thickness x:Key="Hunsu.PanelPadding">12,4,12,12</Thickness>
+  <CornerRadius x:Key="Hunsu.PanelRadius">12</CornerRadius>
+  <CornerRadius x:Key="Hunsu.RowRadius">8</CornerRadius>
+  <CornerRadius x:Key="Hunsu.PillRadius">999</CornerRadius>
+  <sys:Double x:Key="Hunsu.TitleBarHeight">36</sys:Double>
+  <sys:Double x:Key="Hunsu.HitSize">28</sys:Double>
+  <sys:Double x:Key="Hunsu.PanelWidth">240</sys:Double>
+  <sys:Double x:Key="Hunsu.TabWidth">28</sys:Double>
+  <sys:Double x:Key="Hunsu.TabWidthHover">36</sys:Double>
+  <sys:Double x:Key="Hunsu.WindowMinWidth">320</sys:Double>
+  <sys:Double x:Key="Hunsu.WindowMinHeight">200</sys:Double>
+  <sys:Double x:Key="Hunsu.Gap">8</sys:Double>
+  <!-- 그림자: 창 크기를 늘리지 않도록 창 안쪽 여백(ShadowMargin)에 그린다 -->
+  <Thickness x:Key="Hunsu.ShadowMargin">12</Thickness>
+  <DropShadowEffect x:Key="Hunsu.Shadow1" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.35" Color="#000000" RenderingBias="Performance" />
+  <DropShadowEffect x:Key="Hunsu.Shadow2" BlurRadius="22" ShadowDepth="4" Direction="270" Opacity="0.45" Color="#000000" RenderingBias="Performance" />
+
+  <!-- 움직임: fast 120ms(패널 열고 닫기, 올림, 눌림), base 200ms(행 나타남), slow 320ms -->
+  <Duration x:Key="Hunsu.Fast">0:0:0.120</Duration>
+  <Duration x:Key="Hunsu.Base">0:0:0.200</Duration>
+  <Duration x:Key="Hunsu.Slow">0:0:0.320</Duration>
+
+  <!-- 작은 단추(제목줄의 핀, 접기, 투명도): 눌림 영역 28×28, 올리면 GlassHover -->
+  <Style x:Key="Hunsu.IconButton" TargetType="Button">
+    <Setter Property="Width" Value="{StaticResource Hunsu.HitSize}" />
+    <Setter Property="Height" Value="{StaticResource Hunsu.HitSize}" />
+    <Setter Property="Foreground" Value="{StaticResource Hunsu.Muted}" />
+    <Setter Property="FontFamily" Value="{StaticResource Hunsu.FontIcon}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bg" Background="Transparent" CornerRadius="{StaticResource Hunsu.RowRadius}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Bg" Property="Background" Value="{StaticResource Hunsu.GlassHover}" />
+              <Setter Property="Foreground" Value="{StaticResource Hunsu.Text}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Bg" Property="Background" Value="{StaticResource Hunsu.Line}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+</ResourceDictionary>

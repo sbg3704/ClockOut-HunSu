@@ -1,0 +1,13 @@
+{
+  "tab": { "title": "점검", "badge": "{book.audit.hidden:n0}", "tone": "warn" },
+  "panel": [
+    { "type": "stat", "value": "{book.audit.hidden:n0}", "label": "숨은 시트", "tone": "warn", "showWhen": "book.audit.hidden > 0" },
+    { "type": "stat", "value": "0", "label": "숨은 시트", "tone": "good", "showWhen": "book.audit.hidden == 0" },
+    { "type": "list", "items": "book.audit.hiddenList", "text": "{item.name}", "sub": "{item.kind}", "tone": "warn", "max": 6, "emptyText": "숨은 시트가 없습니다." },
+    { "type": "badge", "text": "VBA로만 보이는 '아주 숨김' 시트 {book.audit.veryHidden:n0}개", "tone": "bad", "showWhen": "book.audit.veryHidden > 0" },
+    { "type": "divider" },
+    { "type": "text", "text": "보호된 시트 {book.audit.protectedSheets:n0}개 · 이름 {book.audit.names:n0}개" },
+    { "type": "badge", "text": "다른 파일로 가는 외부 링크 {book.audit.links:n0}개", "tone": "warn", "showWhen": "book.audit.links > 0" },
+    { "type": "text", "text": "외부 링크 없음", "tone": "muted", "showWhen": "book.audit.links == 0" }
+  ]
+}

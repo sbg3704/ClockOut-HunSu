@@ -1,0 +1,12 @@
+{
+  "tab": { "title": "선택", "badge": "{selection.summary.nonEmpty:n0}", "tone": "info" },
+  "panel": [
+    { "type": "stat", "value": "{selection.summary.sum:n}", "label": "합계", "tone": "info", "hideWhen": "selection.summary.types.num == 0" },
+    { "type": "stat", "value": "{selection.summary.nonEmpty:n0}", "label": "개수", "tone": "muted", "showWhen": "selection.summary.types.num == 0" },
+    { "type": "text", "text": "평균 {selection.summary.avg:n} · 최소 {selection.summary.min:n} · 최대 {selection.summary.max:n}", "hideWhen": "selection.summary.types.num == 0" },
+    { "type": "divider" },
+    { "type": "text", "text": "{selection.summary.addr}", "tone": "muted" },
+    { "type": "badge", "text": "오류 {selection.summary.errors:n0}", "tone": "warn", "hideWhen": "selection.summary.errors == 0" },
+    { "type": "text", "text": "숫자 {selection.summary.types.num:n0} · 글자 {selection.summary.types.text:n0} · 수식 {selection.summary.types.formula:n0}", "tone": "muted" }
+  ]
+}

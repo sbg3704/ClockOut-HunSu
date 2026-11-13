@@ -5,9 +5,9 @@ namespace ClockOut.Hunsu.Core;
 
 public readonly record struct PixelRect(int X, int Y, int Width, int Height)
 {
-    public int Right => X + Width;
-    public int Bottom => Y + Height;
-    public bool IsEmpty => Width <= 0 || Height <= 0;
+    [System.Text.Json.Serialization.JsonIgnore] public int Right => X + Width;
+    [System.Text.Json.Serialization.JsonIgnore] public int Bottom => Y + Height;
+    [System.Text.Json.Serialization.JsonIgnore] public bool IsEmpty => Width <= 0 || Height <= 0;
 
     public bool Contains(int px, int py) => px >= X && px < Right && py >= Y && py < Bottom;
 

@@ -1,0 +1,14 @@
+{
+  "tab": { "title": "책", "badge": "{book.info.sheets:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{book.info.name}" },
+    { "type": "badge", "text": "저장됨", "tone": "good", "showWhen": "book.info.saved == true" },
+    { "type": "badge", "text": "저장 안 된 변경이 있습니다", "tone": "warn", "showWhen": "book.info.saved == false" },
+    { "type": "badge", "text": "수동 계산 중: 값이 자동으로 안 바뀝니다", "tone": "bad", "showWhen": "book.info.calcMode == \"manual\"" },
+    { "type": "badge", "text": "반자동 계산(표 제외)", "tone": "warn", "showWhen": "book.info.calcMode == \"semi\"" },
+    { "type": "badge", "text": "읽기 전용", "tone": "muted", "showWhen": "book.info.readOnly == true" },
+    { "type": "divider" },
+    { "type": "text", "text": "시트 {book.info.sheets:n0}개 · 지금 {book.info.activeSheet}", "tone": "muted" },
+    { "type": "text", "text": "구조 보호됨(시트 추가·삭제 불가)", "tone": "muted", "showWhen": "book.info.structureProtected == true" }
+  ]
+}

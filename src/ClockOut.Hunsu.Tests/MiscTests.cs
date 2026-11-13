@@ -54,7 +54,8 @@ public class MiscTests
     [Fact]
     public void AppOptions_Parse()
     {
-        var o = AppOptions.Parse(["--follow", "0x1A2B", "--log", "a.log", "--bogus"]);
+        var o = AppOptions.Parse(["--follow", "0x1A2B", "--log", "a.log", "--layout", "l.json", "--bogus"]);
+        Assert.Equal("l.json", o.LayoutPath);
         Assert.Equal(0x1A2B, o.FollowHwnd);
         Assert.Equal("a.log", o.LogPath);
         Assert.Equal(["--bogus"], o.Errors);

@@ -1,0 +1,13 @@
+{
+  "tab": { "title": "수식", "badge": "{flow.neighbors.precedents.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{flow.neighbors.sheet} ! {flow.neighbors.addr}  =  {flow.neighbors.value}" },
+    { "type": "text", "text": "{flow.neighbors.formula}", "tone": "muted", "showWhen": "flow.neighbors.hasFormula == true" },
+    { "type": "divider" },
+    { "type": "text", "text": "이 칸이 쓰는 칸 {flow.neighbors.precedents.count:n0}개", "tone": "info" },
+    { "type": "list", "items": "flow.neighbors.precedents.items", "text": "{item.addr}", "sub": "{item.value}", "command": "goto", "arg.addr": "{item.addr}", "max": 6, "emptyText": "없음" },
+    { "type": "text", "text": "이 칸을 쓰는 칸 {flow.neighbors.dependents.count:n0}개", "tone": "good" },
+    { "type": "list", "items": "flow.neighbors.dependents.items", "text": "{item.addr}", "sub": "{item.value}", "command": "goto", "arg.addr": "{item.addr}", "max": 6, "emptyText": "없음" },
+    { "type": "badge", "text": "다른 시트도 사용합니다(목록에는 같은 시트만)", "tone": "warn", "showWhen": "flow.neighbors.crossSheet == true" }
+  ]
+}

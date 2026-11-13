@@ -1,7 +1,7 @@
 // 기능: 0단계 측정 도구 시작점. 보이지 않는 엑셀 + 시험 창 + 훈수꾼 앱을 띄워 차례로 재고, 결과를 out\bench에 저장한 뒤 모두 정리한다.
 // 사용법: ClockOut.Hunsu.Bench.exe --app <ClockOut.Hunsu.exe> --xlam <clockout-hunsu.xlam> --out <폴더> [--n 100]
 //         보통은 tools\bench\run_bench.ps1이 빌드부터 한 번에 한다.
-// 의존: HiddenExcel, TargetWindow, AppUnderTest, WindowChecks, ExcelChecks, Report. 키보드·마우스 조작 없음. 사용자 엑셀은 건드리지 않음.
+// 의존: HiddenExcel, TargetWindow, AppUnderTest, WindowChecks, ExcelChecks, FrameChecks, Report. 키보드·마우스 조작 없음. 사용자 엑셀은 건드리지 않음.
 using System.Diagnostics;
 using ClockOut.Hunsu.Bench;
 using ClockOut.Hunsu.Core;
@@ -39,17 +39,32 @@ internal static class Program
             Stage("엑셀 시작");
             rep.Check("보이지 않는 엑셀 시작, 다리 열기", true, $"엑셀 창 보임={Win32.IsWindowVisible(xl.Hwnd)}");
             target = TargetWindow.Create(new PixelRect(120, 120, 1000, 640));
-            app = AppUnderTest.Launch(Path.GetFullPath(exe), target.Hwnd, Path.Combine(outDir, "app.log"), Path.Combine(outDir, "snap"));
+            string layout = Path.Combine(outDir, "layout.json");
+            if (File.Exists(layout)) File.Delete(layout); // 측정용 배치 파일만 지운다(사용자 배치는 %LOCALAPPDATA%에 따로 있음)
+            var targetHwnd = target.Hwnd;
+            AppUnderTest Launch(string logName) => AppUnderTest.Launch(Path.GetFullPath(exe), targetHwnd, Path.Combine(outDir, logName), Path.Combine(outDir, "snap"), layout);
+            app = Launch("app.log");
             var ready = app.WaitFor(l => l.Name == "ready", 15000) ?? throw new InvalidOperationException("앱이 15초 안에 준비되지 않았습니다.");
             Stage("시험 창과 앱 시작");
             app.SignalHwnd = new IntPtr(ready.Long("signal"));
             rep.Check("앱 신호 창 찾기(FindWindow ClockOutHunsuMsg)", Win32.FindWindow(SignalCodec.WindowClass, null) == app.SignalHwnd);
+            var baseline = app.WaitFor(l => l.Name == "frame_baseline", 3000);
+            if (baseline != null)
+                rep.Note($"기준선(아무것도 안 움직일 때 1초): 프레임 {baseline.Get("frames")}개, 평균 간격 {baseline.Get("meanGap")}ms, 가장 긴 간격 {baseline.Get("maxGap")}ms, 25ms 넘은 간격 {baseline.Get("skipped")}번");
             WindowChecks.Run(rep, target, app, ready, xl.Hwnd);
             Stage("오버레이 시험");
             ExcelChecks.Selection(rep, xl, app, n);
             Stage("선택 시험");
-            ExcelChecks.Panel(rep, app, 30);
+            FrameChecks.Panel(rep, app, 30);
             Stage("패널 시험");
+            var (pinHwnd, pinRect) = FrameChecks.Pin(rep, app, 20);
+            Stage("핀 창 시험");
+            FrameChecks.Hotkeys(rep, app, new IntPtr(ready.Long("overlay")), pinHwnd);
+            Stage("단축키 시험");
+            app = FrameChecks.Restart(rep, app, () => Launch("app2.log"), pinRect);
+            Stage("다시 켜기 시험");
+            app.Post(BenchMessages.TogglePin, IntPtr.Zero, 0); // 아래 시험을 위해 도크로 되돌린다
+            app.WaitFor(l => l.Name == "unpin", 3000);
             ExcelChecks.Busy(rep, xl, app);
             Stage("바쁨 시험");
             ExcelChecks.Instances(rep, xl, app, Path.GetFullPath(xlam));

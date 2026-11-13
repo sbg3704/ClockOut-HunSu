@@ -1,5 +1,5 @@
 // 기능: 시험할 훈수꾼 앱을 띄우고, 앱이 남기는 기록(--log)을 따라 읽고, 등록 메시지로 앱을 움직인다(키보드·마우스 대신).
-// 사용법: using var app = AppUnderTest.Launch(exe, targetHwnd, logPath, snapDir); var ready = app.WaitFor(l => l.Name == "ready", 10000);
+// 사용법: using var app = AppUnderTest.Launch(exe, targetHwnd, logPath, snapDir, layoutPath); var ready = app.WaitFor(l => l.Name == "ready", 10000);
 //         app.Post(BenchMessages.OpenPanel, IntPtr.Zero, Stopwatch.GetTimestamp());
 // 의존: Core/LogLine, Core/BenchMessages, Win32, Watchdog
 using System.Diagnostics;
@@ -27,13 +27,14 @@ internal sealed class AppUnderTest : IDisposable
     public bool Alive => !_process.HasExited;
     public int Pid => _process.Id;
 
-    public static AppUnderTest Launch(string exe, IntPtr follow, string logPath, string snapDir)
+    public static AppUnderTest Launch(string exe, IntPtr follow, string logPath, string snapDir, string layoutPath)
     {
         if (File.Exists(logPath)) File.Delete(logPath);
         var psi = new ProcessStartInfo(exe) { UseShellExecute = false };
         psi.ArgumentList.Add("--follow"); psi.ArgumentList.Add(follow.ToInt64().ToString(System.Globalization.CultureInfo.InvariantCulture));
         psi.ArgumentList.Add("--log"); psi.ArgumentList.Add(logPath);
         psi.ArgumentList.Add("--snapshot"); psi.ArgumentList.Add(snapDir);
+        psi.ArgumentList.Add("--layout"); psi.ArgumentList.Add(layoutPath); // 사용자 배치 파일을 건드리지 않게 측정용 파일을 따로 쓴다
         var p = Process.Start(psi) ?? throw new InvalidOperationException("앱을 시작하지 못했습니다: " + exe);
         Watchdog.Track(p.Id);
         return new AppUnderTest(p, logPath);
@@ -89,6 +90,12 @@ internal sealed class AppUnderTest : IDisposable
         }
         return true;
     }
+
+    /// <summary>앱이 스스로 끝날 때까지 기다린다(배치 저장 뒤 끝내기 시험).</summary>
+    public bool WaitExit(int timeoutMs) => _process.WaitForExit(timeoutMs);
+
+    /// <summary>등록 메시지가 아닌 창 메시지를 그대로 보낸다(예: WM_HOTKEY로 단축키 처리 길을 시험).</summary>
+    public void PostRaw(uint msg, IntPtr wParam, IntPtr lParam) => Win32.PostMessage(SignalHwnd, msg, wParam, lParam);
 
     public void Post(string message, IntPtr wParam, long lParam) =>
         Win32.PostMessage(SignalHwnd, Win32.RegisterWindowMessage(message), wParam, new IntPtr(lParam));

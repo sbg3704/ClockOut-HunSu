@@ -1,0 +1,22 @@
+{
+  "spec": 0,
+  "id": "hunsu-sheets",
+  "name": "시트 이동",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "이동",
+  "author": "ClockOut",
+  "description": "열린 통합 문서의 시트를 단추로 보여 주고, 누르면 그 시트로 이동합니다. 지금 시트는 밝게 표시합니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "시트 목록 조회(sheets)와 이동(sheet.activate)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 300,
+  "data": [
+    {"topic": "sheets", "on": ["sheet", "book"], "weight": "light"}
+  ],
+  "commands": ["sheet.activate"],
+  "scope": "book",
+  "params": []
+}

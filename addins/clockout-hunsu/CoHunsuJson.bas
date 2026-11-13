@@ -50,3 +50,42 @@ Public Function CoHunsuJson_Num(ByVal d As Double) As String
     If Left$(t, 2) = "-." Then t = "-0" & Mid$(t, 2)
     CoHunsuJson_Num = t
 End Function
+
+' 인자 JSON({"name":"값"})에서 글자 값 하나를 꺼낸다. 없으면 빈 글자. \", \\, \n, \t, \uXXXX만 풀고 중첩 객체는 다루지 않는다(명령 인자는 평평한 글자 객체).
+Public Function CoHunsuJson_GetStr(ByVal json As String, ByVal key As String) As String
+    Dim p As Long, i As Long, ch As String, buf As String
+    p = InStr(1, json, """" & key & """", vbBinaryCompare)
+    If p = 0 Then Exit Function
+    p = InStr(p + Len(key) + 2, json, ":", vbBinaryCompare)
+    If p = 0 Then Exit Function
+    p = InStr(p, json, """", vbBinaryCompare)
+    If p = 0 Then Exit Function
+    i = p + 1
+    Do While i <= Len(json)
+        ch = Mid$(json, i, 1)
+        If ch = "\" Then
+            i = i + 1
+            If i > Len(json) Then Exit Do
+            ch = Mid$(json, i, 1)
+            Select Case ch
+                Case "n"
+                    buf = buf & vbLf
+                Case "t"
+                    buf = buf & vbTab
+                Case "u"
+                    If i + 4 <= Len(json) Then
+                        buf = buf & ChrW$(CLng("&H" & Mid$(json, i + 1, 4)))
+                        i = i + 4
+                    End If
+                Case Else
+                    buf = buf & ch
+            End Select
+        ElseIf ch = """" Then
+            Exit Do
+        Else
+            buf = buf & ch
+        End If
+        i = i + 1
+    Loop
+    CoHunsuJson_GetStr = buf
+End Function

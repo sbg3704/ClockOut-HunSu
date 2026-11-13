@@ -1,0 +1,19 @@
+{
+  "tab": { "title": "키", "tone": "muted" },
+  "panel": [
+    { "type": "text", "text": "훈수꾼", "tone": "info" },
+    { "type": "text", "text": "Ctrl+Alt+H  부르기 · 닫기" },
+    { "type": "text", "text": "Ctrl+Alt+Shift+H  전부 숨기기 · 보이기" },
+    { "type": "divider" },
+    { "type": "text", "text": "엑셀", "tone": "info" },
+    { "type": "text", "text": "Ctrl+[  이 수식이 쓰는 칸으로" },
+    { "type": "text", "text": "Ctrl+`  수식 보기 켜기 · 끄기" },
+    { "type": "text", "text": "F4  편집 중 참조 고정($) 바꾸기" },
+    { "type": "text", "text": "Alt+=  자동 합계" },
+    { "type": "text", "text": "Ctrl+T  표로 만들기" },
+    { "type": "text", "text": "Ctrl+Shift+L  필터 켜기 · 끄기" },
+    { "type": "text", "text": "Ctrl+;  오늘 날짜 · Ctrl+Shift+;  현재 시각" },
+    { "type": "text", "text": "Ctrl+PgUp · PgDn  앞뒤 시트로" },
+    { "type": "text", "text": "Ctrl+G  이동 창" }
+  ]
+}

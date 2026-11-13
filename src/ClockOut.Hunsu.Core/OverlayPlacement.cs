@@ -21,6 +21,19 @@ public static class OverlayPlacement
         return new PixelRect(x, y, w, h);
     }
 
+    /// <summary>왼쪽 도크: 창 안쪽 왼쪽 위.</summary>
+    public static PixelRect TopLeftInside(PixelRect target, int overlayWidth, int overlayHeight, int marginLeft = MarginRight, int marginTop = MarginTop)
+    {
+        var r = TopRightInside(target, overlayWidth, overlayHeight, marginLeft, marginTop);
+        int x = target.X + marginLeft;
+        if (x + r.Width > target.Right) x = Math.Max(target.X, target.Right - r.Width);
+        return r with { X = x };
+    }
+
+    /// <summary>도크 창 높이: 엑셀 창 높이의 80%(docs/03 8장)에서 위 여백을 뺀 만큼, 최소 minHeight.</summary>
+    public static int DockHeight(PixelRect target, int minHeight, int marginTop = MarginTop) =>
+        Math.Max(minHeight, Math.Min((int)(target.Height * 0.8), target.Height - marginTop - 16));
+
     /// <summary>오버레이를 숨겨야 하는가(최소화, 숨김, 크기 없음).</summary>
     public static bool ShouldHide(bool targetVisible, bool targetMinimized, PixelRect target) =>
         !targetVisible || targetMinimized || target.IsEmpty;

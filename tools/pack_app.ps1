@@ -14,6 +14,7 @@ param([string]$Version = '0.0.001', [switch]$SkipBridge)
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 $repo = Split-Path -Parent $PSScriptRoot
+if ($PSVersionTable.PSVersion.Major -lt 7) { Write-Host "[중단] PowerShell 7(pwsh)로 실행하세요: pwsh -File tools\pack_app.ps1 -Version $Version" -ForegroundColor Red; exit 1 }
 if ($Version -notmatch '^\d+\.\d+\.\d{3,}$') { Write-Host "[중단] 판 번호는 X.Y.ZZZ 모양이어야 합니다(칼퇴 규칙): $Version" -ForegroundColor Red; exit 1 }
 $out = Join-Path $repo 'out\pack'
 $stage = Join-Path $out 'stage'
@@ -54,7 +55,15 @@ Copy-Item (Join-Path $repo 'LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
 Write-Host "== 4) zip과 SHA-256"
 $zip = Join-Path $out 'hunsu.zip'
 Remove-Item $zip -ErrorAction SilentlyContinue
-[IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
+# 항목 이름은 어떤 PowerShell에서도 '/'로 쓴다(5.1의 CreateFromDirectory는 '\'로 써서 칼퇴가 거부했다, docs/06).
+$zs = [IO.Compression.ZipFile]::Open($zip, 'Create')
+try {
+    $root = (Resolve-Path $stage).Path.TrimEnd('\')
+    foreach ($f in Get-ChildItem $stage -Recurse -File) {
+        $entryName = $f.FullName.Substring($root.Length + 1).Replace('\', '/')
+        [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zs, $f.FullName, $entryName, [IO.Compression.CompressionLevel]::Optimal)
+    }
+} finally { $zs.Dispose() }
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $size = (Get-Item $zip).Length
 "$sha  hunsu.zip" | Set-Content -Encoding ascii (Join-Path $out 'hunsu.zip.sha256')

@@ -56,28 +56,6 @@ internal static class ExcelChecks
         rep.Check("다리가 틀 창을 찾아 신호를 보냄", data.GetProperty("target").GetBoolean() && data.GetProperty("sent").GetInt32() > 0, $"이벤트 {data.GetProperty("events").GetInt32()}, 보냄 {data.GetProperty("sent").GetInt32()}");
     }
 
-    public static void Panel(Report rep, AppUnderTest app, int n)
-    {
-        Console.WriteLine("패널 열기");
-        var first = new List<double>(); var done = new List<double>();
-        for (int i = 0; i < n; i++)
-        {
-            app.Drain();
-            long t0 = Stopwatch.GetTimestamp();
-            app.Post(BenchMessages.OpenPanel, IntPtr.Zero, t0);
-            var l = app.WaitFor(x => x.Name == "panel", 3000);
-            if (l != null)
-            {
-                first.Add(Report.Ms(t0, l.Long("first")));
-                done.Add(Report.Ms(t0, l.Long("done")));
-            }
-            app.Post(BenchMessages.ClosePanel, IntPtr.Zero, 0);
-            Thread.Sleep(40);
-        }
-        rep.Time("패널 열기: 첫 프레임(반응 시작)", first, 100);
-        rep.Time("패널 열기: 마지막 프레임(fast 120ms 움직임 포함)", done, 100);
-    }
-
     /// <summary>엑셀이 매크로를 도는 동안 앱이 hello를 부르게 해 거절 코드와 재시도 효과를 본다.</summary>
     public static void Busy(Report rep, HiddenExcel xl, AppUnderTest app)
     {

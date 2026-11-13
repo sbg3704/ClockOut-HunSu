@@ -1,5 +1,6 @@
 // 기능: 엑셀(또는 지정한 창)의 이동, 크기 바뀜, 최소화, 숨김, 닫힘을 SetWinEventHook으로 받아 오버레이 창을 그 자리에 붙인다.
-// 사용법: var f = new WindowFollower(overlayHwnd, targetHwnd, log); f.Start(); ... f.Dispose();
+// 사용법: var f = new WindowFollower(overlayHwnd, targetHwnd, log, OverlayPlacement.TopRightInside, t => 높이); f.Start(); ... f.Dispose();
+//         place = (대상 사각형, 내 폭, 내 높이) → 놓을 사각형. height가 있으면 대상 크기에 맞춰 내 높이도 바꾼다(도크 창). Suspended면 숨긴다(전부 숨김).
 //         화면 스레드(메시지 루프가 있는 스레드)에서 만들고 부른다. 콜백도 그 스레드로 온다(WINEVENT_OUTOFCONTEXT).
 // 의존: Native/User32, Core/OverlayPlacement, Diagnostics/RunLog. 오버레이는 대상 창의 "소유 창"이 되어 늘 그 위에 있다.
 using System.Diagnostics;
@@ -16,17 +17,24 @@ internal sealed class WindowFollower : IDisposable
     private readonly RunLog _log;
     private readonly User32.WinEventProc _proc; // 대리자를 필드로 붙잡아 GC가 거두지 않게 한다
     private readonly List<IntPtr> _hooks = [];
+    private readonly Func<PixelRect, int, int, PixelRect> _place;
+    private readonly Func<PixelRect, int>? _height;
     private bool _hidden;
 
-    public WindowFollower(IntPtr overlay, IntPtr target, RunLog log)
+    public WindowFollower(IntPtr overlay, IntPtr target, RunLog log, Func<PixelRect, int, int, PixelRect>? place = null, Func<PixelRect, int>? height = null)
     {
         _overlay = overlay;
         _target = target;
         _log = log;
         _proc = OnWinEvent;
+        _place = place ?? ((t, w, h) => OverlayPlacement.TopRightInside(t, w, h));
+        _height = height;
     }
 
     public IntPtr Target => _target;
+
+    /// <summary>전부 숨김(Ctrl+Alt+Shift+H) 중이면 true. 바꾼 뒤 Sync("show")를 부른다.</summary>
+    public bool Suspended { get; set; }
 
     /// <summary>대상 창이 닫혔을 때(앱은 다른 엑셀 창을 찾거나 숨는다).</summary>
     public event Action? TargetGone;
@@ -87,32 +95,27 @@ internal sealed class WindowFollower : IDisposable
             Hide(why);
             return;
         }
+        if (Suspended)
+        {
+            Hide("suspended");
+            return;
+        }
         var own = User32.WindowBounds(_overlay);
-        var place = OverlayPlacement.TopRightInside(target, own.Width, own.Height);
-        uint flags = User32.SWP_NOACTIVATE | User32.SWP_NOSIZE | User32.SWP_NOOWNERZORDER;
+        int height = _height?.Invoke(target) ?? own.Height;
+        var place = _place(target, own.Width, height);
+        uint flags = User32.SWP_NOACTIVATE | User32.SWP_NOOWNERZORDER;
+        if (place.Height == own.Height) flags |= User32.SWP_NOSIZE; // 크기가 같으면 옮기기만(레이어드 창 다시 그리기를 피함)
         if (_hidden) flags |= User32.SWP_SHOWWINDOW;
         // 이동 중에는 z순서를 건드리지 않는다(빠르게). 처음, 복원, 다시 보일 때만 "대상 창 바로 위"로 올린다.
         IntPtr after = why == "move" ? IntPtr.Zero : JustAboveTarget();
         if (after == IntPtr.Zero && why == "move") flags |= User32.SWP_NOZORDER;
-        User32.SetWindowPos(_overlay, after, place.X, place.Y, 0, 0, flags);
+        User32.SetWindowPos(_overlay, after, place.X, place.Y, place.Width, place.Height, flags);
         _hidden = false;
         // 이동은 자주 오므로 측정 기록을 켰을 때만 남긴다(t0 = 이벤트를 받은 시각, us = 자리 계산 + SetWindowPos 시간).
         if (why != "move" || _log.Enabled) _log.Write("follow", ("why", why), ("rect", place), ("us", Elapsed(t0)), ("t0", t0));
     }
 
-    /// <summary>
-    /// 오버레이를 대상 창 바로 위에 끼울 자리(SetWindowPos의 hWndInsertAfter). 소유 창 지정만으로는 z순서가 바뀌지 않아
-    /// 대상이 맨 위(TOPMOST)이거나 나중에 앞으로 나온 창이면 오버레이가 그 아래에 깔린다(0단계에서 실제로 봄).
-    /// 다른 프로그램 위로 띄우지 않도록 HWND_TOP 대신 "대상 바로 위 창의 뒤"에 넣는다.
-    /// </summary>
-    private IntPtr JustAboveTarget()
-    {
-        bool topmost = (User32.GetWindowLongPtr(_target, User32.GWL_EXSTYLE).ToInt64() & User32.WS_EX_TOPMOST) != 0;
-        IntPtr prev = User32.GetWindow(_target, User32.GW_HWNDPREV);
-        if (prev == _overlay) prev = User32.GetWindow(_overlay, User32.GW_HWNDPREV);
-        if (prev != IntPtr.Zero) return prev;
-        return topmost ? User32.HWND_TOPMOST : User32.HWND_TOP;
-    }
+    private IntPtr JustAboveTarget() => User32.InsertAfterJustAbove(_overlay, _target);
 
     private void Hide(string why)
     {

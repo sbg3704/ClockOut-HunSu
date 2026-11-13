@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-book",
+  "name": "책 정보",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "요약",
+  "author": "ClockOut",
+  "description": "지금 통합 문서의 저장 여부, 계산 방식(수동이면 경고), 시트 수를 보여 줍니다.",
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 150,
+  "data": [{"topic": "book.info", "on": ["book", "sheet", "change", "calc"], "weight": "light"}],
+  "commands": [],
+  "scope": "book",
+  "params": []
+}

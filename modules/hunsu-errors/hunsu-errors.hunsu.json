@@ -1,0 +1,22 @@
+{
+  "spec": 0,
+  "id": "hunsu-errors",
+  "name": "오류 셀",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "점검",
+  "author": "ClockOut",
+  "description": "지금 시트의 오류 셀(#DIV/0!, #REF! 등)을 모아 보여 주고, 누르면 그 칸으로 이동합니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "오류 셀 조회(errors)와 이동(goto)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 200,
+  "data": [
+    {"topic": "errors", "on": ["change", "calc", "sheet", "book"], "weight": "normal"}
+  ],
+  "commands": ["goto"],
+  "scope": "sheet",
+  "params": []
+}

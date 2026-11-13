@@ -1,0 +1,22 @@
+{
+  "spec": 0,
+  "id": "hunsu-flow",
+  "name": "수식 흐름",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "수식",
+  "author": "ClockOut",
+  "description": "지금 칸이 바로 쓰는 칸과 지금 칸을 바로 쓰는 칸을 보여 주고, 누르면 그 칸으로 이동합니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "수식 이웃 조회(flow.neighbors)와 이동(goto)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 400,
+  "data": [
+    {"topic": "flow.neighbors", "on": ["sel", "change"], "weight": "normal"}
+  ],
+  "commands": ["goto"],
+  "scope": "sheet",
+  "params": []
+}

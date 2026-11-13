@@ -1,0 +1,13 @@
+<!-- 기능: 화면 부품 모음(WPF 라이브러리). Theme(디자인 값 한 벌), Frame(패널 틀, 손잡이), Controls(stat, text, badge, divider), Render(view.json → 부품). -->
+<!-- 사용법: 앱이 참조하고 App.xaml에서 /ClockOut.Hunsu.Ui;component/Theme/Theme.xaml 을 합친다. -->
+<!-- 의존: ClockOut.Hunsu.Core(ViewSpec, DataScope, Template, Condition). 엑셀이나 데이터 조회를 하지 않는다(docs/01 3.4장 4번). -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>ClockOut.Hunsu.Ui</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClockOut.Hunsu.Core\ClockOut.Hunsu.Core.csproj" />
+  </ItemGroup>
+</Project>
