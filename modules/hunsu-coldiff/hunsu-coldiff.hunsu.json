@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-coldiff",
+  "name": "두 열 비교",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "점검",
+  "author": "ClockOut",
+  "description": "나란한 두 열을 골라 줄마다 견주고 다른 줄만 목록으로 보여 줍니다. 줄을 누르면 그 줄로 이동합니다. 선택은 바꾸지 않습니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "두 열 비교 조회(coldiff)와 이동(goto)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 280,
+  "icon": "check",
+  "data": [
+    {"topic": "coldiff", "on": ["sel", "change"], "weight": "normal"}
+  ],
+  "commands": ["goto"],
+  "scope": "selection",
+  "params": []
+}

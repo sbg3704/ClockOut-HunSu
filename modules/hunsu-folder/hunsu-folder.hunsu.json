@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-folder",
+  "name": "폴더 파일 목록",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "이동",
+  "author": "ClockOut",
+  "description": "지금 책이 든 폴더의 파일을 이름순으로 보여 줍니다. 엑셀 파일은 누르면 열립니다. 새 시트를 만들지 않습니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "폴더 파일 조회(folder.files)와 열기(book.open)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 395,
+  "icon": "book",
+  "data": [
+    {"topic": "folder.files", "on": ["book", "sheet"], "weight": "normal"}
+  ],
+  "commands": ["book.open"],
+  "scope": "book",
+  "params": []
+}

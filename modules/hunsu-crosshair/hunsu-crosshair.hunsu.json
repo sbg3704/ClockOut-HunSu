@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-crosshair",
+  "name": "십자 음영",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "점검",
+  "author": "ClockOut",
+  "description": "고른 칸의 행과 열을 옅은 띠로 칠해 지금 위치를 한눈에 보여 줍니다. 엑셀 칸 색을 바꾸지 않고, 실행 취소 기록도 지우지 않습니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "고른 칸의 행·열 띠 자리 조회(mark)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["mark", "tab", "panel"],
+  "place": "edge-right",
+  "order": 215,
+  "icon": "mark",
+  "data": [
+    {"topic": "mark", "on": ["sel", "sheet"], "weight": "normal"}
+  ],
+  "commands": [],
+  "scope": "sheet",
+  "params": []
+}

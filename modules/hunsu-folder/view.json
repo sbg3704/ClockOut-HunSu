@@ -1,0 +1,11 @@
+{
+  "tab": { "title": "폴더", "badge": "{folder.files.bookCount:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{folder.files.hint}", "tone": "muted", "showWhen": "folder.files.ready == false" },
+    { "type": "text", "text": "폴더 {folder.files.folder} · 파일 {folder.files.count:n0}개", "tone": "muted", "showWhen": "folder.files.ready == true" },
+    { "type": "list", "items": "folder.files.books", "text": "{item.name}", "sub": "{item.sizeKb:n0}KB · {item.modified}", "command": "book.open", "arg.name": "{item.name}", "max": 30, "emptyText": "엑셀 파일이 없습니다." },
+    { "type": "divider", "showWhen": "folder.files.ready == true" },
+    { "type": "list", "items": "folder.files.others", "text": "{item.name}", "sub": "{item.sizeKb:n0}KB · {item.modified}", "tone": "muted", "max": 20, "emptyText": "그 밖의 파일이 없습니다." },
+    { "type": "badge", "text": "파일이 많아 앞 200개만 봅니다", "tone": "warn", "showWhen": "folder.files.truncated == true" }
+  ]
+}
