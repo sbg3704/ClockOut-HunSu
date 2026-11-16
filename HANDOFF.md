@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-16 갱신)
 
+## 2026-11-16 최소화 공용 라이브러리 (판 0.0.072)
+- 사용자 요청: 범례만 있는 패널이 한 칸을 다 차지함 → 켜진 모듈은 패널 없이 일하게, 패널은 작은 아이콘으로 줄이고 일하는 중이면 깜빡이게, 이 기능은 라이브러리로 공유. 색연필 그림은 건드리지 않음. 설명 `docs/13_최소화_공용_라이브러리.md`.
+- 된 것: manifest `form: "mini"`(처음 한 번 줄임, hunsu-marks·hunsu-crosshair 선언), `ActivityTracker`/`Minimize`(순수), `ActivityDot`(숨 쉬는 점), 런처·빠른 띠 아이콘에 점, 접기 단추 안내 ‘작게(아이콘으로)’. 시험 5개 추가, 전체 통과, WPF 빌드 0 오류.
+- 못 본 것: 실제 화면(점 위치·깜빡임·줄어든 첫 모양). PC에서 `co build hunsu main` 후 [표시]·[십자선] 패널이 아이콘으로 시작하는지, 흐름을 켜면 점이 숨 쉬는지.
+- 먼저 읽을 파일: `docs/13_최소화_공용_라이브러리.md`, `src/ClockOut.Hunsu/Shell/ShellController.Minimize.cs`, `src/ClockOut.Hunsu.Core/Layout/Minimize.cs`.
+
 ## 2026-11-16 색연필 4차: 다른 시트 = 시트 탭 왕복 화살표 (판 0.0.071)
 - 사용자 요청: 다른 시트는 아래 시트 탭으로 화살표가 쓕 갔다 돌아오는 그림과 간편 설명. docs/12 1-3장. `FlowSketch.Cross.cs`(계산, 시험됨), 모듈이 flow.graph·sheets도 구독, 늦게 온 획만 움직이며 덧붙음(`Late`).
 - 못 본 것: 실제 화면. **탭 자리는 어림**(격자 맨 아래 + 74px, 이름 글자 수로 폭)이라 PC에서 어긋나면 `FlowSketch.TabBox`·`BuildCross`의 숫자를 고친다. 시나리오: 흐름 E1, B10(메모!G1).

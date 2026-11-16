@@ -58,6 +58,7 @@ internal sealed partial class ShellController : IDisposable
         _right = new DockWindow(Places.EdgeRight, _settings);
         _left = new DockWindow(Places.EdgeLeft, _settings);
         CreateQuick();
+        StartActivityWatch();
         _log.Write("launcher", ("shape", _settings.DockShape), ("groups", _settings.DockGroups), ("size", _settings.DockSize), ("icons", _settings.IconProfile), ("idle", _settings.IdleOpacity));
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
         _registry.TopicReady += OnTopic;

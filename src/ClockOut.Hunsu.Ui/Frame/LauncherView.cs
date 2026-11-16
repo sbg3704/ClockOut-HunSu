@@ -154,7 +154,7 @@ public sealed class LauncherView : Canvas
             }
             else
             {
-                el = LauncherParts.Icon(this, _profile, it.Icon, it.Name, _plan.ItemSize, it.Badge, it.Tone, it.Open, it.IsGroup);
+                el = LauncherParts.Icon(this, _profile, it.Icon, it.Name, _plan.ItemSize, it.Badge, it.Tone, it.Open, it.IsGroup, it.Working);
                 Place(el, p, _plan.ItemSize, _plan.ItemSize);
                 el.MouseEnter += (_, _) => ShowTag(it, p);
                 el.MouseLeave += (_, _) => HideTag();
@@ -236,7 +236,7 @@ public sealed class LauncherView : Canvas
         {
             var m = g.Members[j];
             var p = Flip(pts[j]);
-            var el = LauncherParts.Icon(this, _profile, m.Icon, m.Name, size, m.Badge, m.Tone, m.Open, false);
+            var el = LauncherParts.Icon(this, _profile, m.Icon, m.Name, size, m.Badge, m.Tone, m.Open, false, m.Working);
             Place(el, p, size, size);
             el.MouseLeftButtonUp += (_, e) => { e.Handled = true; ModuleClicked?.Invoke(m.Id); };
             el.ContextMenu = ModuleMenu?.Invoke(m.Id);
