@@ -38,6 +38,26 @@
       "type": "button",
       "text": "지금 책 백업 사본 저장 (실험)",
       "command": "write.book.backup"
+    },
+    {
+      "type": "button",
+      "text": "시트 이름 바꾸기(찾아 바꾸기) (실험)",
+      "command": "write.book.rename"
+    },
+    {
+      "type": "button",
+      "text": "시트 탭 이름 순 정렬 (실험)",
+      "command": "write.book.sort_tabs"
+    },
+    {
+      "type": "button",
+      "text": "공유 전 화면 정리 (실험)",
+      "command": "write.book.share_clean"
+    },
+    {
+      "type": "button",
+      "text": "고른 시트만 남기기(되돌릴 수 없음) (실험)",
+      "command": "write.book.keep_selected"
     }
   ]
 }

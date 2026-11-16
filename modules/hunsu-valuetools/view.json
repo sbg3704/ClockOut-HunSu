@@ -63,6 +63,21 @@
       "type": "button",
       "text": "병합을 가운데 맞춤으로 (실험)",
       "command": "write.values.mergecenter"
+    },
+    {
+      "type": "button",
+      "text": "숫자를 한글 금액으로 (실험)",
+      "command": "write.values.won"
+    },
+    {
+      "type": "button",
+      "text": "자연 순서로 정렬(열별) (실험)",
+      "command": "write.values.natsort"
+    },
+    {
+      "type": "button",
+      "text": "입력값 비우기(수식은 남김) (실험)",
+      "command": "write.values.clearinput"
     }
   ]
 }

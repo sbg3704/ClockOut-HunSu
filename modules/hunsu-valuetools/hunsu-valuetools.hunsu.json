@@ -10,7 +10,7 @@
   "dependencies": [
     {
       "id": "clockout-hunsu",
-      "min_version": "0.0.017",
+      "min_version": "0.0.019",
       "reason": "쓰기에 훈수꾼 다리를 씁니다"
     }
   ],
@@ -35,7 +35,10 @@
     "write.values.todate",
     "write.values.unmerge",
     "write.values.mergecenter",
-    "write.values.undo"
+    "write.values.undo",
+    "write.values.won",
+    "write.values.natsort",
+    "write.values.clearinput"
   ],
   "scope": "selection",
   "params": []

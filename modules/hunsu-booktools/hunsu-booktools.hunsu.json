@@ -10,7 +10,7 @@
   "dependencies": [
     {
       "id": "clockout-hunsu",
-      "min_version": "0.0.018",
+      "min_version": "0.0.019",
       "reason": "쓰기에 훈수꾼 다리를 씁니다"
     }
   ],
@@ -30,7 +30,11 @@
     "write.book.export_each",
     "write.book.pdf",
     "write.book.backup",
-    "write.book.delete_sheets"
+    "write.book.delete_sheets",
+    "write.book.rename",
+    "write.book.sort_tabs",
+    "write.book.share_clean",
+    "write.book.keep_selected"
   ],
   "scope": "book",
   "params": []

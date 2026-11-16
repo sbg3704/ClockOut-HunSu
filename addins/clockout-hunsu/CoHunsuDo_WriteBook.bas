@@ -22,7 +22,7 @@ Public Function Do_WriteBook(ByVal cmdName As String, ByVal argsJson As String) 
         Do_WriteBook = CoHunsuJson_Fail("command_failed", "열린 책이 없음")
         Exit Function
     End If
-    If ActiveWorkbook.ProtectStructure And (op = "sheets_from_list" Or op = "split_by_group" Or op = "index" Or op = "delete_sheets") Then
+    If ActiveWorkbook.ProtectStructure And (op = "sheets_from_list" Or op = "split_by_group" Or op = "index" Or op = "delete_sheets" Or op = "rename" Or op = "rename_back" Or op = "sort_tabs" Or op = "restore_order" Or op = "keep_selected") Then
         Do_WriteBook = CoHunsuJson_Fail("command_failed", "책 구조가 보호되어 시트를 더하거나 지울 수 없음")
         Exit Function
     End If
@@ -34,6 +34,12 @@ Public Function Do_WriteBook(ByVal cmdName As String, ByVal argsJson As String) 
         Case "export_each": Do_WriteBook = ExportEach(apply)
         Case "pdf": Do_WriteBook = ExportPdf(apply)
         Case "backup": Do_WriteBook = Backup(apply)
+        Case "rename": Do_WriteBook = RenameSheets(apply, argsJson)
+        Case "rename_back": Do_WriteBook = RenameBack(apply, CoHunsuJson_GetStr(argsJson, "pairs"))
+        Case "sort_tabs": Do_WriteBook = SortTabs(apply)
+        Case "restore_order": Do_WriteBook = RestoreOrder(apply, CoHunsuJson_GetStr(argsJson, "names"))
+        Case "share_clean": Do_WriteBook = ShareClean(apply)
+        Case "keep_selected": Do_WriteBook = KeepSelected(apply)
         Case Else: Do_WriteBook = CoHunsuJson_Fail("query_unknown", "다리에 없는 책 도구: " & op)
     End Select
     Exit Function
@@ -209,6 +215,131 @@ Private Function DeleteSheets(ByVal apply As Boolean, ByVal names As String) As 
     Next p
     Application.DisplayAlerts = oldAlerts
     DeleteSheets = Write_Applied(left, "시트 " & CStr(left) & "개를 지웠습니다.", "", "")
+End Function
+
+' ---- 시트 이름 바꾸기(찾을 글자를 바꿀 글자로) ----
+
+Private Function RenameSheets(ByVal apply As Boolean, ByVal argsJson As String) As String
+    Dim ws As Object, findS As String, repl As String, nn As String, n As Double, pairs As String, taken As Collection
+    If InStr(1, argsJson, """find""", vbBinaryCompare) = 0 Or InStr(1, argsJson, """repl""", vbBinaryCompare) = 0 Then
+        RenameSheets = CoHunsuJson_Ok("{""phase"":""need"",""needs"":[{""key"":""find"",""label"":""시트 이름에서 찾을 글자"",""default"":""""},{""key"":""repl"",""label"":""바꿀 글자(지우려면 비워 두세요)"",""default"":""""}]}")
+        Exit Function
+    End If
+    findS = CoHunsuJson_GetStr(argsJson, "find")
+    repl = CoHunsuJson_GetStr(argsJson, "repl")
+    If Len(findS) = 0 Then RenameSheets = CoHunsuJson_Fail("command_failed", "찾을 글자가 없습니다"): Exit Function
+    For Each ws In ActiveWorkbook.Worksheets
+        If ws.Visible = xlSheetVisible And InStr(1, ws.Name, findS, vbTextCompare) > 0 Then
+            nn = SafeName(Replace(ws.Name, findS, repl, 1, -1, vbTextCompare))
+            If Len(nn) > 0 And StrComp(nn, ws.Name, vbBinaryCompare) <> 0 And InStr(ws.Name, "|") = 0 And InStr(nn, "|") = 0 And InStr(ws.Name, ChrW(8594)) = 0 Then
+                If Not SheetExists(nn) Or StrComp(nn, ws.Name, vbTextCompare) = 0 Then n = n + 1
+            End If
+        End If
+    Next ws
+    If Not apply Then RenameSheets = Write_Plan(n, "시트 이름 " & CStr(n) & "개에서 '" & findS & "'를 '" & repl & "'로 바꿉니다. 이 시트를 가리키는 수식은 엑셀이 따라 바꿉니다."): Exit Function
+    n = 0
+    For Each ws In ActiveWorkbook.Worksheets
+        If ws.Visible = xlSheetVisible And InStr(1, ws.Name, findS, vbTextCompare) > 0 Then
+            nn = SafeName(Replace(ws.Name, findS, repl, 1, -1, vbTextCompare))
+            If Len(nn) > 0 And StrComp(nn, ws.Name, vbBinaryCompare) <> 0 And InStr(ws.Name, "|") = 0 And InStr(nn, "|") = 0 And InStr(ws.Name, ChrW(8594)) = 0 Then
+                If Not SheetExists(nn) Or StrComp(nn, ws.Name, vbTextCompare) = 0 Then
+                    pairs = pairs & IIf(Len(pairs) > 0, "|", "") & nn & ChrW(8594) & ws.Name
+                    ws.Name = nn
+                    n = n + 1
+                End If
+            End If
+        End If
+    Next ws
+    If n = 0 Then RenameSheets = Write_Applied(0, "바뀐 시트 이름이 없습니다.", "", ""): Exit Function
+    RenameSheets = Write_Applied(n, "시트 이름 " & CStr(n) & "개를 바꿨습니다.", "write.book.rename_back", "{" & CoHunsuJson_Pair("pairs", CoHunsuJson_Str(pairs)) & "}")
+End Function
+
+Private Function RenameBack(ByVal apply As Boolean, ByVal pairs As String) As String
+    Dim p As Variant, a() As String, n As Double
+    If Not apply Then RenameBack = Write_Plan(UBound(Split(pairs, "|")) + 1, "시트 이름을 바꾸기 전으로 되돌립니다."): Exit Function
+    For Each p In Split(pairs, "|")
+        a = Split(CStr(p), ChrW(8594))
+        If UBound(a) = 1 Then
+            If SheetExists(a(0)) And (Not SheetExists(a(1)) Or StrComp(a(0), a(1), vbTextCompare) = 0) Then ActiveWorkbook.Sheets(a(0)).Name = a(1): n = n + 1
+        End If
+    Next p
+    RenameBack = Write_Applied(n, "시트 이름 " & CStr(n) & "개를 되돌렸습니다.", "", "")
+End Function
+
+' ---- 탭 정렬(이름 순, 자연 순서는 아님) ----
+
+Private Function SortTabs(ByVal apply As Boolean) As String
+    Dim i As Long, j As Long, cnt As Long, order As String
+    cnt = ActiveWorkbook.Sheets.Count
+    If cnt < 2 Then SortTabs = Write_Plan(0, "시트가 하나뿐입니다."): Exit Function
+    If Not apply Then SortTabs = Write_Plan(cnt, "시트 탭 " & CStr(cnt) & "개를 이름 순(가나다·ABC)으로 늘어놓습니다."): Exit Function
+    For i = 1 To cnt: order = order & IIf(i > 1, "|", "") & ActiveWorkbook.Sheets(i).Name: Next i
+    For i = 1 To cnt - 1
+        For j = i + 1 To cnt
+            If StrComp(ActiveWorkbook.Sheets(j).Name, ActiveWorkbook.Sheets(i).Name, vbTextCompare) < 0 Then
+                ActiveWorkbook.Sheets(j).Move Before:=ActiveWorkbook.Sheets(i)
+            End If
+        Next j
+    Next i
+    SortTabs = Write_Applied(cnt, "시트 탭을 이름 순으로 늘어놓았습니다.", "write.book.restore_order", "{" & CoHunsuJson_Pair("names", CoHunsuJson_Str(order)) & "}")
+End Function
+
+Private Function RestoreOrder(ByVal apply As Boolean, ByVal names As String) As String
+    Dim a() As String, i As Long
+    a = Split(names, "|")
+    If Not apply Then RestoreOrder = Write_Plan(UBound(a) + 1, "시트 탭 순서를 정렬 전으로 되돌립니다."): Exit Function
+    For i = UBound(a) To 0 Step -1
+        If SheetExists(a(i)) Then ActiveWorkbook.Sheets(a(i)).Move Before:=ActiveWorkbook.Sheets(1)
+    Next i
+    RestoreOrder = Write_Applied(UBound(a) + 1, "시트 탭 순서를 되돌렸습니다.", "", "")
+End Function
+
+' ---- 공유 전 정리: 보이는 시트마다 커서를 A1로, 맨 앞 시트를 열어 둔다(값은 안 바뀜) ----
+
+Private Function ShareClean(ByVal apply As Boolean) As String
+    Dim ws As Object, n As Double, first As Object
+    For Each ws In ActiveWorkbook.Worksheets
+        If ws.Visible = xlSheetVisible Then n = n + 1
+    Next ws
+    If Not apply Then ShareClean = Write_Plan(n, "보이는 시트 " & CStr(n) & "개의 커서를 A1로, 화면 위치를 맨 위로 옮기고 첫 시트를 열어 둡니다. 값·수식은 그대로입니다. 되돌리기 없음."): Exit Function
+    For Each ws In ActiveWorkbook.Worksheets
+        If ws.Visible = xlSheetVisible Then
+            If ws.ProtectContents = False Then
+                ws.Activate
+                ws.Range("A1").Select
+                ActiveWindow.ScrollRow = 1
+                ActiveWindow.ScrollColumn = 1
+            End If
+            If first Is Nothing Then Set first = ws
+        End If
+    Next ws
+    If Not first Is Nothing Then first.Activate
+    ShareClean = Write_Applied(n, "공유하기 좋게 화면을 정리했습니다.", "", "")
+End Function
+
+' ---- 고른 시트만 남기기: 지우는 쪽이라 되돌릴 수 없다. 안 고른 시트를 지운다 ----
+
+Private Function KeepSelected(ByVal apply As Boolean) As String
+    Dim keep As Collection, sh As Object, ws As Object, n As Double, oldAlerts As Boolean, list As String, victims As Collection, v As Variant
+    Set keep = New Collection
+    For Each sh In ActiveWindow.SelectedSheets
+        keep.Add sh.Name, LCase$(sh.Name)
+    Next sh
+    Set victims = New Collection
+    For Each ws In ActiveWorkbook.Sheets
+        If Not InCol(keep, ws.Name) Then victims.Add ws.Name
+    Next ws
+    If victims.Count = 0 Then KeepSelected = Write_Plan(0, "모든 시트를 골랐습니다. Ctrl을 누르고 남길 시트만 고르세요."): Exit Function
+    If keep.Count = 0 Then KeepSelected = CoHunsuJson_Fail("command_failed", "남길 시트를 고르세요"): Exit Function
+    If Not apply Then KeepSelected = Write_Plan(victims.Count, "고르지 않은 시트 " & CStr(victims.Count) & "개를 지웁니다. 되돌릴 수 없으니 먼저 [백업 사본 저장]을 권합니다."): Exit Function
+    oldAlerts = Application.DisplayAlerts
+    Application.DisplayAlerts = False
+    For Each v In victims
+        ActiveWorkbook.Sheets(CStr(v)).Delete
+        n = n + 1
+    Next v
+    Application.DisplayAlerts = oldAlerts
+    KeepSelected = Write_Applied(n, "시트 " & CStr(n) & "개를 지웠습니다.", "", "")
 End Function
 
 ' ---- 파일 만들기: 저장된 책 옆에만 ----
