@@ -12,7 +12,7 @@ public class PencilTests
 {
     private static readonly SketchTones Tones = new("warn", "info", "good");
 
-    private static SketchCell Cell(string addr, double x, double y, double w = 60, double h = 20) => new(addr, new MarkBox(x, y, w, h));
+    private static SketchCell Cell(string addr, double x, double y, double w = 60, double h = 20, string to = "") => new(addr, new MarkBox(x, y, w, h), to);
 
     [Fact]
     public void Rng_SameSeed_SameNumbers_DifferentSeed_Differs()
@@ -103,7 +103,7 @@ public class PencilTests
         // 가까운 칸(C1)이 먼 칸(A1)보다 먼저 그려진다
         double firstInfo = plan.Strokes.Where(s => s.Tone == "info").Min(s => s.StartMs);
         Assert.True(firstInfo > 0);
-        Assert.Equal("흐름|D1|A1,B1,C1|E1", plan.Key);
+        Assert.Equal("흐름|pencil|D1|A1,B1,C1|E1||", plan.Key);
         Assert.Contains(plan.Labels, l => l.Text == "A1 (쓰는 칸)");
         Assert.Contains(plan.Labels, l => l.Text == "E1 (쓰이는 칸)");
     }
@@ -166,6 +166,77 @@ public class PencilTests
     }
 
     [Fact]
+    public void Pressure_TapersEnds_AndNibVariesByDirection()
+    {
+        var pts = Enumerable.Range(0, 40).Select(i => new PointD(i * 6, 0)).ToList();
+        var p = PencilStroke.Pressure(pts, new HandRng(3), 0.8, 0);
+        Assert.True(p[0] < 0.5 && p[^1] < 0.5);          // 처음과 끝은 가늘다
+        Assert.True(p[20] > 0.8);                          // 가운데는 굵다
+        var flat = PencilStroke.Pressure(pts, new HandRng(3), 0, 0);
+        Assert.All(flat, v => Assert.Equal(1, v, 6));       // 강약을 끄면 일정
+        var horizontal = PencilStroke.Pressure(pts, new HandRng(3), 0, 0.6)[10];
+        var diag = PencilStroke.Pressure(Enumerable.Range(0, 40).Select(i => new PointD(i * 5, -i * 5 * 0.85)).ToList(), new HandRng(3), 0, 0.6)[10];
+        Assert.NotEqual(horizontal, diag, 3);               // 펜촉: 방향에 따라 굵기가 다르다
+    }
+
+    [Fact]
+    public void Looks_AreDistinct_AndUnknownFallsBackToPencil()
+    {
+        Assert.Equal(["pencil", "marker", "ink"], SketchLook.Names.ToArray());
+        Assert.Same(SketchLook.Pencil, SketchLook.ByName("zzz"));
+        Assert.Same(SketchLook.Pencil, SketchLook.ByName(null));
+        var pre = new[] { Cell("A1", 10, 100) };
+        var pencil = FlowSketch.Plan("s", [Cell("D1", 300, 100)], pre, [], Tones, SketchLook.Pencil);
+        var marker = FlowSketch.Plan("s", [Cell("D1", 300, 100)], pre, [], Tones, SketchLook.Marker);
+        var ink = FlowSketch.Plan("s", [Cell("D1", 300, 100)], pre, [], Tones, SketchLook.Ink);
+        Assert.True(pencil.Grain && !marker.Grain && !ink.Grain);
+        Assert.Contains(pencil.Strokes, s => s.Shade);
+        Assert.Contains(marker.Strokes, s => s.Shade);
+        Assert.DoesNotContain(ink.Strokes, s => s.Shade);               // 펜은 칠하지 않는다
+        Assert.True(pencil.Strokes.Count > ink.Strokes.Count);            // 색연필만 덧그림
+        Assert.True(marker.Strokes[0].Width > ink.Strokes[0].Width * 2);  // 마커가 훨씬 굵다
+        Assert.NotEqual(pencil.Key, marker.Key);                          // 프로필을 바꾸면 새로 그린다
+        Assert.All(ink.Strokes.Where(s => !s.Shade), s => Assert.NotNull(s.Pressure)); // 모든 프로필에 캘리그라피 강약
+    }
+
+    [Fact]
+    public void Plan_TwoLevels_NumbersFlowFromFurthestSourceToFurthestDependent()
+    {
+        var pre = new[] { Cell("B6", 250, 100) };
+        var pre2 = new[] { Cell("A1", 90, 60, to: "B6"), Cell("A2", 90, 100, to: "B6"), Cell("Z9", 90, 300, to: "없는칸") }; // 부모가 없으면 그리지 않음
+        var dep = new[] { Cell("B10", 700, 100) };
+        var dep2 = new[] { Cell("B11", 1000, 100, to: "B10") };
+        var plan = FlowSketch.Plan("s", [Cell("B9", 470, 100)], pre, dep, Tones, SketchLook.Pencil, pre2, dep2);
+        var badges = plan.Labels.Where(l => l.Badge).ToList();
+        Assert.Equal(["1", "2", "3", "4", "5"], badges.Select(b => b.Text).ToArray());   // A1, A2 → B6 → B9 → B10 → B11
+        Assert.True(badges.Zip(badges.Skip(1)).All(p => p.First.StartMs <= p.Second.StartMs));
+        Assert.Contains(plan.Labels, l => l.Text == "A1 (더 앞)");
+        Assert.Contains(plan.Labels, l => l.Text == "B11 (더 뒤)");
+        Assert.DoesNotContain(plan.Labels, l => l.Text.StartsWith("Z9"));
+        Assert.Contains("A1<B6", plan.Key);
+        // 두 번째 단계는 첫 단계보다 가늘다
+        var lvl1 = plan.Strokes.Where(s => s.Tone == "info" && !s.Shade).Max(s => s.Width);
+        Assert.True(lvl1 >= 2);
+    }
+
+    [Fact]
+    public void ReadCells_ReadsTo()
+    {
+        using var doc = JsonDocument.Parse("""[{"addr":"A1","x":110,"y":210,"w":60,"h":20,"to":"B6"}]""");
+        var c = Assert.Single(FlowSketch.ReadCells(doc.RootElement, [], new PixelRect(100, 200, 900, 600), 1));
+        Assert.Equal("B6", c.To);
+    }
+
+    [Fact]
+    public void Settings_PencilLook_NormalizesToKnownNames()
+    {
+        Assert.Equal("pencil", ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("").PencilLook);
+        Assert.Equal("marker", ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("""{"pencilLook":"marker"}""").PencilLook);
+        Assert.Equal("pencil", ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("""{"pencilLook":"crayon"}""").PencilLook);
+        Assert.True(ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("").IsEnabledByDefault("hunsu-pencilflow")); // 시그니처 기능은 처음부터 켜 둔다
+    }
+
+    [Fact]
     public void Plan_NeighborOverlappingActive_DoesNotCrash_AndHasNoArrow()
     {
         var plan = FlowSketch.Plan("s", [Cell("B1", 100, 100)], [Cell("A1", 100, 100)], [], Tones);
@@ -207,9 +278,9 @@ public class PencilTests
         string dir = ManifestViewTests.FindRepoDir("modules/hunsu-pencilflow");
         var (v, errors) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
         Assert.Empty(errors);
-        Assert.Equal(["active", "pre", "dep"], v!.Marks.Select(m => m.Role).ToArray());
+        Assert.Equal(["active", "pre", "dep", "pre2", "dep2"], v!.Marks.Select(m => m.Role).ToArray());
         var scope = new DataScope();
-        using var doc = JsonDocument.Parse("""{"sheet":"흐름","panes":[],"active":[{"addr":"D1","x":1,"y":1,"w":5,"h":5}],"pre":[],"dep":[],"truncated":false}""");
+        using var doc = JsonDocument.Parse("""{"sheet":"흐름","panes":[],"active":[{"addr":"D1","x":1,"y":1,"w":5,"h":5}],"pre":[],"dep":[],"pre2":[],"dep2":[],"truncated":false}""");
         scope.Set("mark", doc.RootElement);
         foreach (var m in v.Marks) Assert.True(scope.TryGet(m.Items, out var arr) && arr.ValueKind == JsonValueKind.Array);
         Assert.True(scope.TryGet("mark.sheet", out var sheet) && sheet.GetString() == "흐름");

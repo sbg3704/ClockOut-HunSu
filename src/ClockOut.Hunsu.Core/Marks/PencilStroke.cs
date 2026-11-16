@@ -164,6 +164,28 @@ public static class PencilStroke
         ];
     }
 
+    /// <summary>캘리그라피 강약: 점마다 굵기 배율(평균 약 0.9). 처음은 가늘게 시작해 굵어지고 끝은 날렵하게 빠지며(taper), 납작한 펜촉처럼 방향에 따라 굵기가 달라진다(nib). 둘 다 0이면 모두 1.</summary>
+    public static IReadOnlyList<double> Pressure(IReadOnlyList<PointD> pts, HandRng rng, double taper, double nib)
+    {
+        int n = pts.Count;
+        var w = new double[n];
+        double ph = rng.Range(0, 6.283), nibAngle = 0.7; // 펜촉 각도(약 40도)
+        for (int i = 0; i < n; i++)
+        {
+            double t = n > 1 ? i / (double)(n - 1) : 0;
+            double head = 0.3 + 0.7 * Smooth(t / 0.16), tail = 0.2 + 0.8 * Smooth((1 - t) / 0.24);
+            double sway = 1 + 0.16 * Math.Sin(6.283 * 0.9 * t + ph);
+            double press = 1 + taper * (head * tail * sway - 1);
+            int a = Math.Max(0, i - 1), b = Math.Min(n - 1, i + 1);
+            double ang = Math.Atan2(pts[b].Y - pts[a].Y, pts[b].X - pts[a].X);
+            double nibK = 1 + nib * (2 * Math.Abs(Math.Sin(ang - nibAngle)) - 1);
+            w[i] = Math.Max(0.12, press * nibK);
+        }
+        return w;
+    }
+
+    private static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+
     /// <summary>같은 획을 다시 한 번 덧그린 듯한 두 번째 획: 점마다 천천히 변하는 어긋남을 더한다.</summary>
     public static IReadOnlyList<PointD> Retrace(IReadOnlyList<PointD> pts, HandRng rng, double amount = 1.1)
     {

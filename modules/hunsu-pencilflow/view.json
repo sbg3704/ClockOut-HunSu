@@ -3,7 +3,9 @@
   "marks": [
     { "items": "mark.active", "tone": "warn", "style": "pencil", "role": "active" },
     { "items": "mark.pre", "tone": "info", "style": "pencil", "role": "pre" },
-    { "items": "mark.dep", "tone": "good", "style": "pencil", "role": "dep" }
+    { "items": "mark.dep", "tone": "good", "style": "pencil", "role": "dep" },
+    { "items": "mark.pre2", "tone": "info", "style": "pencil", "role": "pre2" },
+    { "items": "mark.dep2", "tone": "good", "style": "pencil", "role": "dep2" }
   ],
   "panel": [
     { "type": "badge", "text": "주황 두 겹 고리 · 지금 고른 칸", "tone": "warn" },

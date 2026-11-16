@@ -68,7 +68,8 @@ internal sealed partial class ShellController
             (IReadOnlyList<SketchCell> Cells, string Tone) Role(string r, string tone) => roles.TryGetValue(r, out var v) ? v : ([], tone);
             var pre = Role("pre", "info");
             var dep = Role("dep", "good");
-            sketch = FlowSketch.Plan(sheet, act.Cells, pre.Cells, dep.Cells, new SketchTones(act.Tone, pre.Tone, dep.Tone));
+            sketch = FlowSketch.Plan(sheet, act.Cells, pre.Cells, dep.Cells, new SketchTones(act.Tone, pre.Tone, dep.Tone),
+                SketchLook.ByName(_settings.PencilLook), Role("pre2", "info").Cells, Role("dep2", "good").Cells);
         }
         // 움직임: 윈도우의 "애니메이션 효과" 설정이 꺼져 있으면 바로 그린다.
         _markWindow.Draw(excel, shapes, sketch, tone => ThemeKeys.Tone(_markWindow, tone), System.Windows.SystemParameters.ClientAreaAnimation);
