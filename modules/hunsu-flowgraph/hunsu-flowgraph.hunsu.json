@@ -11,7 +11,7 @@
     {"id": "clockout-hunsu", "min_version": "0.0.014", "reason": "시트를 넘는 수식 흐름 조회(flow.graph)와 이동(goto)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["tab", "panel", "window"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 410,
   "icon": "graph",
   "data": [

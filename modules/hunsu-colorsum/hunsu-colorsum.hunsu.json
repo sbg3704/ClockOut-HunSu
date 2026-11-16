@@ -11,7 +11,7 @@
     {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "색깔별 합계 조회(color.sum)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["tab", "panel", "window"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 185,
   "icon": "format",
   "data": [

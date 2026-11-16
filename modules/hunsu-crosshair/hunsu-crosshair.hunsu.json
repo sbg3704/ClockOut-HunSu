@@ -11,7 +11,7 @@
     {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "고른 칸의 행·열 띠 자리 조회(mark)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["mark", "tab", "panel"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 215,
   "icon": "mark",
   "data": [
