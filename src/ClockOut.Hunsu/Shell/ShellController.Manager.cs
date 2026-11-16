@@ -53,6 +53,12 @@ internal sealed partial class ShellController
         PanelFrame.SharpenOnHover = next.HoverSharpen;
         PanelFrame.MaxBodyHeight = next.PanelMaxHeight;
         UpdateQuickBar();
+        if (key == "hudAnchor")
+        {
+            _activeCell = null;
+            RefreshCellHud();
+            if (_target != IntPtr.Zero) _registry.Refresh(_target, AllEnabledTopics());
+        }
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));

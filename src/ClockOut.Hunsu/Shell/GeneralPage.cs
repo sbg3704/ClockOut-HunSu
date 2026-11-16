@@ -62,6 +62,9 @@ internal sealed class GeneralPage : ScrollViewer
         _root.Children.Add(Row(ManagerParts.Switch(this, s.QuickBar, () => _shell.ApplySetting("quickBar", !s.QuickBar)), "빠른 띠: 주요 모듈 아이콘을 엑셀 위에 한 줄로 (프로필이 바뀌면 같이 바뀜)"));
         _root.Children.Add(Row(ManagerParts.Switch(this, s.CursorHud, () => _shell.ApplySetting("cursorHud", !s.CursorHud)), "커서 HUD: 범위를 끄는 동안 합계를 커서 옆에"));
 
+        Section("합계 HUD가 붙는 곳", "바로 반영");
+        Choices("hudAnchor", s.HudAnchor, [("cursor", "커서 옆 (범위를 끄는 동안)"), ("cell", "고른 칸 옆 (계속)")]);
+
         Section("시작할 때", "다음 실행부터");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.ManagerOnStart, () => _shell.ApplySetting("managerOnStart", !s.ManagerOnStart)), "설정 창을 바로 연다"));
         bool all = s.EnabledByDefault.Contains("*");

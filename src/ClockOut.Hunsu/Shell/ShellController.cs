@@ -161,6 +161,7 @@ internal sealed partial class ShellController : IDisposable
         _markWindow?.Clear();
         UpdateLeftVisibility();
         UpdateQuickBar();
+        ApplyDefaultForms();
     }
 
     private void OnTargetGone()
@@ -190,6 +191,7 @@ internal sealed partial class ShellController : IDisposable
     /// <summary>다른 엑셀 창이 앞으로 나오면 그 창을 따라간다(보통 모드만).</summary>
     private void OnForeground(IntPtr fg, bool isExcel)
     {
+        if (!isExcel) _cursorHud?.HideNow();
         if (!isExcel || _options.FollowHwnd != 0 || fg == _target) return;
         _log.Write("retarget", ("from", _target.ToInt64()), ("to", fg.ToInt64()));
         Follow(fg);

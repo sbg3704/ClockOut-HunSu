@@ -37,4 +37,13 @@ public class ProfilesTests
             foreach (var id in profile.Modules)
                 Assert.True(ids.Contains(id), $"{profile.Id}: 모듈 {id} 없음");
     }
+
+    [Fact]
+    public void ModuleForm_ParsesAndRejectsUnknown()
+    {
+        string Json(string extra) => """{"spec":0,"id":"hunsu-x","name":"x","version":"0.1.000","host":"excel","category":"c","author":"a","description":"d","dependencies":[],"shapes":["panel","window"],"place":"edge-left","order":1,"data":[],"commands":[]""" + extra + "}";
+        Assert.Equal("panel", ClockOut.Hunsu.Core.Manifest.ModuleManifest.Parse(Json("")).Manifest!.Form);
+        Assert.Equal("hud", ClockOut.Hunsu.Core.Manifest.ModuleManifest.Parse(Json(""","form":"hud" """)).Manifest!.Form);
+        Assert.Null(ClockOut.Hunsu.Core.Manifest.ModuleManifest.Parse(Json(""","form":"floaty" """)).Manifest);
+    }
 }

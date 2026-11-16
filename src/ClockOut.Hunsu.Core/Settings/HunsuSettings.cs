@@ -71,6 +71,9 @@ public sealed class HunsuSettings
     /// <summary>범위를 끄는 동안 합계를 커서 옆에 작게 보인다(true, 기본).</summary>
     public bool CursorHud { get; init; } = true;
 
+    /// <summary>합계 HUD가 붙는 곳: "cursor"(범위를 끄는 동안 커서 옆, 기본) 또는 "cell"(여러 칸을 고르면 고른 칸 옆에 계속).</summary>
+    public string HudAnchor { get; init; } = "cursor";
+
     /// <summary>마지막으로 적용한 작업 프로필 id(Core/Layout/Profiles). 비어 있으면 직접 고른 상태.</summary>
     public string Profile { get; init; } = "";
 
@@ -157,6 +160,7 @@ public sealed class HunsuSettings
             Profile = Profile ?? "",
             QuickBar = QuickBar,
             CursorHud = CursorHud,
+            HudAnchor = (HudAnchor ?? "").Trim().ToLowerInvariant() == "cell" ? "cell" : "cursor",
 
             PencilLook = Marks.SketchLook.ByName(PencilLook).Name,
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",

@@ -68,6 +68,25 @@ internal sealed class CursorHud : Window
         Follow();
     }
 
+    /// <summary>글을 바꾸고 화면 픽셀 자리 (x, y)에 고정해 보인다(고른 칸 옆). 따라다니지 않고, HideNow로 숨길 때까지 남는다.</summary>
+    public void ShowAt(string text, int x, int y)
+    {
+        _tick.Stop();
+        _text.Text = text;
+        if (!IsVisible) Show();
+        if (Handle == IntPtr.Zero) return;
+        UpdateLayout();
+        double scale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
+        int w = (int)Math.Round(ActualWidth * scale), h = (int)Math.Round(ActualHeight * scale);
+        User32.SetWindowPos(Handle, new IntPtr(-1), x, y, w, h, User32.SWP_NOACTIVATE | User32.SWP_SHOWWINDOW);
+    }
+
+    public void HideNow()
+    {
+        _tick.Stop();
+        if (IsVisible) Hide();
+    }
+
     private void Follow()
     {
         if (Handle == IntPtr.Zero || !User32.GetCursorPos(out var pt)) return;
