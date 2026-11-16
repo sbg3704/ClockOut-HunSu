@@ -10,6 +10,7 @@ param([string]$Out, [switch]$NoBig)
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 $repo = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot '_com.ps1')
 if (-not $Out) { $Out = Join-Path $repo 'out\훈수꾼_확인용.xlsx' }
 $src = Join-Path $repo 'tools\scenarios\훈수꾼_시나리오.xlsx'
 if (-not (Test-Path $src)) { Write-Host "[중단] 시나리오 원본이 없습니다: $src" -ForegroundColor Red; exit 1 }
@@ -35,7 +36,7 @@ try {
     $xl = New-Object -ComObject Excel.Application
     $p = [uint32]0; [void][HunsuEx.Win]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
     $xl.Visible = $false; $xl.DisplayAlerts = $false; $xl.ScreenUpdating = $false
-    $wb = $xl.Workbooks.Open($Out, 0)    # 0 = 외부 링크를 갱신하지 않음
+    $wb = Invoke-ComRetry { $xl.Workbooks.Open($Out, 0) }    # 0 = 외부 링크를 갱신하지 않음
     Add-BigSheet $wb '큰 표' 'A1:J20000'
     Add-BigSheet $wb '대용량' 'A1:L100000'
     $wb.Worksheets.Item('안내').Activate()

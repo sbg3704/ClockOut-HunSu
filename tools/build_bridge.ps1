@@ -12,6 +12,7 @@ $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 try { [Text.Encoding]::RegisterProvider([Text.CodePagesEncodingProvider]::Instance) } catch {}
 $repo = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot '_com.ps1')
 $src = Join-Path $repo 'addins\clockout-hunsu'
 if (-not $OutDir) { $OutDir = Join-Path $repo 'out' }
 $cp949 = [Text.Encoding]::GetEncoding(949)
@@ -25,7 +26,7 @@ try {
     try { $xl = New-Object -ComObject Excel.Application } catch { $code = 2; throw "엑셀(데스크톱판)을 실행할 수 없습니다." }
     $xl.Visible = $false; $xl.DisplayAlerts = $false; $xl.ScreenUpdating = $false
     $p = [uint32]0; [void][HunsuBuild.Win]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
-    $wb = $xl.Workbooks.Add()
+    $wb = Invoke-ComRetry { $xl.Workbooks.Add() }
     try { $vp = $wb.VBProject; $null = $vp.VBComponents.Count } catch { $code = 3; throw "엑셀이 VBA 프로젝트 접근을 막고 있습니다(보안 센터 > 매크로 설정 > 'VBA 프로젝트 개체 모델에 대한 액세스 신뢰')." }
     try { $vp.Name = 'ClockOut_hunsu' } catch {}
     $mods = Get-ChildItem $src -File | Where-Object { $_.Extension -in '.bas', '.cls' } | Sort-Object Name
