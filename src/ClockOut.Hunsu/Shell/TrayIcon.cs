@@ -33,6 +33,9 @@ internal sealed class TrayIcon : IDisposable
     public event Action? ManagerClicked;
     public event Action? LookClicked;
 
+    /// <summary>알림 영역 풍선 안내(다리 갱신처럼 사용자가 알아야 하는 한 줄).</summary>
+    public void Balloon(string text) => _icon.ShowBalloonTip(8000, "훈수꾼", text, System.Windows.Forms.ToolTipIcon.Info);
+
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";
 
     /// <summary>청록 원 안에 "훈"(docs/03 accent). 그림 파일을 두지 않으려고 실행 때 그린다.</summary>
