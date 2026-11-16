@@ -39,6 +39,14 @@ public sealed class LayoutState
     public int Spec { get; init; } = CurrentSpec;
     public Dictionary<string, ModulePlacement> Modules { get; init; } = new(StringComparer.Ordinal);
 
+    /// <summary>도크(edge-left, edge-right)마다 훈 원의 세로 자리(창 높이에 대한 비율). 편집 모드에서 훈 원을 끌어 바꾼다.</summary>
+    public Dictionary<string, double> Docks { get; init; } = new(StringComparer.Ordinal);
+
+    public const double DefaultDockRatio = 0.45;
+
+    /// <summary>그 도크의 훈 원 세로 비율(0.1~0.9). 정하지 않았으면 기본.</summary>
+    public double DockRatio(string place) => Docks.TryGetValue(place, out var r) ? Math.Clamp(r, 0.1, 0.9) : DefaultDockRatio;
+
     /// <summary>글을 읽는다. 읽을 수 없으면 빈 배치(기본값)로 시작하고 ok=false.</summary>
     public static (LayoutState State, bool Ok) FromJson(string? text)
     {
@@ -47,7 +55,7 @@ public sealed class LayoutState
         {
             var s = JsonSerializer.Deserialize<LayoutState>(text, Json);
             if (s == null || s.Spec > CurrentSpec) return (new LayoutState(), false);
-            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal) }, true);
+            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal), Docks = new Dictionary<string, double>(s.Docks ?? [], StringComparer.Ordinal) }, true);
         }
         catch (JsonException)
         {
