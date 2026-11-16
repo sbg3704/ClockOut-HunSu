@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 170,
+  "icon": "info",
   "data": [{"topic": "sheet.info", "on": ["sheet", "change"], "weight": "light"}],
   "commands": [],
   "scope": "sheet",

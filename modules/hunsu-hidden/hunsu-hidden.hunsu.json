@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 270,
+  "icon": "hidden",
   "data": [{"topic": "hidden", "on": ["sheet", "change"], "weight": "normal"}],
   "commands": ["goto"],
   "scope": "sheet",

@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 180,
+  "icon": "layers",
   "data": [{"topic": "composition", "on": ["sheet"], "weight": "normal"}],
   "commands": [],
   "scope": "sheet",

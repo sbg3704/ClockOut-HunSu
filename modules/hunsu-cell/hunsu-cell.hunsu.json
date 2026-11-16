@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 160,
+  "icon": "cell",
   "data": [{"topic": "cell.info", "on": ["sel", "change"], "weight": "light"}],
   "commands": [],
   "scope": "cell",
