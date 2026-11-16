@@ -65,6 +65,9 @@ public sealed class HunsuSettings
     /// <summary>마우스가 멀 때 아이콘 진하기. 범위 0.15~1.</summary>
     public double IdleOpacity { get; init; } = 0.3;
 
+    /// <summary>마지막으로 적용한 작업 프로필 id(Core/Layout/Profiles). 비어 있으면 직접 고른 상태.</summary>
+    public string Profile { get; init; } = "";
+
     /// <summary>패널에 마우스를 올리면 투명도와 상관없이 선명해진다(true, 기본). false면 정한 투명도를 올려도 그대로 둔다.</summary>
     public bool HoverSharpen { get; init; } = true;
 
@@ -142,6 +145,7 @@ public sealed class HunsuSettings
             IdleOpacity = IdleOpacity is >= 0.15 and <= 1 ? IdleOpacity : d.IdleOpacity,
             WriteAck = WriteAck ?? "",
             HoverSharpen = HoverSharpen,
+            Profile = Profile ?? "",
 
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
