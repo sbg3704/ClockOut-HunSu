@@ -16,12 +16,15 @@ public sealed record ModulePlacement
     public PixelRect? PinRect { get; init; }
     public bool Hidden { get; init; }
 
+    /// <summary>이 모듈의 자리를 잠근다(편집 모드에서도 끌어 옮기지 못함). 편집 모드에서 자물쇠 단추로 바꾼다.</summary>
+    public bool Locked { get; init; }
+
     /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
     public bool? Enabled { get; init; }
 }
 
 /// <summary>선언과 사용자 값을 합친 결과.</summary>
-public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden);
+public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden, bool Locked = false);
 
 public sealed class LayoutState
 {
@@ -63,6 +66,6 @@ public sealed class LayoutState
     {
         var p = Get(id);
         string place = p.Place != null && Places.CanPlace(p.Place, shapes) ? p.Place : declaredPlace;
-        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault));
+        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault), p.Locked);
     }
 }

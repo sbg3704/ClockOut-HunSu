@@ -14,6 +14,8 @@ namespace ClockOut.Hunsu.Ui.Frame;
 public partial class PanelFrame : UserControl
 {
     private int _opacityLevel;
+    private bool _summoned;
+    private bool _locked;
 
     public PanelFrame()
     {
@@ -25,6 +27,7 @@ public partial class PanelFrame : UserControl
     public event Action? PinClicked;
     public event Action? CollapseClicked;
     public event Action? OpacityClicked;
+    public event Action? LockClicked;
     public event Action<MouseButtonEventArgs>? TitleDragStarted;
 
     public string Title
@@ -61,7 +64,26 @@ public partial class PanelFrame : UserControl
     }
 
     /// <summary>부르기(Ctrl+Alt+H) 중: 강조색 테두리로 "지금 누를 수 있음"을 알린다.</summary>
-    public void SetSummoned(bool on) => Card.BorderBrush = (System.Windows.Media.Brush)FindResource(on ? ThemeKeys.Accent : "Hunsu.Line");
+    public void SetSummoned(bool on)
+    {
+        _summoned = on;
+        Card.BorderBrush = (System.Windows.Media.Brush)FindResource(on ? ThemeKeys.Accent : "Hunsu.Line");
+        UpdateLockButton();
+    }
+
+    /// <summary>자리 잠금 표시. 편집 모드(부르기)에서는 늘 보이고, 잠겨 있으면 평소에도 자물쇠가 보인다.</summary>
+    public void SetLocked(bool locked)
+    {
+        _locked = locked;
+        UpdateLockButton();
+    }
+
+    private void UpdateLockButton()
+    {
+        LockButton.Content = _locked ? "\uE72E" : "\uE785"; // 잠김 / 풀림 (Segoe 아이콘)
+        LockButton.ToolTip = _locked ? "잠김: 누르면 풀기" : "이 패널 자리 잠그기";
+        LockButton.Visibility = _summoned || _locked ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     private void FadeTo(double target)
     {
@@ -72,6 +94,8 @@ public partial class PanelFrame : UserControl
     private void PinButton_Click(object sender, RoutedEventArgs e) => PinClicked?.Invoke();
 
     private void CollapseButton_Click(object sender, RoutedEventArgs e) => CollapseClicked?.Invoke();
+
+    private void LockButton_Click(object sender, RoutedEventArgs e) => LockClicked?.Invoke();
 
     private void OpacityButton_Click(object sender, RoutedEventArgs e) => OpacityClicked?.Invoke();
 
