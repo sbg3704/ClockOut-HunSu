@@ -14,6 +14,7 @@
   "place": "edge-right",
   "order": 215,
   "icon": "flow",
+  "form": "mini",
   "data": [
     {"topic": "mark", "on": ["sel", "change", "sheet", "calc"], "weight": "normal"},
     {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"},
