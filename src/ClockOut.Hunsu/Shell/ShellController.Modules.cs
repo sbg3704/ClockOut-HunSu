@@ -236,14 +236,15 @@ internal sealed partial class ShellController
         else ForTopic(r.Topic, m => m.SetStale(true));
         if (r.Response.Ok && r.Topic == "selection.summary") ObserveHistory(r);
         if (r.Response.Ok) OnTopicForMarks(r);
+        if (r.Response.Ok && r.Topic == "mark" && r.Excel == _target) OnMarkForHud(r.Response.Data);
     }
 
     /// <summary>다리 신호 하나가 왔을 때 다시 조회할 주제: 켜진 모듈의 구독만(꺼진 모듈은 엑셀을 바쁘게 하지 않는다).</summary>
     private IReadOnlyList<string> TopicsForSignal(int code) =>
-        TopicRouting.TopicsFor(code, _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data));
+        TopicRouting.TopicsFor(code, _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data).Concat(ExtraSubscriptions()));
 
     private IReadOnlyList<string> AllEnabledTopics() =>
-        TopicRouting.AllTopics(_modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data));
+        TopicRouting.AllTopics(_modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.Manifest.Data).Concat(ExtraSubscriptions()));
 
     /// <summary>단추나 목록 줄을 눌렀다. 모듈 선언의 commands에 있는 이름만 다리로 보낸다(없으면 거절하고 기록).</summary>
     private async void OnCommand(ModuleView mv, string command, string argsJson)

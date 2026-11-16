@@ -18,6 +18,11 @@ public sealed record ModuleManifest(
     /// <summary>아이콘 뜻 이름(선택, 예: "sum"). 그림은 사용자가 고른 아이콘 프로필이 정한다(docs/09 3.1장). 없으면 이름 첫 글자.</summary>
     public string Icon { get; init; } = "";
 
+    /// <summary>처음 보이는 모양(선택, 기본 "panel"). "panel"은 도크 패널, "hud"는 처음부터 떼어 낸 반투명 창으로 엑셀 시트 오른쪽 위에 뜬다(사용자가 한 번 옮기거나 바꾸면 그 값을 따름).</summary>
+    public string Form { get; init; } = "panel";
+
+    public static readonly IReadOnlySet<string> KnownForms = new HashSet<string> { "panel", "hud" };
+
     /// <summary>틀이 아는 가장 높은 선언 규격 번호.</summary>
     public const int SupportedSpec = 0;
 
@@ -50,6 +55,9 @@ public sealed record ModuleManifest(
             if (!shapes.Contains("panel") && !shapes.Contains("window")) errors.Add("panel과 window 중 하나는 있어야 함(docs/01 5장)");
             string place = Str(r, "place");
             if (!Places.CanPlace(place, shapes)) errors.Add($"place '{place}'에 놓을 모양이 shapes에 없음");
+            string form = r.TryGetProperty("form", out _) ? Str(r, "form").Trim().ToLowerInvariant() : "panel";
+            if (!KnownForms.Contains(form)) errors.Add($"모르는 form: {form}");
+            if (form == "hud" && !shapes.Contains("window")) errors.Add("form hud는 shapes에 window가 있어야 함");
             int order = r.TryGetProperty("order", out var o) && o.TryGetInt32(out var ov) ? ov : 500;
 
             var data = new List<DataSubscription>();
@@ -64,7 +72,7 @@ public sealed record ModuleManifest(
                 }
             }
             if (errors.Count > 0) return (null, errors);
-            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant() }, errors);
+            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant(), Form = form }, errors);
         }
         catch (JsonException ex)
         {
