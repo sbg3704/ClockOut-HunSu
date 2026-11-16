@@ -184,6 +184,7 @@ internal sealed partial class ShellController
     {
         if (_pinWindows.TryGetValue(mv.Id, out var w)) return w;
         w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free", Locked = mv.Placement.Locked };
+        w.SnapTargets = () => SnapTargetsFor(mv.Id);
         w.Moved += r => Save(mv, p => p with { PinRect = r });
         w.Prepare();
         _pinWindows[mv.Id] = w;
@@ -213,6 +214,15 @@ internal sealed partial class ShellController
         int w = (int)((double)Application.Current.FindResource("Hunsu.WindowMinWidth") * scale) + 24;
         int h = Math.Max((int)((double)Application.Current.FindResource("Hunsu.WindowMinHeight") * scale), onScreen.Height) + 24;
         return PinPlacement.Default(onScreen, w, h);
+    }
+
+    /// <summary>핀 창을 끌어 놓을 때 붙일 대상: 작업 영역, 엑셀 창, 다른 핀 창(자기 자신 제외).</summary>
+    private IReadOnlyList<PixelRect> SnapTargetsFor(string selfId)
+    {
+        var list = new List<PixelRect>(WorkAreas());
+        if (_target != IntPtr.Zero) list.Add(User32.VisibleBounds(_target));
+        foreach (var kv in _pins) if (kv.Key != selfId) list.Add(kv.Value.Rect);
+        return list;
     }
 
     private static IReadOnlyList<PixelRect> WorkAreas() =>

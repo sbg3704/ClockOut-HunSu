@@ -28,6 +28,27 @@ public static class PinPlacement
         return r with { X = x, Y = y };
     }
 
+    /// <summary>끌어 놓은 창을 가까운 변에 붙인다(자석). 창의 왼·오른·위·아래 변이 대상의 변과 threshold 픽셀 안이면 그 변에 맞춘다. 가로와 세로를 따로 가장 가까운 것 하나씩 고른다.</summary>
+    public static PixelRect Snap(PixelRect r, IReadOnlyList<PixelRect> targets, int threshold = 12)
+    {
+        int dx = Nearest(new[] { r.X, r.Right }, targets.SelectMany(t => new[] { t.X, t.Right }), threshold, out int sx) ? sx : 0;
+        int dy = Nearest(new[] { r.Y, r.Bottom }, targets.SelectMany(t => new[] { t.Y, t.Bottom }), threshold, out int sy) ? sy : 0;
+        return r with { X = r.X + dx, Y = r.Y + dy };
+    }
+
+    private static bool Nearest(int[] mine, IEnumerable<int> theirs, int threshold, out int shift)
+    {
+        shift = 0;
+        int best = int.MaxValue;
+        foreach (int m in mine)
+            foreach (int t in theirs)
+            {
+                int d = t - m;
+                if (Math.Abs(d) <= threshold && Math.Abs(d) < best) { best = Math.Abs(d); shift = d; }
+            }
+        return best != int.MaxValue;
+    }
+
     private static double Distance(PixelRect r, PixelRect a)
     {
         double cx = r.X + r.Width / 2.0, cy = r.Y + r.Height / 2.0;

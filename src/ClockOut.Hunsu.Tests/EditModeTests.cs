@@ -1,6 +1,7 @@
 // 기능: 편집 모드가 쓰는 배치 값 시험: 모듈별 잠금 저장·읽기, 선언 기본값은 잠기지 않음, 배치 글을 되살려 되돌릴 수 있음.
 // 사용법: dotnet test
 // 의존: ClockOut.Hunsu.Core(Layout/LayoutState)
+using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 
 namespace ClockOut.Hunsu.Tests;
@@ -47,5 +48,20 @@ public class EditModeTests
         Assert.True(ok);
         Assert.Equal(0.7, back.DockRatio(Places.EdgeLeft), 3);
         Assert.Equal(0.9, back.DockRatio(Places.EdgeRight), 3);
+    }
+
+    [Fact]
+    public void Snap_PullsNearEdgesAndIgnoresFarOnes()
+    {
+        var area = new PixelRect(0, 0, 1920, 1080);
+        // 왼쪽 변이 5픽셀, 위쪽 변이 8픽셀 떨어짐 → 붙는다
+        var near = PinPlacement.Snap(new PixelRect(5, 8, 300, 200), [area]);
+        Assert.Equal((0, 0), (near.X, near.Y));
+        // 오른쪽 변이 화면 오른쪽 끝과 3픽셀 → 오른쪽 변에 맞춘다
+        var right = PinPlacement.Snap(new PixelRect(1617, 400, 300, 200), [area]);
+        Assert.Equal(1620, right.X);
+        // 멀면(50픽셀) 그대로
+        var far = PinPlacement.Snap(new PixelRect(50, 50, 300, 200), [area]);
+        Assert.Equal((50, 50), (far.X, far.Y));
     }
 }
