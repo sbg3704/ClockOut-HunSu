@@ -25,6 +25,7 @@ internal sealed class PinWindow : Window
     private PixelRect _rect;
     private IntPtr _owner;
     private bool _interactive;
+    private bool _locked;
     private bool _hover; // 제목줄 위에 마우스가 있어 이 순간만 클릭을 받는다(핀 단추 등을 평소에도 누를 수 있게)
 
     public PinWindow(IntPtr owner)
@@ -60,6 +61,21 @@ internal sealed class PinWindow : Window
     /// <summary>true를 돌려주면 Shift 없이도 끌어 옮길 수 있다(배치 잠금이 "free"일 때). null이면 잠금.</summary>
     public Func<bool>? FreeDrag { get; set; }
 
+    /// <summary>이 패널의 자리를 잠갔다(모듈별 잠금): 편집 모드에서도 끌거나 크기를 바꾸지 못한다.</summary>
+    public bool Locked
+    {
+        get => _locked;
+        set { _locked = value; _grip.Visibility = _interactive && !value && _frame != null ? Visibility.Visible : Visibility.Collapsed; }
+    }
+
+    /// <summary>보이는 채로 자리만 옮긴다(편집 취소로 저장된 자리로 되돌릴 때).</summary>
+    public void MoveTo(PixelRect rect)
+    {
+        _rect = rect;
+        if (Handle == IntPtr.Zero || !IsVisible) return;
+        User32.SetWindowPos(Handle, IntPtr.Zero, rect.X, rect.Y, rect.Width, rect.Height, User32.SWP_NOACTIVATE | User32.SWP_NOZORDER);
+    }
+
     /// <summary>사용자가 끌어 옮긴 뒤 새 자리(실제 픽셀).</summary>
     public event Action<PixelRect>? Moved;
 
@@ -75,7 +91,7 @@ internal sealed class PinWindow : Window
         frame.SetTitleTip("Shift를 누른 채 끌어 옮기기(Ctrl+Alt+H로 부르면 그냥 끌기)");
         _host.Child = frame;
         frame.SetSummoned(_interactive);
-        _grip.Visibility = _interactive ? Visibility.Visible : Visibility.Collapsed;
+        _grip.Visibility = _interactive && !_locked ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>자리를 정하고 나타난다. 엑셀 창 바로 위 z순서에 끼우고, fast 120ms 동안 투명도만 움직인다. done은 움직임 뒤 첫 프레임 시각.</summary>
@@ -117,7 +133,7 @@ internal sealed class PinWindow : Window
     {
         _interactive = on;
         _frame?.SetSummoned(on);
-        _grip.Visibility = on && _frame != null ? Visibility.Visible : Visibility.Collapsed;
+        _grip.Visibility = on && !_locked && _frame != null ? Visibility.Visible : Visibility.Collapsed;
         ApplyStyle();
     }
 
@@ -192,7 +208,7 @@ internal sealed class PinWindow : Window
 
     private void OnTitleDrag(MouseButtonEventArgs e)
     {
-        if (!(_interactive || _hover) || e.ButtonState != MouseButtonState.Pressed) return;
+        if (_locked || !(_interactive || _hover) || e.ButtonState != MouseButtonState.Pressed) return;
         // 잠금(기본)이면 Shift를 누른 채만 옮긴다. 부르기(편집 모드) 중이거나 잠금이 free면 그냥 옮긴다.
         if (!_interactive && !(FreeDrag?.Invoke() ?? false) && !User32.ShiftDown()) return;
         DragMove(); // 놓을 때까지 돌아오지 않는다

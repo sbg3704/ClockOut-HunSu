@@ -29,6 +29,8 @@ internal sealed partial class ShellController
             mv.Frame.SetOpacityLevel(next);
             Save(mv, p => p with { Opacity = next });
         };
+        mv.Frame.LockClicked += () => ToggleLock(mv);
+        mv.Frame.SetLocked(mv.Placement.Locked);
         mv.Frame.ContextMenu = SideMenu(mv);
         mv.BadgeChanged += () => DockOf(mv)?.RefreshLauncher();
         return mv;
@@ -150,6 +152,7 @@ internal sealed partial class ShellController
         rect = PinPlacement.KeepOnScreen(rect, WorkAreas());
         var w = PinWindowFor(mv);
         w.SetOwner(_target);
+        w.Locked = mv.Placement.Locked;
         w.SetInteractive(_summoned);
         w.Host(mv.DetachFrame());
         _pins[mv.Id] = w;
@@ -180,7 +183,7 @@ internal sealed partial class ShellController
     private PinWindow PinWindowFor(ModuleView mv)
     {
         if (_pinWindows.TryGetValue(mv.Id, out var w)) return w;
-        w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free" };
+        w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free", Locked = mv.Placement.Locked };
         w.Moved += r => Save(mv, p => p with { PinRect = r });
         w.Prepare();
         _pinWindows[mv.Id] = w;

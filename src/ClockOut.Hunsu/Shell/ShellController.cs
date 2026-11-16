@@ -197,15 +197,6 @@ internal sealed partial class ShellController : IDisposable
         f.Sync(any ? "show" : "empty");
     }
 
-    public void ToggleSummon()
-    {
-        _summoned = !_summoned;
-        if (_summoned && _hiddenAll) ToggleHideAll();
-        foreach (var p in _pins.Values) p.SetInteractive(_summoned);
-        foreach (var m in _modules.Where(m => m.InDock)) m.Frame.SetSummoned(_summoned);
-        _log.Write("summon", ("on", _summoned), ("pins", _pins.Count));
-    }
-
     public void ToggleHideAll()
     {
         _hiddenAll = !_hiddenAll;
