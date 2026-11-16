@@ -21,7 +21,7 @@ public sealed record ModuleManifest(
     /// <summary>처음 보이는 모양(선택, 기본 "panel"). "panel"은 도크 패널, "hud"는 처음부터 떼어 낸 반투명 창으로 엑셀 시트 오른쪽 위에 뜬다(사용자가 한 번 옮기거나 바꾸면 그 값을 따름).</summary>
     public string Form { get; init; } = "panel";
 
-    public static readonly IReadOnlySet<string> KnownForms = new HashSet<string> { "panel", "hud" };
+    public static readonly IReadOnlySet<string> KnownForms = new HashSet<string> { "panel", "hud", "mini" };
 
     /// <summary>틀이 아는 가장 높은 선언 규격 번호.</summary>
     public const int SupportedSpec = 0;

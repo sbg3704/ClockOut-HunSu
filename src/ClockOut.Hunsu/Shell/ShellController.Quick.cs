@@ -55,7 +55,7 @@ internal sealed partial class ShellController
     {
         if (_quick == null) return;
         var items = _modules.Where(m => m.InDock && !m.Placement.Hidden).OrderBy(m => m.Placement.Order).Take(QuickMax)
-            .Select(m => new QuickItem(m.Id, m.Module.Manifest.Name, m.Module.Manifest.Icon, m.ShowsPanel)).ToList();
+            .Select(m => new QuickItem(m.Id, m.Module.Manifest.Name, m.Module.Manifest.Icon, m.ShowsPanel, IsModuleWorking(m))).ToList();
         _quick.SetItems(items);
         bool show = _settings.QuickBar && items.Count > 0;
         if (show && !_quick.IsVisible) _quick.Show();
@@ -117,6 +117,7 @@ internal sealed partial class ShellController
     private void ApplyDefaultForms()
     {
         if (_target == IntPtr.Zero) return;
+        ApplyMiniForms();
         foreach (var mv in _modules)
         {
             if (mv.Module.Manifest.Form != "hud" || mv.Placement.Hidden || _formApplied.Contains(mv.Id) || _store.State.Modules.ContainsKey(mv.Id)) continue;

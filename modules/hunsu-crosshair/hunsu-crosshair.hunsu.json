@@ -14,6 +14,7 @@
   "place": "edge-left",
   "order": 215,
   "icon": "mark",
+  "form": "mini",
   "data": [
     {"topic": "mark", "on": ["sel", "sheet"], "weight": "normal"}
   ],

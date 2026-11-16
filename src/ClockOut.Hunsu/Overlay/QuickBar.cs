@@ -9,13 +9,14 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Native;
+using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Ui.Icons;
 using ClockOut.Hunsu.Ui.Theme;
 
 namespace ClockOut.Hunsu.Overlay;
 
 /// <summary>빠른 띠 칸 하나: 모듈 id, 이름(툴팁), 아이콘 뜻 이름, 지금 패널이 열려 있는가.</summary>
-internal sealed record QuickItem(string Id, string Name, string Icon, bool Open);
+internal sealed record QuickItem(string Id, string Name, string Icon, bool Open, bool Working = false);
 
 internal sealed class QuickBar : Window
 {
@@ -104,6 +105,12 @@ internal sealed class QuickBar : Window
             Cursor = Cursors.Hand,
             Margin = new Thickness(1),
         };
+        if (it.Working && !it.Open)
+        {
+            var dot = ActivityDot.Create(this, 6);
+            dot.HorizontalAlignment = HorizontalAlignment.Right; dot.VerticalAlignment = VerticalAlignment.Bottom; dot.Margin = new Thickness(0, 0, 2, 2);
+            host.Child = new Grid { Children = { icon, dot } };
+        }
         if (icon is FrameworkElement fe) { fe.HorizontalAlignment = HorizontalAlignment.Center; fe.VerticalAlignment = VerticalAlignment.Center; }
         host.MouseEnter += (_, _) => { if (!it.Open) host.Background = (Brush)FindResource("Hunsu.GlassHover"); };
         host.MouseLeave += (_, _) => host.Background = it.Open ? (Brush)FindResource("Hunsu.GlassHover") : Brushes.Transparent;

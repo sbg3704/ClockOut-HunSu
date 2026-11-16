@@ -20,10 +20,10 @@ public static class DockShapes
 }
 
 /// <summary>런처에 넣을 모듈 하나: id, 이름, 순서, 아이콘 뜻 이름, 배지 글, 톤, 지금 패널이 열려 있는가.</summary>
-public sealed record LauncherModule(string Id, string Name, int Order, string Icon, string Badge, string Tone, bool Open);
+public sealed record LauncherModule(string Id, string Name, int Order, string Icon, string Badge, string Tone, bool Open, bool Working = false);
 
 /// <summary>1단계 칸: 묶음 또는 모듈 하나. 묶음이면 Members가 2개 이상이다.</summary>
-public sealed record LauncherItem(string Key, bool IsGroup, string Name, string Icon, string Badge, string Tone, bool Open, IReadOnlyList<LauncherModule> Members);
+public sealed record LauncherItem(string Key, bool IsGroup, string Name, string Icon, string Badge, string Tone, bool Open, IReadOnlyList<LauncherModule> Members, bool Working = false);
 
 public static class LauncherGroups
 {
@@ -49,12 +49,12 @@ public static class LauncherGroups
             var members = sorted.Where(m => m.Order >= r.Lo && m.Order <= r.Hi).ToList();
             if (members.Count == 0) continue;
             if (members.Count == 1) { items.Add(Single(members[0])); continue; }
-            items.Add(new LauncherItem(r.Key, true, r.Name, r.Icon, SumBadges(members.Select(m => m.Badge)), TopTone(members.Select(m => m.Tone)), members.Any(m => m.Open), members));
+            items.Add(new LauncherItem(r.Key, true, r.Name, r.Icon, SumBadges(members.Select(m => m.Badge)), TopTone(members.Select(m => m.Tone)), members.Any(m => m.Open), members, members.Any(m => m.Working)));
         }
         return items;
     }
 
-    private static LauncherItem Single(LauncherModule m) => new(m.Id, false, m.Name, m.Icon, m.Badge, m.Tone, m.Open, [m]);
+    private static LauncherItem Single(LauncherModule m) => new(m.Id, false, m.Name, m.Icon, m.Badge, m.Tone, m.Open, [m], m.Working);
 
     /// <summary>묶음 배지 = 안쪽 숫자의 합. 숫자가 아닌 배지가 있으면 점 하나(•), 다 비면 빈 글.</summary>
     public static string SumBadges(IEnumerable<string> badges)

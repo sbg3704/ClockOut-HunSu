@@ -33,7 +33,7 @@ internal static class LauncherParts
     }
 
     /// <summary>원형 아이콘 칸(Canvas, 크기 size). 원·그림·배지·열림 고리. 원(Border)은 Tag로 돌려준다(올림 색 바꾸기).</summary>
-    public static Canvas Icon(FrameworkElement scope, string profile, string icon, string name, double size, string badge, string tone, bool open, bool group)
+    public static Canvas Icon(FrameworkElement scope, string profile, string icon, string name, double size, string badge, string tone, bool open, bool group, bool working = false)
     {
         var c = new Canvas { Width = size, Height = size, Cursor = System.Windows.Input.Cursors.Hand };
         if (open)
@@ -58,6 +58,12 @@ internal static class LauncherParts
             bd.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(bd, size - bd.DesiredSize.Width * 0.6); Canvas.SetTop(bd, -4);
             c.Children.Add(bd);
+        }
+        if (working && !open)
+        {
+            var dot = ActivityDot.Create(scope, Math.Max(6, size * 0.2));
+            Canvas.SetLeft(dot, size - dot.Width - 1); Canvas.SetTop(dot, size - dot.Height - 1);
+            c.Children.Add(dot);
         }
         c.Tag = circle;
         return c;

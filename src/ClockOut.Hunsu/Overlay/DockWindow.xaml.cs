@@ -138,8 +138,11 @@ public partial class DockWindow : Window
         Launcher.Configure(_settings.DockShape, _settings.DockGroups, LauncherShapes.Scale(_settings.DockSize), _settings.IdleOpacity, _settings.IconProfile, mirror: Side == Places.EdgeLeft);
 
     /// <summary>런처 아이콘(이름, 아이콘, 배지, 열림)을 지금 모듈 상태로 다시 넣는다.</summary>
+    /// <summary>줄어든 모듈이 일하는 중인지 묻는 함수(셸이 넣는다). 아이콘에 숨 쉬는 점을 그린다.</summary>
+    internal Func<ModuleView, bool>? IsWorking { get; set; }
+
     internal void RefreshLauncher() =>
-        Launcher.SetModules(_modules.Select(m => new LauncherModule(m.Id, m.Module.Manifest.Name, m.Placement.Order, m.Module.Manifest.Icon, m.Badge, m.Tone, m.ShowsPanel)).ToList());
+        Launcher.SetModules(_modules.Select(m => new LauncherModule(m.Id, m.Module.Manifest.Name, m.Placement.Order, m.Module.Manifest.Icon, m.Badge, m.Tone, m.ShowsPanel, IsWorking?.Invoke(m) ?? false)).ToList());
 
     /// <summary>창 너비 = 패널 너비 + 런처 폭 + 그림자 여백. 패널 칸은 런처 폭만큼 가장자리에서 떨어진다.</summary>
     private void Resize(int count)
