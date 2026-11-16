@@ -23,12 +23,20 @@ public class FrameSettingsTests
     {
         var d = HunsuSettings.FromJson("");
         Assert.Equal("dark", d.Theme);
-        Assert.Equal(240, d.PanelWidth);
+        Assert.Equal(220, d.PanelWidth);
         var s = HunsuSettings.FromJson("""{"theme":"Light","panelWidth":320}""");
         Assert.Equal("light", s.Theme);
         Assert.Equal(320, s.PanelWidth);
         var bad = HunsuSettings.FromJson("""{"theme":"neon","panelWidth":9999}""");
         Assert.Equal("dark", bad.Theme);
-        Assert.Equal(240, bad.PanelWidth);
+        Assert.Equal(220, bad.PanelWidth);
+    }
+
+    [Fact]
+    public void Settings_PanelMaxHeight_DefaultAndClamp()
+    {
+        Assert.Equal(120, HunsuSettings.FromJson("").PanelMaxHeight);
+        Assert.Equal(180, HunsuSettings.FromJson("""{"panelMaxHeight":180}""").PanelMaxHeight);
+        Assert.Equal(120, HunsuSettings.FromJson("""{"panelMaxHeight":5}""").PanelMaxHeight);
     }
 }

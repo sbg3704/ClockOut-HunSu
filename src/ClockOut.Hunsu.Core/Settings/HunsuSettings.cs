@@ -42,7 +42,10 @@ public sealed class HunsuSettings
     public string Theme { get; init; } = ThemeChoice.Dark;
 
     /// <summary>도크 패널 너비(DIP). 범위 200~480. 핀 창은 끌어서 크기를 바꾼다(부르기 중).</summary>
-    public int PanelWidth { get; init; } = 240;
+    public int PanelWidth { get; init; } = 220;
+
+    /// <summary>도크 패널 내용의 최대 높이(DIP). 넘치면 패널 안에서 휠로 내린다. 범위 60~600(600이면 사실상 제한 없음). FHD 한쪽에 5~6개 올리려고 작게 둔다.</summary>
+    public int PanelMaxHeight { get; init; } = 120;
 
     /// <summary>셀 위 표시층(mark)을 쓰는 모듈이 켜져 있을 때, 엑셀이 앞에 있으면 이 간격(ms)으로 자리를 다시 묻는다(스크롤에는 엑셀 이벤트가 없음). 0이면 신호 때만. 범위 0 또는 150~5000.</summary>
     public int MarkPollMs { get; init; } = 400;
@@ -130,6 +133,7 @@ public sealed class HunsuSettings
             ManagerOnStart = ManagerOnStart,
             Theme = ThemeChoice.Normalize(Theme),
             PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
+            PanelMaxHeight = InRange(PanelMaxHeight, 60, 600) ? PanelMaxHeight : d.PanelMaxHeight,
             MarkPollMs = MarkPollMs == 0 || InRange(MarkPollMs, 150, 5000) ? MarkPollMs : d.MarkPollMs,
             DockShape = Layout.DockShapes.Normalize(DockShape),
             DockGroups = DockGroups,

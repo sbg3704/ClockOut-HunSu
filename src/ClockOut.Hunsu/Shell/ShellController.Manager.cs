@@ -51,6 +51,8 @@ internal sealed partial class ShellController
         _settings = next;
         Parts.ListMaxRows = next.ListMaxRows;
         PanelFrame.SharpenOnHover = next.HoverSharpen;
+        PanelFrame.MaxBodyHeight = next.PanelMaxHeight;
+        foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));
         SettingsChanged?.Invoke();
@@ -64,6 +66,8 @@ internal sealed partial class ShellController
         _settings = d;
         Parts.ListMaxRows = d.ListMaxRows;
         PanelFrame.SharpenOnHover = d.HoverSharpen;
+        PanelFrame.MaxBodyHeight = d.PanelMaxHeight;
+        foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, d, _log);
         SettingsChanged?.Invoke();
     }

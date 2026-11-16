@@ -32,7 +32,10 @@ internal sealed class GeneralPage : ScrollViewer
         Choices("theme", s.Theme, [("dark", "어둡게"), ("light", "밝게"), ("auto", "Windows 따라")]);
 
         Section("패널 너비", "껐다 켜면 바뀝니다");
-        Choices("panelWidth", s.PanelWidth, [(200, "좁게 200"), (240, "기본 240"), (300, "300"), (360, "360"), (480, "넓게 480")]);
+        Choices("panelWidth", s.PanelWidth, [(200, "좁게 200"), (220, "기본 220"), (260, "260"), (320, "320"), (480, "넓게 480")]);
+
+        Section("패널 높이(내용 최대)", "바로 반영. 넘치면 패널 안에서 휠로 내립니다");
+        Choices("panelMaxHeight", s.PanelMaxHeight, [(90, "작게 90"), (120, "기본 120"), (180, "크게 180"), (300, "300"), (600, "제한 없음")]);
 
         Section("패널 위치 잠금", "바로 반영");
         Choices("layoutLock", s.LayoutLock, [("locked", "잠금 (Shift+끌기로 옮김)"), ("free", "자유 (그냥 끌어서 옮김)")]);

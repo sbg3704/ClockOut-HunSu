@@ -31,7 +31,7 @@ public static partial class Parts
     {
         var value = new TextBlock { FontWeight = FontWeights.Bold, Text = "-", TextTrimming = TextTrimming.CharacterEllipsis };
         var label = new TextBlock { Margin = new Thickness(0, 0, 0, 2), TextTrimming = TextTrimming.CharacterEllipsis };
-        var box = new StackPanel { Margin = new Thickness(0, 4, 0, 6) };
+        var box = new StackPanel { Margin = new Thickness(0, 2, 0, 3) };
         box.Children.Add(label);
         box.Children.Add(value);
         box.Loaded += (_, _) =>
@@ -65,7 +65,7 @@ public static partial class Parts
 
     private static (FrameworkElement, Action<DataScope>) Text(ViewItem item)
     {
-        var t = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 2), LineHeight = 18, LineStackingStrategy = LineStackingStrategy.BlockLineHeight };
+        var t = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 1, 0, 1), LineHeight = 15, LineStackingStrategy = LineStackingStrategy.BlockLineHeight };
         t.Loaded += (_, _) => t.FontSize = (double)t.FindResource("Hunsu.FontSmall");
         return (t, scope =>
         {
@@ -78,7 +78,7 @@ public static partial class Parts
     private static (FrameworkElement, Action<DataScope>) Badge(ViewItem item)
     {
         var text = new TextBlock { Margin = new Thickness(8, 1, 8, 1) };
-        var b = new Border { Child = text, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 4, 0, 4), MinHeight = 18 };
+        var b = new Border { Child = text, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 2), MinHeight = 16 };
         b.Loaded += (_, _) =>
         {
             b.CornerRadius = (CornerRadius)b.FindResource("Hunsu.PillRadius");
@@ -95,14 +95,14 @@ public static partial class Parts
 
     private static FrameworkElement Divider()
     {
-        var d = new Border { Height = 1, Margin = new Thickness(0, 6, 0, 6) };
+        var d = new Border { Height = 1, Margin = new Thickness(0, 3, 0, 3) };
         d.Loaded += (_, _) => d.Background = (Brush)d.FindResource("Hunsu.Line");
         return d;
     }
 
     public static FrameworkElement Placeholder(string text)
     {
-        var t = new TextBlock { Text = text, Margin = new Thickness(0, 4, 0, 4), TextWrapping = TextWrapping.Wrap };
+        var t = new TextBlock { Text = text, Margin = new Thickness(0, 2, 0, 2), TextWrapping = TextWrapping.Wrap };
         t.Loaded += (_, _) => t.Foreground = (Brush)t.FindResource(ThemeKeys.Muted);
         return t;
     }
