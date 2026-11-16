@@ -60,6 +60,7 @@ internal sealed partial class ShellController
         UpdateLeftVisibility();
         bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
         _right.SetAllCollapsedLabel(allCollapsed);
+        UpdateMarkLayer();
         ModulesChanged?.Invoke();
     }
 
@@ -169,6 +170,7 @@ internal sealed partial class ShellController
         if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); });
         else ForTopic(r.Topic, m => m.SetStale(true));
         if (r.Response.Ok && r.Topic == "selection.summary") ObserveHistory(r);
+        if (r.Response.Ok) OnTopicForMarks(r);
     }
 
     /// <summary>다리 신호 하나가 왔을 때 다시 조회할 주제: 켜진 모듈의 구독만(꺼진 모듈은 엑셀을 바쁘게 하지 않는다).</summary>

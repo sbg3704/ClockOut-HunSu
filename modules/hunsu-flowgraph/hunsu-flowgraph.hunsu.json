@@ -1,0 +1,22 @@
+{
+  "spec": 0,
+  "id": "hunsu-flowgraph",
+  "name": "수식 족보",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "수식",
+  "author": "ClockOut",
+  "description": "고른 칸의 수식이 어디서 오고 어디로 가는지 시트를 넘어 두 단계까지 나무처럼 보여 줍니다. 줄을 누르면 그 칸으로 갑니다. 다른 통합 문서 참조는 수만 셉니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.014", "reason": "시트를 넘는 수식 흐름 조회(flow.graph)와 이동(goto)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 410,
+  "data": [
+    {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"}
+  ],
+  "commands": ["goto"],
+  "scope": "book",
+  "params": []
+}

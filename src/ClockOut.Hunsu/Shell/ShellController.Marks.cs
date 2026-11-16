@@ -1,0 +1,86 @@
+// 기능: 셀 위 표시층(ShellController의 일부). 켜진 모듈의 view.json marks[] 선언을 모아, 해당 주제 조회 결과(칸 자리)를 MarkWindow에 그린다.
+//       스크롤은 엑셀 이벤트가 없어서 엑셀이 앞에 있을 때만 settings.markPollMs 간격으로 그 주제를 다시 묻는다(끄는 중이면 QueryThrottle이 미룬다).
+// 사용법: OnTopic이 결과마다 OnTopicForMarks(r)를 부르고, RefreshDocks·전부 숨김·엑셀 바뀜 때 UpdateMarkLayer()를 부른다.
+// 의존: Overlay/MarkWindow, Core/Marks/MarkGeometry, Core/View(MarkSpec, DataScope), Ui/Theme(ThemeKeys.Tone). 칸 값은 받지 않는다(자리만).
+using System.Text.Json;
+using System.Windows.Media;
+using System.Windows.Threading;
+using ClockOut.Hunsu.Core;
+using ClockOut.Hunsu.Core.Marks;
+using ClockOut.Hunsu.Core.View;
+using ClockOut.Hunsu.Excel;
+using ClockOut.Hunsu.Native;
+using ClockOut.Hunsu.Overlay;
+using ClockOut.Hunsu.Ui.Theme;
+
+namespace ClockOut.Hunsu.Shell;
+
+internal sealed partial class ShellController
+{
+    private MarkWindow? _markWindow;
+    private DispatcherTimer? _markPoll;
+    private readonly Dictionary<string, JsonElement> _markData = new(StringComparer.Ordinal); // 주제 → 마지막 결과
+
+    /// <summary>켜진 모듈의 marks 선언과 그 모듈.</summary>
+    private IEnumerable<(ModuleView Module, MarkSpec Spec)> ActiveMarks() =>
+        _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.View.Marks.Select(s => (m, s)));
+
+    private IReadOnlyList<string> MarkTopics() =>
+        [.. ActiveMarks().SelectMany(x => x.Module.Module.Manifest.Data.Select(d => d.Topic).Where(t => x.Spec.Items.StartsWith(t + ".", StringComparison.Ordinal)))
+            .Where(t => !TopicRouting.IsAppTopic(t)).Distinct(StringComparer.Ordinal)];
+
+    private void OnTopicForMarks(TopicResult r)
+    {
+        if (r.Excel != _target || !MarkTopics().Contains(r.Topic)) return;
+        _markData[r.Topic] = r.Response.Data.Clone();
+        DrawMarks();
+    }
+
+    private void DrawMarks()
+    {
+        if (_hiddenAll || _target == IntPtr.Zero || User32.IsIconic(_target)) { _markWindow?.Clear(); return; }
+        var specs = ActiveMarks().ToList();
+        if (specs.Count == 0) { _markWindow?.Clear(); return; }
+        _markWindow ??= new MarkWindow();
+        _markWindow.SetOwner(_target);
+        var excel = User32.WindowBounds(_target);
+        var scope = new DataScope();
+        foreach (var kv in _markData) scope.Set(kv.Key, kv.Value);
+        var shapes = new List<(MarkBox, Brush, string)>();
+        foreach (var (_, spec) in specs)
+        {
+            if (!scope.TryGet(spec.Items, out var arr)) continue;
+            string topic = _markData.Keys.Where(t => spec.Items.StartsWith(t + ".", StringComparison.Ordinal)).OrderByDescending(t => t.Length).FirstOrDefault() ?? "";
+            var panes = scope.TryGet(topic + ".panes", out var p) ? MarkGeometry.Read(p) : [];
+            var brush = ThemeKeys.Tone(_markWindow, spec.Tone);
+            foreach (var box in MarkGeometry.Layout(MarkGeometry.Read(arr), panes, excel, _markWindow.Scale)) shapes.Add((box, brush, spec.Style));
+        }
+        _markWindow.Draw(excel, shapes);
+    }
+
+    /// <summary>표시층을 쓰는 모듈이 켜져 있으면 느린 다시 묻기를 켜고, 아니면 끄고 지운다.</summary>
+    private void UpdateMarkLayer()
+    {
+        bool any = MarkTopics().Count > 0;
+        if (!any)
+        {
+            _markPoll?.Stop();
+            _markData.Clear();
+            _markWindow?.Clear();
+            return;
+        }
+        if (_settings.MarkPollMs > 0)
+        {
+            _markPoll ??= new DispatcherTimer(TimeSpan.FromMilliseconds(_settings.MarkPollMs), DispatcherPriority.Background, (_, _) => PollMarks(), System.Windows.Application.Current.Dispatcher);
+            _markPoll.Start();
+        }
+        DrawMarks();
+    }
+
+    private void PollMarks()
+    {
+        if (_hiddenAll || _target == IntPtr.Zero) return;
+        if (User32.GetForegroundWindow() != _target) return; // 다른 창을 쓰는 동안 엑셀을 바쁘게 하지 않는다
+        _registry.Refresh(_target, MarkTopics());
+    }
+}

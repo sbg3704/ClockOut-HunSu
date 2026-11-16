@@ -43,6 +43,9 @@ public sealed class HunsuSettings
     /// <summary>도크 패널 너비(DIP). 범위 200~480. 핀 창은 끌어서 크기를 바꾼다(부르기 중).</summary>
     public int PanelWidth { get; init; } = 240;
 
+    /// <summary>셀 위 표시층(mark)을 쓰는 모듈이 켜져 있을 때, 엑셀이 앞에 있으면 이 간격(ms)으로 자리를 다시 묻는다(스크롤에는 엑셀 이벤트가 없음). 0이면 신호 때만. 범위 0 또는 150~5000.</summary>
+    public int MarkPollMs { get; init; } = 400;
+
     public bool IsEnabledByDefault(string moduleId) => EnabledByDefault.Contains("*") || EnabledByDefault.Contains(moduleId);
 
     public static HunsuSettings FromJson(string? text)
@@ -76,6 +79,7 @@ public sealed class HunsuSettings
             ManagerOnStart = ManagerOnStart,
             Theme = ThemeChoice.Normalize(Theme),
             PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
+            MarkPollMs = MarkPollMs == 0 || InRange(MarkPollMs, 150, 5000) ? MarkPollMs : d.MarkPollMs,
         };
     }
 

@@ -1,5 +1,6 @@
 // 기능: 화면 선언(view.json)을 읽는다(docs/01 4.1장). 모양별(tab, panel, chip)로 부품 목록과 연결 글 틀을 담는다.
 // 사용법: var (spec, errors) = ViewSpec.Parse(json); spec.Panel → 부품 목록, spec.Tab → 손잡이 제목·배지
+//   marks[]는 셀 위 표시층 선언(MarkSpec).
 // 의존: System.Text.Json. 부품 종류 목록은 KnownItems 한 곳. 모르는 부품은 오류로 모아 그 줄만 건너뛴다.
 using System.Text.Json;
 
@@ -17,8 +18,17 @@ public sealed record ShapeSpec(IReadOnlyDictionary<string, string> Props)
     public string Get(string key, string fallback = "") => Props.TryGetValue(key, out var v) ? v : fallback;
 }
 
+/// <summary>셀 위 표시층 선언 하나(view.json의 marks[]): items는 칸 자리(x,y,w,h 화면 픽셀) 배열 경로, tone은 색, style은 outline(테두리)·fill(옅은 칠)·underline(밑줄).</summary>
+public sealed record MarkSpec(string Items, string Tone, string Style)
+{
+    public static readonly IReadOnlySet<string> Styles = new HashSet<string> { "outline", "fill", "underline" };
+}
+
 public sealed record ViewSpec(ShapeSpec? Tab, ShapeSpec? Chip, IReadOnlyList<ViewItem> Panel)
 {
+    /// <summary>셀 위 표시층(docs/08). 없으면 빈 목록.</summary>
+    public IReadOnlyList<MarkSpec> Marks { get; init; } = [];
+
     public static readonly IReadOnlySet<string> KnownItems = new HashSet<string>
     {
         "stat", "list", "text", "badge", "button", "toggle", "input", "bar", "spark", "progress", "flow", "tabs", "divider",
@@ -51,7 +61,22 @@ public sealed record ViewSpec(ShapeSpec? Tab, ShapeSpec? Chip, IReadOnlyList<Vie
                     items.Add(new ViewItem(type, props));
                 }
             }
-            return (new ViewSpec(tab, chip, items), errors);
+            var marks = new List<MarkSpec>();
+            if (r.TryGetProperty("marks", out var mk) && mk.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var e in mk.EnumerateArray())
+                {
+                    var props = Props(e);
+                    string path = props.TryGetValue("items", out var it) ? it : "";
+                    string tone = props.TryGetValue("tone", out var tn) ? tn : "info";
+                    string style = props.TryGetValue("style", out var st) ? st : "outline";
+                    if (path.Length == 0) { errors.Add("marks에 items 없음"); continue; }
+                    if (!Tones.Contains(tone)) errors.Add($"모르는 톤: '{tone}'");
+                    if (!MarkSpec.Styles.Contains(style)) { errors.Add($"모르는 표시 모양: '{style}'"); continue; }
+                    marks.Add(new MarkSpec(path, tone, style));
+                }
+            }
+            return (new ViewSpec(tab, chip, items) { Marks = marks }, errors);
         }
         catch (JsonException ex)
         {
