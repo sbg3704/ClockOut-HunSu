@@ -29,6 +29,7 @@ internal sealed partial class ShellController : IDisposable
     private readonly InstanceRegistry _registry;
     private readonly HotkeyService _hotkeys;
     private readonly TrayIcon _tray;
+    private BridgeUpdater? _bridgeUpdater;
     private readonly DockWindow _right;
     private readonly DockWindow _left;
     private readonly List<ModuleView> _modules = [];
@@ -87,12 +88,17 @@ internal sealed partial class ShellController : IDisposable
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
             var side = d.Side;
+            d.SetCenterRatio(_store.State.DockRatio(side));
+            d.HubDropped += (ratio, x) => OnHubDropped(side, ratio, x);
             d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }
     }
 
     public void Start()
     {
+        // 이미 깔린 다리가 이 묶음의 다리보다 낮으면 스스로 바꾼다(엑셀이 잡고 있으면 놓을 때까지 기다림).
+        _bridgeUpdater = new BridgeUpdater(_log, text => Application.Current.Dispatcher.BeginInvoke(() => _tray.Balloon(text)));
+        _bridgeUpdater.Start();
         var roots = new[] { Path.Combine(AppContext.BaseDirectory, "modules") };
         foreach (var lm in ModuleCatalog.Load(roots, _log)) _modules.Add(CreateView(lm));
         foreach (var mv in _modules.Where(m => m.Module.Manifest.Shapes.Contains("window") || m.Module.Manifest.Shapes.Contains("panel"))) PinWindowFor(mv);
@@ -193,15 +199,6 @@ internal sealed partial class ShellController : IDisposable
         f.Sync(any ? "show" : "empty");
     }
 
-    public void ToggleSummon()
-    {
-        _summoned = !_summoned;
-        if (_summoned && _hiddenAll) ToggleHideAll();
-        foreach (var p in _pins.Values) p.SetInteractive(_summoned);
-        foreach (var m in _modules.Where(m => m.InDock)) m.Frame.SetSummoned(_summoned);
-        _log.Write("summon", ("on", _summoned), ("pins", _pins.Count));
-    }
-
     public void ToggleHideAll()
     {
         _hiddenAll = !_hiddenAll;
@@ -233,6 +230,7 @@ internal sealed partial class ShellController : IDisposable
         _log.Write("exit");
         foreach (var f in _followers) f.Dispose();
         _hotkeys.Dispose();
+        _bridgeUpdater?.Dispose();
         _tray.Dispose();
         _registry.Dispose();
         _signal.Dispose();

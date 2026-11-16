@@ -8,6 +8,7 @@ param([string]$Xlam)
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 $repo = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot '_com.ps1')
 if (-not $Xlam) { $Xlam = Join-Path $repo 'out\clockout-hunsu.xlam' }
 if (-not (Test-Path $Xlam)) { Write-Host "[중단] $Xlam 이 없습니다. tools\build_bridge.ps1을 먼저 돌리세요." -ForegroundColor Red; exit 1 }
 Add-Type -Namespace HunsuTest -Name Win -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint pid);' -ErrorAction SilentlyContinue
@@ -19,14 +20,14 @@ function Check([string]$name, [bool]$ok, [string]$detail = '') {
 $xl = $null; $xlPid = 0
 try {
     $xl = New-Object -ComObject Excel.Application
-    $xl.Visible = $false; $xl.DisplayAlerts = $false
+    Invoke-ComRetry { $xl.Visible = $false; $xl.DisplayAlerts = $false }
     $p = [uint32]0; [void][HunsuTest.Win]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
-    $null = $xl.Workbooks.Open($Xlam)
-    $wb = $xl.Workbooks.Add()
+    $null = Invoke-ComRetry { $xl.Workbooks.Open($Xlam) }
+    $wb = Invoke-ComRetry { $xl.Workbooks.Add() }
     $ws = $wb.Worksheets.Item(1)
     $ws.Range('A1').Value2 = 10; $ws.Range('A2').Value2 = 20.5; $ws.Range('A3').Value2 = '글자'
     $ws.Range('A4').Formula = '=A1*2'; $ws.Range('A5').Formula = '=1/0'
-    $run = { param($proc, $a1, $a2) if ($PSBoundParameters.Count -ge 3) { $xl.Run("'clockout-hunsu.xlam'!$proc", $a1, $a2) } else { $xl.Run("'clockout-hunsu.xlam'!$proc") } }
+    $run = { param($proc, $a1, $a2) if ($PSBoundParameters.Count -ge 3) { Invoke-ComRetry { $xl.Run("'clockout-hunsu.xlam'!$proc", $a1, $a2) } } else { Invoke-ComRetry { $xl.Run("'clockout-hunsu.xlam'!$proc") } } }
 
     Write-Host "hello"
     $h = (& $run 'CoHunsu_Hello') | ConvertFrom-Json

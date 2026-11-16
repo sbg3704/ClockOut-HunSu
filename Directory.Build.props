@@ -1,6 +1,6 @@
 <!-- 기능: 저장소 안 모든 C# 프로젝트의 공통 설정(docs/05 2장: Nullable, ImplicitUsings, 경고를 오류로). -->
 <!-- 사용법: 각 .csproj가 자동으로 읽는다. 프로젝트마다 따로 적지 않는다. -->
-<!-- 의존: global.json(SDK 판 고정) -->
+<!-- 의존: global.json(SDK 판 고정). Version이 훈수꾼의 판 번호 한 곳이다(co build, pack_app, 알림 영역 툴팁이 여기서 읽음). 프로그램을 바꾸는 PR은 올린다(CLAUDE.md). -->
 <Project>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>

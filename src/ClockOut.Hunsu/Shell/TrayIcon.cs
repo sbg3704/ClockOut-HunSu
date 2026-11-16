@@ -1,6 +1,6 @@
 // 기능: 알림 영역(작업 표시줄 오른쪽) 아이콘과 메뉴: 부르기·닫기, 전부 숨기기·다시 보이기, 모듈 관리, 끄기. 끄는 단추가 없다는 0단계 지적을 메운다.
 // 사용법: using var tray = new TrayIcon(); tray.SummonClicked += ...; tray.HideAllClicked += ...; tray.QuitClicked += ...
-// 의존: WinForms NotifyIcon(WPF에 없음), System.Drawing(아이콘을 그림 파일 없이 그려 만든다). 이름은 다 적어 쓴다(WPF 이름과 겹치지 않게).
+// 의존: WinForms NotifyIcon(WPF에 없음), System.Drawing. 아이콘은 실행 파일에 넣은 hunsu.ico(고양이, assets/icon)를 읽고, 못 읽으면 "훈" 원을 그려 대신한다. 이름은 다 적어 쓴다(WPF 이름과 겹치지 않게).
 namespace ClockOut.Hunsu.Shell;
 
 internal sealed class TrayIcon : IDisposable
@@ -9,9 +9,12 @@ internal sealed class TrayIcon : IDisposable
     private readonly System.Drawing.Icon _image;
     private readonly System.Windows.Forms.ToolStripMenuItem _hideItem;
 
+    /// <summary>알림 영역 툴팁은 63자까지라 넘으면 자른다.</summary>
+    private static string Trim(string s) => s.Length <= 63 ? s : s[..63];
+
     public TrayIcon()
     {
-        _image = DrawIcon();
+        _image = LoadIcon() ?? DrawIcon();
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("부르기 · 닫기\tCtrl+Alt+H", null, (_, _) => SummonClicked?.Invoke());
         _hideItem = new System.Windows.Forms.ToolStripMenuItem("전부 숨기기\tCtrl+Alt+Shift+H", null, (_, _) => HideAllClicked?.Invoke());
@@ -20,7 +23,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add("모양 바꾸기…", null, (_, _) => LookClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("훈수꾼 끄기", null, (_, _) => QuitClicked?.Invoke());
-        _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = "훈수꾼", ContextMenuStrip = menu, Visible = true };
+        _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = Trim("훈수꾼 " + BuildInfo.Text), ContextMenuStrip = menu, Visible = true };
         _icon.MouseClick += (_, e) => { if (e.Button == System.Windows.Forms.MouseButtons.Left) SummonClicked?.Invoke(); };
     }
 
@@ -30,9 +33,26 @@ internal sealed class TrayIcon : IDisposable
     public event Action? ManagerClicked;
     public event Action? LookClicked;
 
+    /// <summary>알림 영역 풍선 안내(다리 갱신처럼 사용자가 알아야 하는 한 줄).</summary>
+    public void Balloon(string text) => _icon.ShowBalloonTip(8000, "훈수꾼", text, System.Windows.Forms.ToolTipIcon.Info);
+
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";
 
-    /// <summary>청록 원 안에 "훈"(docs/03 accent). 그림 파일을 두지 않으려고 실행 때 그린다.</summary>
+    /// <summary>실행 파일에 넣은 hunsu.ico에서 알림 영역 크기(보통 16·20·24px)에 맞는 그림을 읽는다. 없거나 깨지면 null.</summary>
+    private static System.Drawing.Icon? LoadIcon()
+    {
+        try
+        {
+            using var s = typeof(TrayIcon).Assembly.GetManifestResourceStream("hunsu.ico");
+            return s is null ? null : new System.Drawing.Icon(s, System.Windows.Forms.SystemInformation.SmallIconSize);
+        }
+        catch (Exception ex) when (ex is ArgumentException or System.IO.IOException)
+        {
+            return null; // 아이콘 읽기 실패는 앱을 멈출 일이 아니다: 그려 만든 아이콘으로 대신한다.
+        }
+    }
+
+    /// <summary>(대체용) 청록 원 안에 "훈"(docs/03 accent). 그림 파일을 두지 않으려고 실행 때 그린다.</summary>
     private static System.Drawing.Icon DrawIcon()
     {
         using var bmp = new System.Drawing.Bitmap(32, 32);

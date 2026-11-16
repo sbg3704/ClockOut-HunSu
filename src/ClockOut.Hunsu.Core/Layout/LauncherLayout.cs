@@ -166,7 +166,7 @@ public static class LauncherShapes
         return Math.Ceiling(-left + 8);
     }
 
-    /// <summary>펼친 묶음의 모듈 줄: 왼쪽 끝(left)에서 왼쪽으로 count개, 세로 y. 간격 = 지름 + 8.</summary>
+    /// <summary>펼친 묶음의 모듈 줄: 왼쪽 끝(left)에서 왼쪽으로 count개, 세로 y. 간격 = 지름 + 16(배지가 이웃 아이콘에 닿지 않게).</summary>
     public static IReadOnlyList<LPoint> Row(double left, double y, int count, double size) =>
-        Enumerable.Range(0, count).Select(j => new LPoint(left - 12 - size / 2 - j * (size + 8), y)).ToList();
+        Enumerable.Range(0, count).Select(j => new LPoint(left - 12 - size / 2 - j * (size + 16), y)).ToList();
 }

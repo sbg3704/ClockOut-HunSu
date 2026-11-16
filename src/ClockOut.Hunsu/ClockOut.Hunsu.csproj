@@ -12,14 +12,33 @@
     <AssemblyName>ClockOut.Hunsu</AssemblyName>
     <RootNamespace>ClockOut.Hunsu</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\hunsu.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- WFO0003: WinForms 앱용 안내(DPI를 Application.SetHighDpiMode로). 이 앱은 WPF이고 WinForms는 알림 아이콘에만 쓰므로 매니페스트(PerMonitorV2)를 유지한다. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
+  <!-- 판 번호 뒤에 "이 PR에서 몇 번째 작업인지"(main 뒤로 쌓인 커밋 수 → a, b, c...), co가 넣는 꼬리표(HUNSU_BUILD_TAG, 예 pr20), 짧은 커밋을 붙여 같은 판의 시험 빌드를 구별한다: v0.0.020c pr20 abc1234. git이 없으면 판 번호만. -->
+  <Target Name="HunsuStamp" BeforeTargets="InitializeSourceControlInformation">
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="HunsuSha" />
+    </Exec>
+    <Exec Command="git rev-list --count origin/main..HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="HunsuCount" />
+    </Exec>
+    <PropertyGroup>
+      <HunsuCount Condition="'$(HunsuCount)' == '' Or !$([System.Text.RegularExpressions.Regex]::IsMatch('$(HunsuCount)', '^[0-9]+$'))">0</HunsuCount>
+      <SourceRevisionId Condition="'$(HunsuSha)' != ''">$(HunsuCount).$(HunsuSha)</SourceRevisionId>
+      <SourceRevisionId Condition="'$(HunsuSha)' != '' And '$(HUNSU_BUILD_TAG)' != ''">$(HUNSU_BUILD_TAG).$(HunsuCount).$(HunsuSha)</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
   <ItemGroup>
     <!-- WinForms의 Application, MessageBox 등과 WPF 이름이 겹치지 않게 암묵 using에서 뺀다(NotifyIcon만 이름을 다 적어 쓴다). -->
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 고양이 아이콘: 실행 파일 아이콘이자 알림 영역 아이콘 원본. 원본 SVG는 assets/icon, 만드는 법은 tools/icons/make_app_icon.mjs. -->
+    <EmbeddedResource Include="Assets\hunsu.ico" LogicalName="hunsu.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClockOut.Hunsu.Core\ClockOut.Hunsu.Core.csproj" />

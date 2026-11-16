@@ -16,12 +16,15 @@ public sealed record ModulePlacement
     public PixelRect? PinRect { get; init; }
     public bool Hidden { get; init; }
 
+    /// <summary>이 모듈의 자리를 잠근다(편집 모드에서도 끌어 옮기지 못함). 편집 모드에서 자물쇠 단추로 바꾼다.</summary>
+    public bool Locked { get; init; }
+
     /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
     public bool? Enabled { get; init; }
 }
 
 /// <summary>선언과 사용자 값을 합친 결과.</summary>
-public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden);
+public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden, bool Locked = false);
 
 public sealed class LayoutState
 {
@@ -36,6 +39,14 @@ public sealed class LayoutState
     public int Spec { get; init; } = CurrentSpec;
     public Dictionary<string, ModulePlacement> Modules { get; init; } = new(StringComparer.Ordinal);
 
+    /// <summary>도크(edge-left, edge-right)마다 훈 원의 세로 자리(창 높이에 대한 비율). 편집 모드에서 훈 원을 끌어 바꾼다.</summary>
+    public Dictionary<string, double> Docks { get; init; } = new(StringComparer.Ordinal);
+
+    public const double DefaultDockRatio = 0.45;
+
+    /// <summary>그 도크의 훈 원 세로 비율(0.1~0.9). 정하지 않았으면 기본.</summary>
+    public double DockRatio(string place) => Docks.TryGetValue(place, out var r) ? Math.Clamp(r, 0.1, 0.9) : DefaultDockRatio;
+
     /// <summary>글을 읽는다. 읽을 수 없으면 빈 배치(기본값)로 시작하고 ok=false.</summary>
     public static (LayoutState State, bool Ok) FromJson(string? text)
     {
@@ -44,7 +55,7 @@ public sealed class LayoutState
         {
             var s = JsonSerializer.Deserialize<LayoutState>(text, Json);
             if (s == null || s.Spec > CurrentSpec) return (new LayoutState(), false);
-            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal) }, true);
+            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal), Docks = new Dictionary<string, double>(s.Docks ?? [], StringComparer.Ordinal) }, true);
         }
         catch (JsonException)
         {
@@ -63,6 +74,6 @@ public sealed class LayoutState
     {
         var p = Get(id);
         string place = p.Place != null && Places.CanPlace(p.Place, shapes) ? p.Place : declaredPlace;
-        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault));
+        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault), p.Locked);
     }
 }

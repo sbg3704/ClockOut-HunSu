@@ -86,7 +86,7 @@ public class LauncherTests
     {
         var row = LauncherShapes.Row(300, 100, 3, 32);
         Assert.True(row[0].X < 300 && row[1].X < row[0].X && row[2].X < row[1].X);
-        Assert.Equal(40, row[0].X - row[1].X, 3);
+        Assert.Equal(48, row[0].X - row[1].X, 3);
     }
 
     [Fact]
