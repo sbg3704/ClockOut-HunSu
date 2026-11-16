@@ -1,4 +1,12 @@
-# 인수인계 (2026-11-13 갱신)
+# 인수인계 (2026-11-16 갱신)
+
+## 2026-11-16 계정1 몫 6가지 (브랜치 `claude/project-thread-697fy8`, 클라우드 작업)
+- 사용자 지시: PR #13 머지(완료) → PR #14 나눔 표의 계정1 몫을 Claude 추천대로 만들기. 설계·결정·스위치는 `docs/08_계정1_틀_기능_2026-11-16.md`.
+- 된 것: 부품 bar·spark·progress, 밝은/어두운 테마(`theme`), 도크 패널 너비(`panelWidth`)·핀 창 모서리 크기 조절, 발자취(`hunsu-history`, 앱 주제 `app.*`), 시트를 넘는 수식 흐름(`flow.graph`, `hunsu-flowgraph`), 셀 위 표시층(`mark`, `marks[]` 문법, `hunsu-marks`), bench 조회 부하(`QueryLoadChecks`). 다리 0.0.014.
+- 확인: 클라우드에서 빌드 0경고·0오류, Core 시험 138개 통과, bench 컴파일. **VBA 컴파일·엑셀 실행·화면은 아직**.
+- 다음: PC에서 `tools\build.ps1` → `tools\build_bridge.ps1` → `tools\test_bridge.ps1`(새 시험 4개) → 앱에서 새 모듈 3개 켜 보기 → 확대·배율에서 표시층이 칸에 맞는지 → `run_bench.ps1`.
+- 계정2(PR #14)와 겹치는 곳: `CoHunsuApi.bas`의 Select Case·hello 목록 2줄, `RepoModules()` 한 줄, 다리 판(0.0.014). 나중에 머지하는 쪽이 한 줄씩 이어 붙인다.
+- 먼저 읽을 파일: `docs/08_계정1_틀_기능_2026-11-16.md`, `src/ClockOut.Hunsu/Shell/ShellController.Marks.cs`, `addins/clockout-hunsu/CoHunsuQ_FlowGraph.bas`.
 
 ## 2026-11-13 오후 떨림 고침 끝 (PR #13, 일#306)
 - 근본 원인(다리 조회 중 SpecialCells가 선택 이벤트를 일으킨 조회→신호 고리)을 고쳤고, 사용자가 보이는 엑셀에서 끌어 보고 "잘 작동함"(16:06).

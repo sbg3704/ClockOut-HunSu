@@ -102,11 +102,11 @@ Private Sub Walk(ByVal c As Range, ByVal level As Long, ByVal depth As Long, ByV
     Next r
 End Sub
 
-Private Function NodeJson(ByVal r As Range, ByVal from As Range, ByVal level As Long) As String
+Private Function NodeJson(ByVal r As Range, ByVal origin As Range, ByVal level As Long) As String
     Dim sh As String, a As String, v As String, f As String, cross As Boolean
     sh = r.Worksheet.Name
     a = r.Address(False, False)
-    cross = (sh <> from.Worksheet.Name)
+    cross = (sh <> origin.Worksheet.Name)
     On Error Resume Next
     If r.CountLarge = 1 Then
         v = Left$(CStr(r.Text), 24)
