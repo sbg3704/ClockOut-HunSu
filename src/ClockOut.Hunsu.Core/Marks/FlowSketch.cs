@@ -11,20 +11,21 @@ namespace ClockOut.Hunsu.Core.Marks;
 public sealed record SketchCell(string Addr, MarkBox Box, string To = "");
 
 /// <summary>획 하나. StartMs부터 DurationMs 동안 처음에서 끝으로 그려진다. Shade는 칠하기(스크리블). Pressure는 점마다 굵기 배율(캘리그라피 강약, 없으면 일정한 굵기).</summary>
-public sealed record SketchStroke(IReadOnlyList<PointD> Points, string Tone, double Width, double Alpha, double StartMs, double DurationMs, bool Shade = false, IReadOnlyList<double>? Pressure = null);
+public sealed record SketchStroke(IReadOnlyList<PointD> Points, string Tone, double Width, double Alpha, double StartMs, double DurationMs, bool Shade = false, IReadOnlyList<double>? Pressure = null, bool Late = false);
 
-/// <summary>손글씨 이름표. StartMs에 나타난다. Angle은 도. Badge면 (X,Y)가 가운데인 작은 동그라미 번호표.</summary>
-public sealed record SketchLabel(string Text, double X, double Y, double Angle, string Tone, double StartMs, bool Badge = false);
+/// <summary>손글씨 이름표. StartMs에 나타난다. Angle은 도. Badge면 (X,Y)가 가운데인 작은 동그라미 번호표. Late는 다른 시트 조회가 늦게 도착해 나중에 더해지는 것(그것만 움직이며 나타남).</summary>
+public sealed record SketchLabel(string Text, double X, double Y, double Angle, string Tone, double StartMs, bool Badge = false, bool Late = false);
 
 public sealed record SketchTones(string Active, string Pre, string Dep);
 
 public sealed record SketchPlan(string Key, IReadOnlyList<SketchStroke> Strokes, IReadOnlyList<SketchLabel> Labels, double TotalMs, bool Grain = true)
 {
+    public bool HasLate => Strokes.Any(s => s.Late);
     public static readonly SketchPlan Empty = new("", [], [], 0);
     public bool IsEmpty => Strokes.Count == 0;
 }
 
-public static class FlowSketch
+public static partial class FlowSketch
 {
     /// <summary>한 묶음(앞/뒤)에서 그리는 칸의 최대 수. 가까운 것부터. 넘으면 그만큼 덜 그린다(그리기 부담 한도).</summary>
     public const int MaxPerGroup = 10;
@@ -62,12 +63,14 @@ public static class FlowSketch
         public readonly List<SketchStroke> Strokes = [];
         public readonly List<SketchLabel> Labels = [];
         public int Number;
+        public int CrossNotes; // 시트 설명 글을 위로 쌓아 서로 겹치지 않게 하는 순번
     }
 
     public static SketchPlan Plan(string sheet, IReadOnlyList<SketchCell> active, IReadOnlyList<SketchCell> pre, IReadOnlyList<SketchCell> dep, SketchTones tones,
-        SketchLook? look = null, IReadOnlyList<SketchCell>? pre2 = null, IReadOnlyList<SketchCell>? dep2 = null)
+        SketchLook? look = null, IReadOnlyList<SketchCell>? pre2 = null, IReadOnlyList<SketchCell>? dep2 = null, SketchCross? cross = null)
     {
-        if (active.Count == 0 || (pre.Count == 0 && dep.Count == 0)) return SketchPlan.Empty;
+        bool hasCross = cross is { IsEmpty: false };
+        if (active.Count == 0 || (pre.Count == 0 && dep.Count == 0 && !hasCross)) return SketchPlan.Empty;
         var ctx = new Ctx(look ?? SketchLook.Pencil);
         var a = active[0];
         double cursor = 0;
@@ -77,6 +80,9 @@ public static class FlowSketch
         cursor = AddPencil(ctx, PencilStroke.Loop(a.Box, rngA, 3.5), tones.Active, 3.0, 0.95, cursor, 3.2, rngA);
         cursor = AddPencil(ctx, PencilStroke.Loop(a.Box, rngA, 7), tones.Active, 2.0, 0.8, cursor - 60, 3.2, rngA);
         ctx.Labels.Add(new SketchLabel("여기", a.Box.X + a.Box.W + 2, a.Box.Y - 15, -4, tones.Active, 60));
+
+        // 다른 시트에서 들어오는 값: 아래 시트 탭까지 쓕 갔다가 돌아온다(번호가 가장 먼저)
+        if (hasCross) cursor = AddCross(ctx, sheet, a, cross!.Pre, true, tones.Pre, cross, cursor);
 
         // 단계 순서 = 계산이 흘러가는 순서: 더 앞(2단계 쓰는 칸) → 쓰는 칸 → 쓰이는 칸 → 더 뒤. 번호도 이 순서로 붙는다.
         var ac = Center(a.Box);
@@ -136,6 +142,9 @@ public static class FlowSketch
             }
         }
 
+        // 다른 시트로 나가는 값(번호가 가장 나중)
+        if (hasCross) AddCross(ctx, sheet, a, cross!.Dep, false, tones.Dep, cross, cursor);
+
         var strokes = ctx.Strokes;
         var labels = ctx.Labels;
         double total = Math.Max(strokes.Max(s => s.StartMs + s.DurationMs), labels.Count == 0 ? 0 : labels.Max(l => l.StartMs + 120));
@@ -147,7 +156,7 @@ public static class FlowSketch
             total = Math.Min(total, BudgetMs);
         }
         string key = sheet + "|" + ctx.Look.Name + "|" + a.Addr + "|" + string.Join(",", pre.Select(c => c.Addr)) + "|" + string.Join(",", dep.Select(c => c.Addr))
-            + "|" + string.Join(",", (pre2 ?? []).Select(c => c.Addr + "<" + c.To)) + "|" + string.Join(",", (dep2 ?? []).Select(c => c.Addr + "<" + c.To));
+            + "|" + string.Join(",", (pre2 ?? []).Select(c => c.Addr + "<" + c.To)) + "|" + string.Join(",", (dep2 ?? []).Select(c => c.Addr + "<" + c.To));  // 다른 시트 정보는 키에 넣지 않는다(늦게 도착해도 처음부터 다시 그리지 않으려고)
         return new SketchPlan(key, strokes, labels, total, ctx.Look.Grain);
     }
 

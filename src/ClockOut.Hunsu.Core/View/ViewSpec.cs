@@ -19,11 +19,11 @@ public sealed record ShapeSpec(IReadOnlyDictionary<string, string> Props)
 }
 
 /// <summary>셀 위 표시층 선언 하나(view.json의 marks[]): items는 칸 자리(x,y,w,h 화면 픽셀) 배열 경로, tone은 색, style은 outline(테두리)·fill(옅은 칠)·underline(밑줄)·pencil(손으로 그린 색연필 수식 흐름).
-/// pencil은 role이 필요하다: active(고른 칸을 두름) · pre(쓰는 칸, 화살표가 고른 칸으로) · dep(쓰이는 칸, 화살표가 그 칸으로) · pre2/dep2(한 단계 더 앞/뒤, 칸 자리에 to가 있음). 칸 자리에 addr가 있어야 한다.</summary>
+/// pencil은 role이 필요하다: active(고른 칸을 두름) · pre(쓰는 칸, 화살표가 고른 칸으로) · dep(쓰이는 칸, 화살표가 그 칸으로) · pre2/dep2(한 단계 더 앞/뒤, 칸 자리에 to가 있음) · crossPre/crossDep(다른 시트에서 오는/가는 칸, flow.graph의 items) · tabs(시트 탭 이름 순서, sheets의 items). 칸 자리에 addr가 있어야 한다.</summary>
 public sealed record MarkSpec(string Items, string Tone, string Style, string Role = "")
 {
     public static readonly IReadOnlySet<string> Styles = new HashSet<string> { "outline", "fill", "underline", "pencil" };
-    public static readonly IReadOnlySet<string> Roles = new HashSet<string> { "active", "pre", "dep", "pre2", "dep2" };
+    public static readonly IReadOnlySet<string> Roles = new HashSet<string> { "active", "pre", "dep", "pre2", "dep2", "crossPre", "crossDep", "tabs" };
 }
 
 public sealed record ViewSpec(ShapeSpec? Tab, ShapeSpec? Chip, IReadOnlyList<ViewItem> Panel)

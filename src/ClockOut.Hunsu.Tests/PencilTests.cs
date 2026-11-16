@@ -236,6 +236,53 @@ public class PencilTests
         Assert.True(ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("").IsEnabledByDefault("hunsu-pencilflow")); // 시그니처 기능은 처음부터 켜 둔다
     }
 
+    private static readonly MarkBox Strip = new(80, 600, 1200, 22);
+
+    [Fact]
+    public void ReadCross_OnlyCrossTrue_AndReadTabs_InOrder()
+    {
+        using var d = JsonDocument.Parse("""[{"sheet":"매출","addr":"G15","cross":true},{"sheet":"흐름","addr":"A1","cross":false},{"addr":"B2","cross":true},{"sheet":"요약","addr":"C3","cross":true}]""");
+        var refs = FlowSketch.ReadCross(d.RootElement);
+        Assert.Equal([new CrossRef("매출", "G15"), new CrossRef("요약", "C3")], refs.ToArray());
+        using var t = JsonDocument.Parse("""[{"name":"흐름"},{"name":"매출"},{"x":1}]""");
+        Assert.Equal(["흐름", "매출"], FlowSketch.ReadTabs(t.RootElement).ToArray());
+    }
+
+    [Fact]
+    public void TabBox_FollowsTabOrder_AndWidthByName()
+    {
+        var cross = new SketchCross([], [], ["흐름", "Sheet2", "매출"], Strip);
+        var a = FlowSketch.TabBox(cross, "흐름"); var b = FlowSketch.TabBox(cross, "Sheet2"); var c = FlowSketch.TabBox(cross, "매출");
+        Assert.Equal(80, a.X);
+        Assert.Equal(a.X + a.W, b.X, 6);
+        Assert.Equal(b.X + b.W, c.X, 6);
+        Assert.True(a.W > 48 && b.W > 48);
+        Assert.Equal(Strip.Y, c.Y);
+    }
+
+    [Fact]
+    public void Plan_Cross_DrawsDownToTabAndBack_WithNoteAndNumbers_AllLate()
+    {
+        var cross = new SketchCross([new CrossRef("매출", "G15")], [new CrossRef("요약", "C3"), new CrossRef("요약", "C4")], ["흐름", "매출", "요약"], Strip);
+        var plan = FlowSketch.Plan("흐름", [Cell("E1", 300, 100)], [Cell("D1", 200, 100)], [], Tones, SketchLook.Pencil, null, null, cross);
+        Assert.Contains(plan.Labels, l => l.Text == "매출 시트 G15 에서 가져와요" && l.Late);
+        Assert.Contains(plan.Labels, l => l.Text == "요약 시트 C3 외 1칸 로 보내요" && l.Late);
+        // 번호: 다른 시트에서 오는 것이 가장 먼저(1), 같은 시트 쓰는 칸(2), 다른 시트로 가는 것이 가장 나중(3)
+        Assert.Equal(["1", "2", "3"], plan.Labels.Where(l => l.Badge).OrderBy(l => l.Text).Select(l => l.Text).ToArray());
+        Assert.True(plan.HasLate);
+        Assert.Contains(plan.Strokes, s => s.Late && s.Points.Any(p => p.Y >= Strip.Y - 8)); // 시트 탭 줄까지 내려간다
+        Assert.DoesNotContain("매출", plan.Key); // 늦게 도착해도 처음부터 다시 그리지 않도록 키에는 없다
+    }
+
+    [Fact]
+    public void Plan_CrossOnly_StillDraws_AndNoCrossMeansNoLate()
+    {
+        var cross = new SketchCross([new CrossRef("매출", "G15")], [], ["흐름", "매출"], Strip);
+        Assert.False(FlowSketch.Plan("s", [Cell("E1", 300, 100)], [], [], Tones, null, null, null, cross).IsEmpty);
+        Assert.True(FlowSketch.Plan("s", [Cell("E1", 300, 100)], [], [], Tones).IsEmpty);
+        Assert.False(FlowSketch.Plan("s", [Cell("E1", 300, 100)], [Cell("D1", 200, 100)], [], Tones).HasLate);
+    }
+
     [Fact]
     public void Plan_NeighborOverlappingActive_DoesNotCrash_AndHasNoArrow()
     {
@@ -278,11 +325,17 @@ public class PencilTests
         string dir = ManifestViewTests.FindRepoDir("modules/hunsu-pencilflow");
         var (v, errors) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
         Assert.Empty(errors);
-        Assert.Equal(["active", "pre", "dep", "pre2", "dep2"], v!.Marks.Select(m => m.Role).ToArray());
+        Assert.Equal(["active", "pre", "dep", "pre2", "dep2", "crossPre", "crossDep", "tabs"], v!.Marks.Select(m => m.Role).ToArray());
         var scope = new DataScope();
         using var doc = JsonDocument.Parse("""{"sheet":"흐름","panes":[],"active":[{"addr":"D1","x":1,"y":1,"w":5,"h":5}],"pre":[],"dep":[],"pre2":[],"dep2":[],"truncated":false}""");
         scope.Set("mark", doc.RootElement);
+        using var fg = JsonDocument.Parse("""{"sheet":"흐름","addr":"D1","pre":{"items":[]},"dep":{"items":[]}}""");
+        scope.Set("flow.graph", fg.RootElement);
+        using var sh = JsonDocument.Parse("""{"items":[{"name":"흐름"}]}""");
+        scope.Set("sheets", sh.RootElement);
         foreach (var m in v.Marks) Assert.True(scope.TryGet(m.Items, out var arr) && arr.ValueKind == JsonValueKind.Array);
+        var (man, _) = ClockOut.Hunsu.Core.Manifest.ModuleManifest.Parse(File.ReadAllText(Path.Combine(dir, "hunsu-pencilflow.hunsu.json")));
+        Assert.All(v.Marks, m => Assert.Contains(man!.Data, d => m.Items.StartsWith(d.Topic + ".", StringComparison.Ordinal)));
         Assert.True(scope.TryGet("mark.sheet", out var sheet) && sheet.GetString() == "흐름");
     }
 }

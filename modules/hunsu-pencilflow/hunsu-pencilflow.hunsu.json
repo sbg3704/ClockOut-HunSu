@@ -8,14 +8,16 @@
   "author": "ClockOut",
   "description": "고른 칸을 손으로 빙 두르고, 쓰는 칸에서 오는 화살표와 쓰이는 칸으로 가는 화살표를 한 단계 더 앞뒤까지 번호를 붙여 휙휙 그어 줍니다. 색연필·형광 마커·펜 중에 고릅니다. 칸을 옮길 때마다 새로 그려집니다.",
   "dependencies": [
-    {"id": "clockout-hunsu", "min_version": "0.0.020", "reason": "칸 자리 조회(mark, 2단계 pre2·dep2)에 훈수꾼 다리를 씁니다"}
+    {"id": "clockout-hunsu", "min_version": "0.0.020", "reason": "칸 자리 조회(mark, 2단계 pre2·dep2), 다른 시트 흐름(flow.graph), 시트 탭 이름(sheets)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["mark", "tab", "panel"],
   "place": "edge-right",
   "order": 215,
   "icon": "flow",
   "data": [
-    {"topic": "mark", "on": ["sel", "change", "sheet", "calc"], "weight": "normal"}
+    {"topic": "mark", "on": ["sel", "change", "sheet", "calc"], "weight": "normal"},
+    {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"},
+    {"topic": "sheets", "on": ["sheet", "book"], "weight": "light"}
   ],
   "commands": [],
   "scope": "sheet",

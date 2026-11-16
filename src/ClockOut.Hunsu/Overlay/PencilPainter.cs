@@ -22,6 +22,7 @@ internal sealed class PencilPainter
     private readonly Dictionary<Color, Brush> _grain = [];
     private string _key = "";
     private int _sig;
+    private bool _hadLate;
 
     public PencilPainter(Canvas canvas) => _canvas = canvas;
 
@@ -32,6 +33,7 @@ internal sealed class PencilPainter
         _canvas.Children.Clear();
         _key = "";
         _sig = 0;
+        _hadLate = false;
     }
 
     public void Paint(SketchPlan plan, Func<string, Brush> tone, bool animate)
@@ -40,12 +42,25 @@ internal sealed class PencilPainter
         int sig = Signature(plan);
         if (plan.Key == _key && sig == _sig) return;
         bool fresh = plan.Key != _key;
+        // 같은 그림에 다른 시트 조회가 늦게 도착해 더해진 경우: 늦게 온 획만 움직이며 나타나고 나머지는 그대로 둔다.
+        bool lateOnly = !fresh && plan.HasLate && !_hadLate;
+        _hadLate = plan.HasLate;
         _key = plan.Key;
         _sig = sig;
         _canvas.Children.Clear();
-        animate &= fresh;
-        foreach (var s in plan.Strokes) _canvas.Children.Add(Stroke(s, tone(s.Tone), animate, plan.Grain));
-        foreach (var l in plan.Labels) _canvas.Children.Add(Label(l, tone(l.Tone), animate));
+        double shift = lateOnly
+            ? Math.Min(plan.Strokes.Where(x => x.Late).Select(x => x.StartMs).DefaultIfEmpty(0).Min(), plan.Labels.Where(x => x.Late).Select(x => x.StartMs).DefaultIfEmpty(double.MaxValue).Min())
+            : 0;
+        foreach (var s in plan.Strokes)
+        {
+            bool anim = animate && (fresh || (lateOnly && s.Late));
+            _canvas.Children.Add(Stroke(lateOnly && s.Late ? s with { StartMs = Math.Max(0, s.StartMs - shift) } : s, tone(s.Tone), anim, plan.Grain));
+        }
+        foreach (var l in plan.Labels)
+        {
+            bool anim = animate && (fresh || (lateOnly && l.Late));
+            _canvas.Children.Add(Label(lateOnly && l.Late ? l with { StartMs = Math.Max(0, l.StartMs - shift) } : l, tone(l.Tone), anim));
+        }
     }
 
     private static int Signature(SketchPlan plan)
