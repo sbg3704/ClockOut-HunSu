@@ -1,0 +1,8 @@
+{
+  "tab": { "title": "메모", "badge": "{comments.notes:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{comments.sheet} · 메모 {comments.notes:n0}개 · 댓글 {comments.threads:n0}개", "tone": "muted" },
+    { "type": "list", "items": "comments.items", "text": "{item.addr}", "sub": "{item.text}", "command": "goto", "arg.addr": "{item.addr}", "max": 10, "emptyText": "이 시트에는 메모와 댓글이 없습니다." },
+    { "type": "badge", "text": "앞의 일부만 조회했습니다", "tone": "warn", "showWhen": "comments.truncated == true" }
+  ]
+}
