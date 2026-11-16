@@ -15,7 +15,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        _shell = new ShellController(AppOptions.Parse(e.Args));
+        var options = AppOptions.Parse(e.Args);
+        // 처리되지 않은 오류는 설정 파일 옆 logs 폴더에 남긴다(--layout을 주면 그 폴더 옆).
+        string dataDir = options.LayoutPath != null
+            ? System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(options.LayoutPath)) ?? "."
+            : System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ClockOut", "Hunsu");
+        Diagnostics.ErrorLog.Install(System.IO.Path.Combine(dataDir, "logs"));
+        _shell = new ShellController(options);
         _shell.Start();
     }
 
