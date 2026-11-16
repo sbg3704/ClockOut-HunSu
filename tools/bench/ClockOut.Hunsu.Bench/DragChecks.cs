@@ -44,11 +44,19 @@ internal static class DragChecks
         }
         long tEnd = Stopwatch.GetTimestamp();
         int renders = 0;
+        double busyMs = 0; // 끌기 동안 훈수꾼 조회가 엑셀을 쓴 시간(조회 시작~끝 합)
         string target = last;
-        var final = app.WaitFor(l => { if (l.Name == "render") renders++; return l.Name == "render" && Same(l.Get("addr"), target); }, 5000);
+        // 끌기 전 큰 선택(N1:AG..)과 마지막 걸음 주소가 같으므로, 끌기 시작 뒤에 그린 것만 센다(앞의 그리기를 잡으면 음수가 나옴, 일#305).
+        var final = app.WaitFor(l =>
+        {
+            if (l.Name != "render" || l.Long("frame") < t0) return false;
+            renders++;
+            busyMs += Report.Ms(l.Long("qs"), l.Long("qd"));
+            return Same(l.Get("addr"), target);
+        }, 5000);
         double settle = final == null ? double.NaN : Report.Ms(tEnd, final.Long("frame"));
         rep.Time("끌기 중 엑셀 선택 한 번(엑셀 화면 스레드 대기 포함)", selectMs, 50);
-        rep.Check($"끌기 {Steps}걸음 동안 조회가 묶임(걸음 수의 1/3 이하)", renders <= Steps / 3, $"조회·그리기 {renders}번 / 선택 {Steps}번, 걸린 시간 {Report.Ms(t0, tEnd):0}ms");
+        rep.Check($"끌기 {Steps}걸음 동안 조회가 묶임(걸음 수의 1/3 이하)", renders <= Steps / 3, $"조회·그리기 {renders}번 / 선택 {Steps}번, 걸린 시간 {Report.Ms(t0, tEnd):0}ms, 조회가 엑셀을 쓴 비율 {busyMs / Report.Ms(t0, tEnd) * 100:0}% (마우스 단추는 누르지 않음: 평소 간격 규칙만 잼)");
         rep.Check("끌기를 멈추면 마지막 선택이 1초 안에 화면에 반영", final != null && settle < 1000, final == null ? "마지막 선택 안 옴" : $"{settle:0}ms");
     }
 

@@ -129,7 +129,7 @@ internal static class ExcelChecks
         app.Drain();
         xl3.Select("C7");
         var r3 = app.WaitFor(l => IsRender(l, xl3.Hwnd), 5000);
-        rep.Check("엑셀 새로 띄움 → 새 인스턴스로 바로 연결", r3 != null && r3.Get("ok") == "True" && SameAddress(r3.Get("addr"), "C7"), r3 == null ? "응답 없음" : $"attach={r3.Get("attach")}");
+        rep.Check("엑셀 새로 띄움 → 새 인스턴스로 바로 연결", r3 != null && r3.Get("ok") == "True" && SameAddress(r3.Get("addr"), "C7"), r3 == null ? "응답 없음" : $"attach={r3.Get("attach")} ok={r3.Get("ok")} addr={r3.Get("addr")} code={r3.Get("code")}");
         app.Drain();
         xl1.Select("E6");
         var r1 = app.WaitFor(l => IsRender(l, xl1.Hwnd), 3000);
