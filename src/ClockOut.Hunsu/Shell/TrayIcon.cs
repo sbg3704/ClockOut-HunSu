@@ -9,6 +9,9 @@ internal sealed class TrayIcon : IDisposable
     private readonly System.Drawing.Icon _image;
     private readonly System.Windows.Forms.ToolStripMenuItem _hideItem;
 
+    /// <summary>알림 영역 툴팁은 63자까지라 넘으면 자른다.</summary>
+    private static string Trim(string s) => s.Length <= 63 ? s : s[..63];
+
     public TrayIcon()
     {
         _image = LoadIcon() ?? DrawIcon();
@@ -20,7 +23,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add("모양 바꾸기…", null, (_, _) => LookClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("훈수꾼 끄기", null, (_, _) => QuitClicked?.Invoke());
-        _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = "훈수꾼", ContextMenuStrip = menu, Visible = true };
+        _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = Trim("훈수꾼 " + BuildInfo.Text), ContextMenuStrip = menu, Visible = true };
         _icon.MouseClick += (_, e) => { if (e.Button == System.Windows.Forms.MouseButtons.Left) SummonClicked?.Invoke(); };
     }
 
@@ -29,6 +32,9 @@ internal sealed class TrayIcon : IDisposable
     public event Action? QuitClicked;
     public event Action? ManagerClicked;
     public event Action? LookClicked;
+
+    /// <summary>알림 영역 풍선 안내(다리 갱신처럼 사용자가 알아야 하는 한 줄).</summary>
+    public void Balloon(string text) => _icon.ShowBalloonTip(8000, "훈수꾼", text, System.Windows.Forms.ToolTipIcon.Info);
 
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";
 

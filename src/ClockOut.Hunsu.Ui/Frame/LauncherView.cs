@@ -39,6 +39,29 @@ public sealed class LauncherView : Canvas
     public event Action<string>? ModuleClicked;
     public event Action? HubClicked;
 
+    /// <summary>편집 모드에서 훈 원을 끌고 있다(커서 위치는 창이 읽는다). 끝나면 HubDragEnded.</summary>
+    public event Action? HubDragMoved;
+    public event Action? HubDragEnded;
+
+    /// <summary>훈 원의 세로 자리(이 부품 높이에 대한 비율, 0.1~0.9). 바꾸면 다시 그린다.</summary>
+    public double CenterRatio
+    {
+        get => _centerRatio;
+        set { double v = Math.Clamp(value, 0.1, 0.9); if (Math.Abs(v - _centerRatio) < 1e-6) return; _centerRatio = v; Rebuild(); }
+    }
+    private double _centerRatio = 0.45;
+
+    /// <summary>편집 모드: 훈 원을 끌어 옮길 수 있고 훈 원에 강조 테두리가 생긴다.</summary>
+    public bool EditMode
+    {
+        get => _edit;
+        set { if (_edit == value) return; _edit = value; Rebuild(); }
+    }
+    private bool _edit, _dragging;
+
+    /// <summary>끄는 동안 전체를 세로로 밀어 보인다(다시 그리지 않아 마우스 붙잡기가 유지됨). 끝나면 0으로.</summary>
+    public void SetDragOffset(double dy) => RenderTransform = dy == 0 ? Transform.Identity : new TranslateTransform(0, dy);
+
     /// <summary>모듈 우클릭 메뉴를 만드는 곳(모듈 id). 훈 원 메뉴는 HubMenu.</summary>
     public Func<string, ContextMenu?>? ModuleMenu { get; set; }
     public ContextMenu? HubMenu { get; set; }
@@ -94,12 +117,26 @@ public sealed class LauncherView : Canvas
         _items.Clear(); _dots.Clear(); _row.Clear(); _hub = null; _tag = null; _rowZone = Rect.Empty;
         if (ActualWidth <= 0 || ActualHeight <= 0) return;
         var items = LauncherGroups.Build(_modules, _grouped);
-        _plan = LauncherShapes.Plan(_shape, items.Count, _scale, ActualWidth, ActualHeight, awake: true, _grouped);
+        _plan = LauncherShapes.Plan(_shape, items.Count, _scale, ActualWidth, ActualHeight, awake: true, _grouped, _centerRatio);
         if (_plan.ShowHub)
         {
             _hub = LauncherParts.Hub(this, _plan.HubSize);
             Place(_hub, _plan.Hub, _plan.HubSize, _plan.HubSize);
-            _hub.MouseLeftButtonUp += (_, e) => { e.Handled = true; SetAwake(!Awake); HubClicked?.Invoke(); };
+            _hub.MouseLeftButtonUp += (_, e) =>
+            {
+                e.Handled = true;
+                if (_dragging) { _dragging = false; _hub?.ReleaseMouseCapture(); HubDragEnded?.Invoke(); return; }
+                SetAwake(!Awake);
+                HubClicked?.Invoke();
+            };
+            if (_edit)
+            {
+                _hub.Cursor = System.Windows.Input.Cursors.SizeAll;
+                _hub.ToolTip = "끌어서 옮기기 (위아래, 반대쪽 가장자리로)";
+                if (_hub is Border hb) { hb.BorderBrush = (Brush)FindResource(ThemeKeys.Accent); hb.BorderThickness = new Thickness(2); }
+                _hub.MouseLeftButtonDown += (_, e) => { e.Handled = true; _dragging = true; _hub?.CaptureMouse(); };
+                _hub.MouseMove += (_, _) => { if (_dragging) HubDragMoved?.Invoke(); };
+            }
             _hub.ContextMenu = HubMenu;
             Children.Add(_hub);
         }
@@ -206,7 +243,7 @@ public sealed class LauncherView : Canvas
             var tip = LauncherParts.Label(this, m.Name, true);
             tip.Visibility = Visibility.Hidden;
             tip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            SetLeft(tip, p.X - tip.DesiredSize.Width / 2); SetTop(tip, p.Y - size / 2 - tip.DesiredSize.Height - 4);
+            SetLeft(tip, p.X - tip.DesiredSize.Width / 2); SetTop(tip, p.Y - size / 2 - tip.DesiredSize.Height - 12);
             el.MouseEnter += (_, _) => tip.Visibility = Visibility.Visible;
             el.MouseLeave += (_, _) => tip.Visibility = Visibility.Hidden;
             el.RenderTransform = new TranslateTransform(_mirror ? -14 : 14, 0);

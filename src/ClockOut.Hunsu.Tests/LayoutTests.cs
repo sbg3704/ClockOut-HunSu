@@ -89,7 +89,7 @@ public class LayoutTests
     public void Opacity_Cycles()
     {
         Assert.Equal(1, OpacityLevels.Next(0));
-        Assert.Equal(0, OpacityLevels.Next(2));
+        Assert.Equal(0, OpacityLevels.Next(OpacityLevels.Rest.Length - 1));
         Assert.Equal(1.0, OpacityLevels.RestOpacity(0));
         Assert.Equal(1.0, OpacityLevels.RestOpacity(-5));
     }

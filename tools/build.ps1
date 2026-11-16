@@ -16,6 +16,8 @@ function Step([string]$name, [scriptblock]$body) {
     & $body
     if ($LASTEXITCODE -ne 0) { Write-Host "[실패] $name (종료 코드 $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
+# 판 번호를 올렸는지 본다(프로그램을 바꾸고 번호가 그대로면 실패). pwsh로 확인한다(파이썬 필요 없음).
+Step '판 번호 확인' { pwsh -NoProfile -File (Join-Path $PSScriptRoot 'check_version.ps1') }
 Step 'C# 빌드' { dotnet build $sln -c $cfg --nologo -v q }
 Step 'Core 시험' { dotnet test (Join-Path $repo 'src\ClockOut.Hunsu.Tests') -c $cfg --nologo --no-build -v q }
 if (-not $NoExcel) {

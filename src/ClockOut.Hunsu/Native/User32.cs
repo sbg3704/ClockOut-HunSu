@@ -61,6 +61,9 @@ internal static class User32
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static extern bool UnregisterHotKey(IntPtr hwnd, int id);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static extern bool DestroyIcon(IntPtr icon);
     [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
+    /// <summary>Shift 키가 지금 눌려 있는가(창이 활성화되지 않아도 읽힌다).</summary>
+    public static bool AltDown() => (GetAsyncKeyState(0x12) & 0x8000) != 0;
+    public static bool ShiftDown() => (GetAsyncKeyState(0x10) & 0x8000) != 0;
     [DllImport("user32.dll")] public static extern int GetSystemMetrics(int index);
 
     /// <summary>주 마우스 단추(왼손잡이 설정이면 오른쪽)가 지금 눌려 있나. 범위를 끄는 중인지 볼 때 쓴다.</summary>

@@ -5,6 +5,7 @@ using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Overlay;
+using ClockOut.Hunsu.Ui.Controls;
 
 namespace ClockOut.Hunsu.Shell;
 
@@ -35,6 +36,39 @@ internal sealed partial class ShellController
         SettingsStore.Save(SettingsPath, next, _log);
         _log.Write("launcher", ("shape", next.DockShape), ("groups", next.DockGroups), ("size", next.DockSize), ("icons", next.IconProfile), ("idle", next.IdleOpacity));
         LookChanged?.Invoke();
+    }
+
+    /// <summary>일반 설정이 바뀌었다(설정 창 [일반]이 다시 그린다).</summary>
+    internal event Action? SettingsChanged;
+
+    /// <summary>설정 창 [일반]에서 고른 값 하나를 settings.json에 쓰고 바로 쓸 수 있는 것은 반영한다(목록 줄 수). 범위 밖 값은 기본값으로 되돌려진다.</summary>
+    internal void ApplySetting(string key, object value)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(_settings.ToJson())!;
+        node[key] = System.Text.Json.JsonSerializer.SerializeToNode(value);
+        var next = HunsuSettings.FromJson(node.ToJsonString());
+        _settings = next;
+        Parts.ListMaxRows = next.ListMaxRows;
+        SettingsStore.Save(SettingsPath, next, _log);
+        _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));
+        SettingsChanged?.Invoke();
+        ModulesChanged?.Invoke();
+    }
+
+    /// <summary>일반 설정(모양 제외)을 처음 값으로 되돌린다. 도크 모양은 그대로 둔다.</summary>
+    internal void ResetGeneralSettings()
+    {
+        var d = new HunsuSettings().WithLook(_settings.Look);
+        _settings = d;
+        Parts.ListMaxRows = d.ListMaxRows;
+        SettingsStore.Save(SettingsPath, d, _log);
+        SettingsChanged?.Invoke();
+    }
+
+    internal void OpenSettingsFile()
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = SettingsPath, UseShellExecute = true }); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { /* 열 프로그램이 없으면 아무 일도 하지 않는다 */ }
     }
 
     /// <summary>모듈 켜기·끄기. 꺼진 모듈은 도크·핀 창에서 빠지고 엑셀 조회도 하지 않는다. 켤 때는 지금 값을 한 번 채운다.</summary>
