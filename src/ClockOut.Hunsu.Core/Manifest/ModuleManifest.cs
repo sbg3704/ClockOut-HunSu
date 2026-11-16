@@ -21,6 +21,9 @@ public sealed record ModuleManifest(
     /// <summary>처음 보이는 모양(선택, 기본 "panel"). "panel"은 도크 패널, "hud"는 처음부터 떼어 낸 반투명 창으로 엑셀 시트 오른쪽 위에 뜬다(사용자가 한 번 옮기거나 바꾸면 그 값을 따름).</summary>
     public string Form { get; init; } = "panel";
 
+    /// <summary>빠른 설정(선택): 우클릭 메뉴에서 창 없이 바꾸는 값들(QuickSetting.cs).</summary>
+    public IReadOnlyList<QuickSetting> Quick { get; init; } = [];
+
     public static readonly IReadOnlySet<string> KnownForms = new HashSet<string> { "panel", "hud", "mini" };
 
     /// <summary>틀이 아는 가장 높은 선언 규격 번호.</summary>
@@ -71,8 +74,9 @@ public sealed record ModuleManifest(
                     data.Add(new DataSubscription(topic, Strings(e, "on"), weight));
                 }
             }
+            var quick = r.TryGetProperty("quick", out var q) && q.ValueKind == JsonValueKind.Array ? QuickSchema.Read(q, errors) : [];
             if (errors.Count > 0) return (null, errors);
-            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant(), Form = form }, errors);
+            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant(), Form = form, Quick = quick }, errors);
         }
         catch (JsonException ex)
         {

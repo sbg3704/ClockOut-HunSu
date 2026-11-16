@@ -23,6 +23,7 @@ internal sealed partial class ShellController
         _quick = new QuickBar(_settings.IconProfile);
         _quick.Prepare();
         _quick.ItemClicked += OnModuleIcon;
+        _quick.ItemMenu = ModuleIconMenu;
         _quick.TargetBounds = () => _target == IntPtr.Zero ? default : User32.VisibleBounds(_target);
         _quick.Moved += (rx, ry) =>
         {

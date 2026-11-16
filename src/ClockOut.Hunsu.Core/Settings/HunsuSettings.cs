@@ -97,6 +97,9 @@ public sealed class HunsuSettings
     /// <summary>색연필 수식 흐름의 보이는 형태: "pencil"(색연필, 기본)·"marker"(형광 마커)·"ink"(펜). 모르는 이름은 색연필. 바로 반영(docs/12).</summary>
     public string PencilLook { get; init; } = "pencil";
 
+    /// <summary>색연필 수식 흐름을 지금 그릴지(기본 켜짐). 우클릭 메뉴·Ctrl+Alt+D로 켜고 끈다. 끄면 그림만 멈추고 모듈은 켜진 채다.</summary>
+    public bool PencilDraw { get; init; } = true;
+
     public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
 
     /// <summary>도크 모양 5칸(설정 창 [모양]이 바꾸는 값).</summary>
@@ -163,6 +166,7 @@ public sealed class HunsuSettings
             HudAnchor = (HudAnchor ?? "").Trim().ToLowerInvariant() == "cell" ? "cell" : "cursor",
 
             PencilLook = Marks.SketchLook.ByName(PencilLook).Name,
+            PencilDraw = PencilDraw,
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
     }
