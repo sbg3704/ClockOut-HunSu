@@ -90,10 +90,11 @@ internal sealed class ManagerWindow : Window
         var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         titles.Children.Add(new TextBlock
         {
-            Text = "설정",
+            Text = "설정  " + BuildInfo.Text,
             FontFamily = (FontFamily)FindResource("Hunsu.FontTitle"),
             FontSize = (double)FindResource("Hunsu.FontTitleSize") + 5,
             FontWeight = FontWeights.SemiBold,
+            ToolTip = "훈수꾼 판 " + BuildInfo.Text,
         });
         _summary.Foreground = (Brush)FindResource(ThemeKeys.Muted);
         _summary.Margin = new Thickness(0, 2, 0, 0);
