@@ -56,7 +56,7 @@ public class MinimizeTests
         string root = AppContext.BaseDirectory;
         while (root != null && !Directory.Exists(Path.Combine(root, "modules"))) root = Path.GetDirectoryName(root)!;
         Assert.NotNull(root);
-        foreach (var id in new[] { "hunsu-marks", "hunsu-crosshair" })
+        foreach (var id in new[] { "hunsu-marks", "hunsu-crosshair", "hunsu-pencilflow" })
         {
             var m = ModuleManifest.Parse(File.ReadAllText(Path.Combine(root, "modules", id, id + ".hunsu.json"))).Manifest;
             Assert.NotNull(m);
