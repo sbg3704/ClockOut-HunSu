@@ -29,8 +29,8 @@ public static partial class Parts
 
     private static (FrameworkElement, Action<DataScope>) Stat(ViewItem item)
     {
-        var value = new TextBlock { FontWeight = FontWeights.Bold, Text = "-" };
-        var label = new TextBlock { Margin = new Thickness(0, 0, 0, 2) };
+        var value = new TextBlock { FontWeight = FontWeights.Bold, Text = "-", TextTrimming = TextTrimming.CharacterEllipsis };
+        var label = new TextBlock { Margin = new Thickness(0, 0, 0, 2), TextTrimming = TextTrimming.CharacterEllipsis };
         var box = new StackPanel { Margin = new Thickness(0, 4, 0, 6) };
         box.Children.Add(label);
         box.Children.Add(value);
@@ -65,7 +65,7 @@ public static partial class Parts
 
     private static (FrameworkElement, Action<DataScope>) Text(ViewItem item)
     {
-        var t = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 2) };
+        var t = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 2), LineHeight = 18, LineStackingStrategy = LineStackingStrategy.BlockLineHeight };
         t.Loaded += (_, _) => t.FontSize = (double)t.FindResource("Hunsu.FontSmall");
         return (t, scope =>
         {
@@ -102,7 +102,7 @@ public static partial class Parts
 
     public static FrameworkElement Placeholder(string text)
     {
-        var t = new TextBlock { Text = text, Margin = new Thickness(0, 4, 0, 4) };
+        var t = new TextBlock { Text = text, Margin = new Thickness(0, 4, 0, 4), TextWrapping = TextWrapping.Wrap };
         t.Loaded += (_, _) => t.Foreground = (Brush)t.FindResource(ThemeKeys.Muted);
         return t;
     }

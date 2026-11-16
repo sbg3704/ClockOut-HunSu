@@ -55,6 +55,7 @@ public static partial class Parts
         {
             Text = Template.Render(item.Get("text"), row),
             TextTrimming = TextTrimming.CharacterEllipsis,
+            TextWrapping = TextWrapping.NoWrap,
             VerticalAlignment = VerticalAlignment.Center,
             FontSize = (double)host.FindResource("Hunsu.FontSmall"),
             FontWeight = active ? FontWeights.SemiBold : FontWeights.Normal,
@@ -71,6 +72,9 @@ public static partial class Parts
             {
                 Text = sub,
                 Margin = new Thickness(8, 0, 0, 0),
+                MaxWidth = 110, // 보조 글이 길어도 본문 자리를 다 먹지 않게
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                TextAlignment = TextAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = (double)host.FindResource("Hunsu.FontCaption"),
                 Foreground = (Brush)host.FindResource(ThemeKeys.Muted),
@@ -78,6 +82,7 @@ public static partial class Parts
             Grid.SetColumn(subText, 1);
             grid.Children.Add(subText);
         }
+        string full = main.Text + (sub.Length > 0 ? "  ·  " + sub : "");
         Brush rest = active ? (Brush)host.FindResource("Hunsu.GlassHover") : Brushes.Transparent;
         var border = new Border
         {
@@ -87,6 +92,7 @@ public static partial class Parts
             MinHeight = 24,
             CornerRadius = (CornerRadius)host.FindResource("Hunsu.RowRadius"),
             Background = rest,
+            ToolTip = full.Length > 24 ? full : null, // 잘린 글은 올리면 전체가 보인다
         };
         if (command.Length > 0 && onCommand != null) MakeClickable(border, rest, (Brush)host.FindResource("Hunsu.GlassHover"), () => onCommand(command, CommandArgs.Build(item.Props, row)));
         return border;
