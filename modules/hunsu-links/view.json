@@ -5,6 +5,7 @@
     { "type": "stat", "value": "0", "label": "외부 링크 파일", "tone": "good", "showWhen": "links.count == 0" },
     { "type": "list", "items": "links.items", "text": "{item.file}", "tone": "warn", "max": 10, "emptyText": "다른 파일을 가리키는 링크가 없습니다." },
     { "type": "badge", "text": "앞의 일부만 조회했습니다", "tone": "warn", "showWhen": "links.truncated == true" },
-    { "type": "text", "text": "링크 끊기·갱신은 엑셀 데이터 탭의 '링크 편집'에서 하세요.", "tone": "muted", "showWhen": "links.count > 0" }
+    { "type": "text", "text": "갱신은 엑셀 데이터 탭의 '링크 편집'에서, 끊기는 아래 실험 단추로 할 수 있습니다.", "tone": "muted", "showWhen": "links.count > 0" },
+    { "type": "button", "text": "외부 링크 모두 끊기 (실험)", "command": "write.links.break", "showWhen": "links.count > 0" }
   ]
 }

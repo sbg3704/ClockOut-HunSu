@@ -229,6 +229,7 @@ internal sealed partial class ShellController
             _log.Write("command_denied", ("module", mv.Id), ("cmd", command));
             return;
         }
+        if (ClockOut.Hunsu.Core.Write.WritePolicy.IsWrite(command)) { await OnWriteCommand(mv, command, argsJson); return; } // 실험 쓰기 명령: 공지·확인 뒤에만(ShellController.Write)
         if (TopicRouting.IsAppTopic(command)) { OnAppCommand(mv, command, argsJson); return; } // 앱이 처리(ShellController.History)
         if (_target == IntPtr.Zero) return;
         var call = await _registry.DoAsync(_target, command, argsJson);

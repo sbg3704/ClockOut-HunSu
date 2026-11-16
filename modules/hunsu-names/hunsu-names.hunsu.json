@@ -7,13 +7,13 @@
   "category": "이동",
   "author": "ClockOut",
   "description": "통합 문서의 이름(Name) 목록을 보여 주고, 칸을 가리키는 이름은 누르면 그곳으로 이동합니다.",
-  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.016", "reason": "조회에 훈수꾼 다리를 씁니다"}],
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 350,
   "icon": "tag",
   "data": [{"topic": "names", "on": ["book", "sheet"], "weight": "normal"}],
-  "commands": ["goto"],
+  "commands": ["goto", "write.names.delete_broken"],
   "scope": "book",
   "params": []
 }
