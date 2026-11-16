@@ -64,4 +64,13 @@ public class EditModeTests
         var far = PinPlacement.Snap(new PixelRect(50, 50, 300, 200), [area]);
         Assert.Equal((50, 50), (far.X, far.Y));
     }
+
+    [Fact]
+    public void HoverSharpen_DefaultsOnAndSurvivesRoundTrip()
+    {
+        Assert.True(new ClockOut.Hunsu.Core.Settings.HunsuSettings().HoverSharpen);
+        var off = ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson("{\"hoverSharpen\": false}");
+        Assert.False(off.HoverSharpen);
+        Assert.False(ClockOut.Hunsu.Core.Settings.HunsuSettings.FromJson(off.ToJson()).HoverSharpen);
+    }
 }

@@ -3,6 +3,7 @@
 // 의존: ShellController.Modules.cs(Save, Pin, MoveToDock, RefreshDocks), Core/Layout/OrderPlan, Core/TopicRouting, Shell/ManagerWindow.
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Overlay;
 using ClockOut.Hunsu.Ui.Controls;
@@ -49,6 +50,7 @@ internal sealed partial class ShellController
         var next = HunsuSettings.FromJson(node.ToJsonString());
         _settings = next;
         Parts.ListMaxRows = next.ListMaxRows;
+        PanelFrame.SharpenOnHover = next.HoverSharpen;
         SettingsStore.Save(SettingsPath, next, _log);
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));
         SettingsChanged?.Invoke();
@@ -61,6 +63,7 @@ internal sealed partial class ShellController
         var d = new HunsuSettings().WithLook(_settings.Look);
         _settings = d;
         Parts.ListMaxRows = d.ListMaxRows;
+        PanelFrame.SharpenOnHover = d.HoverSharpen;
         SettingsStore.Save(SettingsPath, d, _log);
         SettingsChanged?.Invoke();
     }
@@ -105,6 +108,15 @@ internal sealed partial class ShellController
             if (m.Placement.Order != order) Save(m, p => p with { Order = order });
         }
         RefreshDocks();
+    }
+
+    /// <summary>패널 투명도를 한 단계 바꾼다(제목줄 단추와 설정 창 ◐ 단추가 같이 씀). 5단계를 돌아 처음으로 간다.</summary>
+    internal void CycleOpacity(ModuleView mv)
+    {
+        int next = OpacityLevels.Next(mv.Frame.OpacityLevel);
+        mv.Frame.SetOpacityLevel(next);
+        Save(mv, p => p with { Opacity = next });
+        ModulesChanged?.Invoke();
     }
 
     /// <summary>관리자의 [왼쪽][오른쪽][떼기]: 도크로 옮기거나 핀 창으로 뗀다.</summary>

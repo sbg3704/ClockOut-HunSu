@@ -13,6 +13,9 @@ namespace ClockOut.Hunsu.Ui.Frame;
 
 public partial class PanelFrame : UserControl
 {
+    /// <summary>마우스를 올리면 선명해지는지(설정 hoverSharpen). 모든 패널에 같이 적용된다.</summary>
+    public static bool SharpenOnHover { get; set; } = true;
+
     private int _opacityLevel;
     private bool _summoned;
     private bool _locked;
@@ -20,7 +23,7 @@ public partial class PanelFrame : UserControl
     public PanelFrame()
     {
         InitializeComponent();
-        MouseEnter += (_, _) => FadeTo(1.0);
+        MouseEnter += (_, _) => FadeTo(SharpenOnHover ? 1.0 : OpacityLevels.RestOpacity(_opacityLevel));
         MouseLeave += (_, _) => FadeTo(OpacityLevels.RestOpacity(_opacityLevel));
     }
 

@@ -190,6 +190,7 @@ internal sealed class ManagerWindow : Window
         controls.Children.Add(ManagerParts.Chip(this, "왼", place == Places.EdgeLeft, () => _shell.PlaceFromManager(mv, Places.EdgeLeft)));
         controls.Children.Add(ManagerParts.Chip(this, "오른", place == Places.EdgeRight, () => _shell.PlaceFromManager(mv, Places.EdgeRight)));
         controls.Children.Add(ManagerParts.Chip(this, "떼기", place == Places.Pin, () => _shell.PlaceFromManager(mv, Places.Pin)));
+        controls.Children.Add(ManagerParts.Chip(this, "◐" + OpacityLevels.Short[Math.Clamp(mv.Placement.Opacity, 0, OpacityLevels.Short.Length - 1)], mv.Placement.Opacity != 0, () => _shell.CycleOpacity(mv)));
         controls.Children.Add(ManagerParts.Chip(this, "▲", false, () => _shell.MoveOrder(mv, -1)));
         controls.Children.Add(ManagerParts.Chip(this, "▼", false, () => _shell.MoveOrder(mv, 1)));
         DockPanel.SetDock(controls, Dock.Right);

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Threading;
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Ui.Controls;
 using ClockOut.Hunsu.Ui.Theme;
@@ -49,6 +50,7 @@ internal sealed partial class ShellController : IDisposable
         _store = new LayoutStore(options.LayoutPath, _log);
         _settings = SettingsStore.Load(SettingsStore.PathFor(options.LayoutPath), _log);
         Parts.ListMaxRows = _settings.ListMaxRows;
+        PanelFrame.SharpenOnHover = _settings.HoverSharpen;
         // 테마와 패널 너비는 창을 만들기 전에 넣어야 StaticResource가 받는다(settings.theme, panelWidth).
         string theme = ThemePicker.Apply(Application.Current, _settings.Theme, _settings.PanelWidth);
         _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));

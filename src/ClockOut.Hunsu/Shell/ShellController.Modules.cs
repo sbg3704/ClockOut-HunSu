@@ -23,12 +23,7 @@ internal sealed partial class ShellController
         mv.Frame.PinClicked += () => { if (mv.InDock) Pin(mv, null); else Unpin(mv, null); };
         mv.Frame.CollapseClicked += () => SetCollapsed(mv, true, null);
         mv.Tab.Clicked += () => SetCollapsed(mv, false, null);
-        mv.Frame.OpacityClicked += () =>
-        {
-            int next = OpacityLevels.Next(mv.Frame.OpacityLevel);
-            mv.Frame.SetOpacityLevel(next);
-            Save(mv, p => p with { Opacity = next });
-        };
+        mv.Frame.OpacityClicked += () => CycleOpacity(mv);
         mv.Frame.LockClicked += () => ToggleLock(mv);
         mv.Frame.SetLocked(mv.Placement.Locked);
         mv.Frame.ContextMenu = SideMenu(mv);
