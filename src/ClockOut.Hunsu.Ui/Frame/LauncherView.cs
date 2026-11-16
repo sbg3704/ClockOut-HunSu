@@ -206,7 +206,7 @@ public sealed class LauncherView : Canvas
             var tip = LauncherParts.Label(this, m.Name, true);
             tip.Visibility = Visibility.Hidden;
             tip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            SetLeft(tip, p.X - tip.DesiredSize.Width / 2); SetTop(tip, p.Y - size / 2 - tip.DesiredSize.Height - 4);
+            SetLeft(tip, p.X - tip.DesiredSize.Width / 2); SetTop(tip, p.Y - size / 2 - tip.DesiredSize.Height - 12);
             el.MouseEnter += (_, _) => tip.Visibility = Visibility.Visible;
             el.MouseLeave += (_, _) => tip.Visibility = Visibility.Hidden;
             el.RenderTransform = new TranslateTransform(_mirror ? -14 : 14, 0);
