@@ -31,7 +31,7 @@
 
 ## 판 번호 규칙 (2026-11-16 사용자 지적: 시험할 때마다 계속 001이라 빌드를 구별 못 함)
 - 훈수꾼의 판 번호는 `Directory.Build.props`의 `<Version>` **한 곳**이다(co build, pack_app, 알림 영역 툴팁, 설정 창 제목이 여기서 읽는다). 다리(addins) 판은 `clockout-hunsu.clockout.json`에서 따로 센다.
-- **프로그램(src, modules, addins)을 바꾸는 PR은 PR마다 Version을 올린다**(+1 고침, +10 기능, +100 큰 변화). 문서·협업·tools만 바꾸면 올리지 않아도 된다. `tools/check_version.py`가 main보다 안 올랐으면 실패시키고 `tools\build.ps1`이 부른다. 출시(Release)는 사용자가 하므로 올린 번호가 곧 출시는 아니다.
+- **프로그램(src, modules, addins)을 바꾸는 PR은 PR마다 Version을 올린다**(+1 고침, +10 기능, +100 큰 변화). 문서·협업·tools만 바꾸면 올리지 않아도 된다. `tools/check_version.ps1`가 main보다 안 올랐으면 실패시키고 `tools\build.ps1`이 부른다. 출시(Release)는 사용자가 하므로 올린 번호가 곧 출시는 아니다.
 - 같은 판 안의 시험 빌드는 **글자로 순서를 안다**: 프로그램이 `v0.0.020c pr20 · abc1234`처럼 판 번호 + 이 PR에서 main 뒤로 쌓인 커밋 수(a, b, c...) + 꼬리표 + 짧은 커밋을 보여 준다(알림 영역 아이콘에 올리면, 설정 창 제목). 글자는 빌드 때 `git rev-list --count origin/main..HEAD`로 자동으로 정해진다. 꼬리표는 환경변수 `HUNSU_BUILD_TAG`로 co가 넣을 수 있다.
 - 두 계정이 같은 번호를 고르지 않게, 올리기 전에 `협업/` 노트의 "판 번호 예약" 표에 번호와 PR 번호를 적는다.
 
