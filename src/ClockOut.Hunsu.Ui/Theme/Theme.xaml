@@ -26,25 +26,25 @@
   <FontFamily x:Key="Hunsu.FontTitle">SUIT, Pretendard, Malgun Gothic, Segoe UI</FontFamily>
   <FontFamily x:Key="Hunsu.FontNumber">IBM Plex Sans KR, Segoe UI, Malgun Gothic</FontFamily>
   <FontFamily x:Key="Hunsu.FontIcon">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-  <sys:Double x:Key="Hunsu.FontCaption">11</sys:Double>
-  <sys:Double x:Key="Hunsu.FontSmall">12</sys:Double>
+  <sys:Double x:Key="Hunsu.FontCaption">10</sys:Double>
+  <sys:Double x:Key="Hunsu.FontSmall">11</sys:Double>
   <sys:Double x:Key="Hunsu.FontBody">13</sys:Double>
   <sys:Double x:Key="Hunsu.FontTitleSize">15</sys:Double>
-  <sys:Double x:Key="Hunsu.FontStat">28</sys:Double>
+  <sys:Double x:Key="Hunsu.FontStat">20</sys:Double>
 
   <!-- 간격, 모서리, 크기: docs/03 5장, 7장, 8장 -->
-  <Thickness x:Key="Hunsu.PanelPadding">12,4,12,12</Thickness>
-  <CornerRadius x:Key="Hunsu.PanelRadius">12</CornerRadius>
-  <CornerRadius x:Key="Hunsu.RowRadius">8</CornerRadius>
+  <Thickness x:Key="Hunsu.PanelPadding">8,2,8,6</Thickness>
+  <CornerRadius x:Key="Hunsu.PanelRadius">10</CornerRadius>
+  <CornerRadius x:Key="Hunsu.RowRadius">6</CornerRadius>
   <CornerRadius x:Key="Hunsu.PillRadius">999</CornerRadius>
-  <sys:Double x:Key="Hunsu.TitleBarHeight">36</sys:Double>
-  <sys:Double x:Key="Hunsu.HitSize">28</sys:Double>
-  <sys:Double x:Key="Hunsu.PanelWidth">240</sys:Double>
+  <sys:Double x:Key="Hunsu.TitleBarHeight">26</sys:Double>
+  <sys:Double x:Key="Hunsu.HitSize">22</sys:Double>
+  <sys:Double x:Key="Hunsu.PanelWidth">220</sys:Double>
   <sys:Double x:Key="Hunsu.TabWidth">28</sys:Double>
   <sys:Double x:Key="Hunsu.TabWidthHover">36</sys:Double>
   <sys:Double x:Key="Hunsu.WindowMinWidth">320</sys:Double>
   <sys:Double x:Key="Hunsu.WindowMinHeight">200</sys:Double>
-  <sys:Double x:Key="Hunsu.Gap">8</sys:Double>
+  <sys:Double x:Key="Hunsu.Gap">4</sys:Double>
   <!-- 그림자: 창 크기를 늘리지 않도록 창 안쪽 여백(ShadowMargin)에 그린다 -->
   <Thickness x:Key="Hunsu.ShadowMargin">12</Thickness>
   <DropShadowEffect x:Key="Hunsu.Shadow1" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.35" Color="#000000" RenderingBias="Performance" />
@@ -61,7 +61,7 @@
     <Setter Property="Height" Value="{StaticResource Hunsu.HitSize}" />
     <Setter Property="Foreground" Value="{DynamicResource Hunsu.Muted}" />
     <Setter Property="FontFamily" Value="{StaticResource Hunsu.FontIcon}" />
-    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontSize" Value="11" />
     <Setter Property="Focusable" Value="False" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">

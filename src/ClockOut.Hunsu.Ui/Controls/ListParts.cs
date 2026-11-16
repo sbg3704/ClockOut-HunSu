@@ -23,7 +23,7 @@ public static partial class Parts
 
     private static (FrameworkElement, Action<DataScope>) ListPart(ViewItem item, Action<string, string>? onCommand)
     {
-        var host = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
+        var host = new StackPanel { Margin = new Thickness(0, 1, 0, 1) };
         string itemsPath = item.Get("items");
         int declaredMax = int.TryParse(item.Get("max"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var mx) && mx > 0 ? mx : int.MaxValue;
         return (host, scope =>
@@ -87,9 +87,9 @@ public static partial class Parts
         var border = new Border
         {
             Child = grid,
-            Padding = new Thickness(8, 4, 8, 4),
-            Margin = new Thickness(0, 1, 0, 1),
-            MinHeight = 24,
+            Padding = new Thickness(6, 2, 6, 2),
+            Margin = new Thickness(0, 0, 0, 0),
+            MinHeight = 20,
             CornerRadius = (CornerRadius)host.FindResource("Hunsu.RowRadius"),
             Background = rest,
             ToolTip = full.Length > 24 ? full : null, // 잘린 글은 올리면 전체가 보인다
@@ -101,7 +101,7 @@ public static partial class Parts
     private static (FrameworkElement, Action<DataScope>) ButtonPart(ViewItem item, Action<string, string>? onCommand)
     {
         var text = new TextBlock { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeights.SemiBold };
-        var border = new Border { Child = text, Padding = new Thickness(10, 5, 10, 5), Margin = new Thickness(0, 4, 0, 4), MinHeight = 28 };
+        var border = new Border { Child = text, Padding = new Thickness(8, 3, 8, 3), Margin = new Thickness(0, 2, 0, 2), MinHeight = 22 };
         string command = item.Get("command");
         DataScope current = new();
         bool wired = false; // 도크 ↔ 핀 창을 옮기면 Loaded가 또 불리므로 한 번만 연결한다

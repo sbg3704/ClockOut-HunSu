@@ -16,6 +16,9 @@ public partial class PanelFrame : UserControl
     /// <summary>마우스를 올리면 선명해지는지(설정 hoverSharpen). 모든 패널에 같이 적용된다.</summary>
     public static bool SharpenOnHover { get; set; } = true;
 
+    /// <summary>도크에 있을 때 패널 내용의 최대 높이(DIP, 설정 panelMaxHeight). 넘치면 휠로 내린다. 핀 창은 창 크기를 따른다.</summary>
+    public static double MaxBodyHeight { get; set; } = 120;
+
     private int _opacityLevel;
     private bool _summoned;
     private bool _locked;
@@ -23,6 +26,7 @@ public partial class PanelFrame : UserControl
     public PanelFrame()
     {
         InitializeComponent();
+        ApplyBodyLimit(false);
         MouseEnter += (_, _) => FadeTo(SharpenOnHover ? 1.0 : OpacityLevels.RestOpacity(_opacityLevel));
         MouseLeave += (_, _) => FadeTo(OpacityLevels.RestOpacity(_opacityLevel));
     }
@@ -54,8 +58,13 @@ public partial class PanelFrame : UserControl
             PinButton.Content = value ? "" : "";
             PinButton.ToolTip = value ? "도크로 되돌리기" : "떼어 내기(핀 창)";
             CollapseButton.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
+            ApplyBodyLimit(value);
         }
     }
+
+    /// <summary>도크의 내용 높이 제한을 다시 건다(설정이 바뀌었을 때). 핀 창이면 제한을 두지 않는다.</summary>
+    public void ApplyBodyLimit(bool pinned) =>
+        BodyScroll.MaxHeight = pinned ? double.PositiveInfinity : Math.Max(40, MaxBodyHeight);
 
     public int OpacityLevel => _opacityLevel;
 

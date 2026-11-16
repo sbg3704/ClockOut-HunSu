@@ -51,6 +51,7 @@ internal sealed partial class ShellController : IDisposable
         _settings = SettingsStore.Load(SettingsStore.PathFor(options.LayoutPath), _log);
         Parts.ListMaxRows = _settings.ListMaxRows;
         PanelFrame.SharpenOnHover = _settings.HoverSharpen;
+        PanelFrame.MaxBodyHeight = _settings.PanelMaxHeight;
         // 테마와 패널 너비는 창을 만들기 전에 넣어야 StaticResource가 받는다(settings.theme, panelWidth).
         string theme = ThemePicker.Apply(Application.Current, _settings.Theme, _settings.PanelWidth);
         _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));

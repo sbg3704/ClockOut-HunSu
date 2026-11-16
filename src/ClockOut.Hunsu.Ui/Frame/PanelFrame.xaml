@@ -17,12 +17,12 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <DockPanel Margin="12,0,6,0" VerticalAlignment="Center" LastChildFill="True">
-          <Border x:Name="Dot" DockPanel.Dock="Left" Width="6" Height="6" CornerRadius="3" Background="{StaticResource Hunsu.Accent}" Margin="0,0,8,0" />
-          <TextBlock x:Name="TitleText" FontFamily="{StaticResource Hunsu.FontTitle}" FontSize="{StaticResource Hunsu.FontBody}"
+        <DockPanel Margin="8,0,4,0" VerticalAlignment="Center" LastChildFill="True">
+          <Border x:Name="Dot" DockPanel.Dock="Left" Width="5" Height="5" CornerRadius="3" Background="{StaticResource Hunsu.Accent}" Margin="0,0,6,0" />
+          <TextBlock x:Name="TitleText" FontFamily="{StaticResource Hunsu.FontTitle}" FontSize="{StaticResource Hunsu.FontSmall}"
                      FontWeight="SemiBold" Foreground="{StaticResource Hunsu.Text}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
         </DockPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,4,0">
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,2,0">
           <Button x:Name="LockButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE785;" ToolTip="이 패널 자리 잠그기" Visibility="Collapsed" Click="LockButton_Click" />
           <Button x:Name="OpacityButton" Style="{StaticResource Hunsu.IconButton}" FontFamily="Segoe UI Symbol" Content="◐"
                   ToolTip="투명도" Click="OpacityButton_Click" />
