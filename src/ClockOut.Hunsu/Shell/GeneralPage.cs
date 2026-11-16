@@ -37,6 +37,9 @@ internal sealed class GeneralPage : ScrollViewer
         Section("패널 높이(내용 최대)", "바로 반영. 넘치면 패널 안에서 휠로 내립니다");
         Choices("panelMaxHeight", s.PanelMaxHeight, [(90, "작게 90"), (120, "기본 120"), (180, "크게 180"), (300, "300"), (600, "제한 없음")]);
 
+        Section("수식 흐름 그림 (색연필 수식 흐름 모듈)", "바로 반영");
+        Choices("pencilLook", s.PencilLook, [("pencil", "색연필"), ("marker", "형광 마커"), ("ink", "펜")]);
+
         Section("패널 위치 잠금", "바로 반영");
         Choices("layoutLock", s.LayoutLock, [("locked", "잠금 (Shift+끌기로 옮김)"), ("free", "자유 (그냥 끌어서 옮김)")]);
 

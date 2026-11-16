@@ -72,6 +72,8 @@ try {
     $mk = (& $run 'CoHunsu_Query' 'mark' '{}') | ConvertFrom-Json
     Check 'mark ok, 오류 칸 A5와 활성 칸' ($mk.ok -and ($mk.data.errors | Where-Object { $_.addr -eq 'A5' }) -and $mk.data.active.Count -eq 1) ($mk | ConvertTo-Json -Compress -Depth 5)
 
+    Check 'mark에 2단계 pre2·dep2 배열이 있음(다리 0.0.020)' ($mk.ok -and $null -ne $mk.data.pre2 -and $null -ne $mk.data.dep2) ($mk | ConvertTo-Json -Compress -Depth 5)
+
     Write-Host "오류 처리"
     $u = (& $run 'CoHunsu_Query' 'no.such' '{}') | ConvertFrom-Json
     Check 'query_unknown' ($u.ok -eq $false -and $u.code -eq 'query_unknown')

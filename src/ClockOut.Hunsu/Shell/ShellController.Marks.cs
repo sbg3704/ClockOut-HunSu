@@ -49,6 +49,8 @@ internal sealed partial class ShellController
         var shapes = new List<(MarkBox, Brush, string)>();
         var roles = new Dictionary<string, (IReadOnlyList<SketchCell> Cells, string Tone)>(StringComparer.Ordinal);
         string sheet = scope.TryGet("mark.sheet", out var sh) && sh.ValueKind == System.Text.Json.JsonValueKind.String ? sh.GetString() ?? "" : "";
+        var crossRefs = new Dictionary<string, IReadOnlyList<CrossRef>>(StringComparer.Ordinal);
+        IReadOnlyList<string> tabNames = [];
         foreach (var (_, spec) in specs)
         {
             if (!scope.TryGet(spec.Items, out var arr)) continue;
@@ -56,7 +58,9 @@ internal sealed partial class ShellController
             var panes = scope.TryGet(topic + ".panes", out var p) ? MarkGeometry.Read(p) : [];
             if (spec.Style == "pencil")
             {
-                roles[spec.Role] = (FlowSketch.ReadCells(arr, panes, excel, _markWindow.Scale), spec.Tone);
+                if (spec.Role is "crossPre" or "crossDep") crossRefs[spec.Role] = FlowSketch.ReadCross(arr);
+                else if (spec.Role == "tabs") tabNames = FlowSketch.ReadTabs(arr);
+                else roles[spec.Role] = (FlowSketch.ReadCells(arr, panes, excel, _markWindow.Scale), spec.Tone);
                 continue;
             }
             var brush = ThemeKeys.Tone(_markWindow, spec.Tone);
@@ -68,10 +72,27 @@ internal sealed partial class ShellController
             (IReadOnlyList<SketchCell> Cells, string Tone) Role(string r, string tone) => roles.TryGetValue(r, out var v) ? v : ([], tone);
             var pre = Role("pre", "info");
             var dep = Role("dep", "good");
-            sketch = FlowSketch.Plan(sheet, act.Cells, pre.Cells, dep.Cells, new SketchTones(act.Tone, pre.Tone, dep.Tone));
+            sketch = FlowSketch.Plan(sheet, act.Cells, pre.Cells, dep.Cells, new SketchTones(act.Tone, pre.Tone, dep.Tone),
+                SketchLook.ByName(_settings.PencilLook), Role("pre2", "info").Cells, Role("dep2", "good").Cells,
+                BuildCross(scope, act.Cells, crossRefs, tabNames, excel, _markWindow.Scale));
         }
         // 움직임: 윈도우의 "애니메이션 효과" 설정이 꺼져 있으면 바로 그린다.
         _markWindow.Draw(excel, shapes, sketch, tone => ThemeKeys.Tone(_markWindow, tone), System.Windows.SystemParameters.ClientAreaAnimation);
+    }
+
+    /// <summary>다른 시트 흐름. flow.graph가 지금 고른 칸(시트·주소가 같음)의 것일 때만 쓴다(선택을 옮긴 직후 옛 결과가 남아 있을 수 있음).
+    /// 시트 탭 줄 자리는 엑셀이 알려 주지 않아 격자 맨 아래(스크롤 막대 줄)에서 어림한다: 왼쪽은 격자 왼쪽 + 탭 이동 단추 폭, 높이는 한 줄.</summary>
+    private static SketchCross? BuildCross(DataScope scope, IReadOnlyList<SketchCell> active, IReadOnlyDictionary<string, IReadOnlyList<CrossRef>> refs, IReadOnlyList<string> tabs, PixelRect excel, double scale)
+    {
+        if (active.Count == 0 || refs.Count == 0 || tabs.Count == 0) return null;
+        if (!scope.TryGet("flow.graph.addr", out var fa) || !scope.TryGet("flow.graph.sheet", out var fs)) return null;
+        if (fa.GetString() != active[0].Addr || fs.GetString() != (scope.TryGet("mark.sheet", out var ms) ? ms.GetString() : null)) return null;
+        var panes = scope.TryGet("mark.panes", out var p) ? MarkGeometry.Read(p) : [];
+        if (panes.Count == 0) return null;
+        int left = panes.Min(x => x.X), bottom = panes.Max(x => x.Bottom);
+        var strip = new MarkBox((left - excel.X) / scale + 74, (bottom - excel.Y) / scale + 1, Math.Max(200, (excel.Width / scale)), 22);
+        var cross = new SketchCross(refs.GetValueOrDefault("crossPre") ?? [], refs.GetValueOrDefault("crossDep") ?? [], tabs, strip);
+        return cross.IsEmpty ? null : cross;
     }
 
     /// <summary>표시층을 쓰는 모듈이 켜져 있으면 느린 다시 묻기를 켜고, 아니면 끄고 지운다.</summary>
@@ -97,6 +118,6 @@ internal sealed partial class ShellController
     {
         if (_hiddenAll || _target == IntPtr.Zero) return;
         if (User32.GetForegroundWindow() != _target) return; // 다른 창을 쓰는 동안 엑셀을 바쁘게 하지 않는다
-        _registry.Refresh(_target, MarkTopics());
+        _registry.Refresh(_target, [.. MarkTopics().Where(t => t == "mark")]); // 스크롤을 따라가려면 칸 자리만 다시 묻는다(무거운 흐름 조회는 선택이 바뀔 때만)
     }
 }

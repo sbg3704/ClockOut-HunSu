@@ -33,7 +33,7 @@ public sealed class HunsuSettings
     public int ListMaxRows { get; init; } = 50;
 
     /// <summary>처음 쓸 때(사용자가 관리자에서 아직 켜거나 끄지 않은 모듈) 켜 둘 모듈 id. "*"를 넣으면 전부 켠다.</summary>
-    public List<string> EnabledByDefault { get; init; } = ["hunsu-selection"];
+    public List<string> EnabledByDefault { get; init; } = ["hunsu-selection", "hunsu-pencilflow"];
 
     /// <summary>시작할 때 모듈 관리자 창을 바로 연다(처음 써 볼 때 편함).</summary>
     public bool ManagerOnStart { get; init; }
@@ -93,6 +93,9 @@ public sealed class HunsuSettings
 
     /// <summary>배치 잠금: "locked"(기본, 떼어 낸 패널은 Shift를 누른 채 끌어야 옮겨짐) 또는 "free"(그냥 끌어서 옮김). 부르기(Ctrl+Alt+H) 중에는 늘 옮길 수 있다(편집 모드).</summary>
     public string LayoutLock { get; init; } = "locked";
+
+    /// <summary>색연필 수식 흐름의 보이는 형태: "pencil"(색연필, 기본)·"marker"(형광 마커)·"ink"(펜). 모르는 이름은 색연필. 바로 반영(docs/12).</summary>
+    public string PencilLook { get; init; } = "pencil";
 
     public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
 
@@ -159,6 +162,7 @@ public sealed class HunsuSettings
             CursorHud = CursorHud,
             HudAnchor = (HudAnchor ?? "").Trim().ToLowerInvariant() == "cell" ? "cell" : "cursor",
 
+            PencilLook = Marks.SketchLook.ByName(PencilLook).Name,
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
     }
