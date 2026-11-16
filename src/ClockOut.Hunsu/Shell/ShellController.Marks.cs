@@ -1,7 +1,7 @@
 // 기능: 셀 위 표시층(ShellController의 일부). 켜진 모듈의 view.json marks[] 선언을 모아, 해당 주제 조회 결과(칸 자리)를 MarkWindow에 그린다.
 //       스크롤은 엑셀 이벤트가 없어서 엑셀이 앞에 있을 때만 settings.markPollMs 간격으로 그 주제를 다시 묻는다(끄는 중이면 QueryThrottle이 미룬다).
 // 사용법: OnTopic이 결과마다 OnTopicForMarks(r)를 부르고, RefreshDocks·전부 숨김·엑셀 바뀜 때 UpdateMarkLayer()를 부른다.
-// 의존: Overlay/MarkWindow, Core/Marks/MarkGeometry, Core/View(MarkSpec, DataScope), Ui/Theme(ThemeKeys.Tone). 칸 값은 받지 않는다(자리만).
+// 의존: Overlay/MarkWindow(색연필은 PencilPainter), Core/Marks/MarkGeometry·FlowSketch, Core/View(MarkSpec, DataScope), Ui/Theme(ThemeKeys.Tone). 칸 값은 받지 않는다(자리만).
 using System.Text.Json;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -47,15 +47,31 @@ internal sealed partial class ShellController
         var scope = new DataScope();
         foreach (var kv in _markData) scope.Set(kv.Key, kv.Value);
         var shapes = new List<(MarkBox, Brush, string)>();
+        var roles = new Dictionary<string, (IReadOnlyList<SketchCell> Cells, string Tone)>(StringComparer.Ordinal);
+        string sheet = scope.TryGet("mark.sheet", out var sh) && sh.ValueKind == System.Text.Json.JsonValueKind.String ? sh.GetString() ?? "" : "";
         foreach (var (_, spec) in specs)
         {
             if (!scope.TryGet(spec.Items, out var arr)) continue;
             string topic = _markData.Keys.Where(t => spec.Items.StartsWith(t + ".", StringComparison.Ordinal)).OrderByDescending(t => t.Length).FirstOrDefault() ?? "";
             var panes = scope.TryGet(topic + ".panes", out var p) ? MarkGeometry.Read(p) : [];
+            if (spec.Style == "pencil")
+            {
+                roles[spec.Role] = (FlowSketch.ReadCells(arr, panes, excel, _markWindow.Scale), spec.Tone);
+                continue;
+            }
             var brush = ThemeKeys.Tone(_markWindow, spec.Tone);
             foreach (var box in MarkGeometry.Layout(MarkGeometry.Read(arr), panes, excel, _markWindow.Scale)) shapes.Add((box, brush, spec.Style));
         }
-        _markWindow.Draw(excel, shapes);
+        SketchPlan? sketch = null;
+        if (roles.TryGetValue("active", out var act))
+        {
+            (IReadOnlyList<SketchCell> Cells, string Tone) Role(string r, string tone) => roles.TryGetValue(r, out var v) ? v : ([], tone);
+            var pre = Role("pre", "info");
+            var dep = Role("dep", "good");
+            sketch = FlowSketch.Plan(sheet, act.Cells, pre.Cells, dep.Cells, new SketchTones(act.Tone, pre.Tone, dep.Tone));
+        }
+        // 움직임: 윈도우의 "애니메이션 효과" 설정이 꺼져 있으면 바로 그린다.
+        _markWindow.Draw(excel, shapes, sketch, tone => ThemeKeys.Tone(_markWindow, tone), System.Windows.SystemParameters.ClientAreaAnimation);
     }
 
     /// <summary>표시층을 쓰는 모듈이 켜져 있으면 느린 다시 묻기를 켜고, 아니면 끄고 지운다.</summary>

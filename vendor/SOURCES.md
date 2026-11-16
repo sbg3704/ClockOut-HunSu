@@ -60,6 +60,7 @@
 | MIT | 아이콘 Fluent·Phosphor·Tabler·Iconoir, WPF-UI, MaterialDesignThemes, CsWin32, SkiaSharp 3종, LottieSharp, Microsoft.Msagl 2종, Msagl.WpfGraphControl, FluentIcons.Wpf | 저작권 줄과 MIT 전문을 배포물에 함께 넣는다. 보증 없음. |
 | ISC | 아이콘 Lucide | 저작권 줄과 ISC 전문을 함께 넣는다(MIT와 거의 같음). |
 | Apache-2.0 | 아이콘 Material Symbols | 라이선스 전문을 함께 넣고, 고친 파일은 고쳤다고 적는다(경로 형식만 바꿔 쓴다). NOTICE 파일이 있으면 함께 넣는다(이 패키지엔 없음). |
+| OFL 1.1 | Nanum Pen Script(손글씨, 2026-11-16 `google/fonts` 저장소 `ofl/nanumpenscript/NanumPenScript-Regular.ttf` 그대로 번들, 라이선스 `OFL-NanumPenScript.txt`를 실행 파일 옆 `fonts\`에 함께) | 원본 그대로라 예약 글꼴 이름(Nanum, NanumPen 등) 문제 없음. 훈수꾼 실행 파일에 리소스로 들어간다(색연필 수식 흐름의 이름표). |
 | OFL 1.1 | Pretendard, SUIT, IBM Plex Sans KR | `OFL-*.txt`를 함께 넣는다. 글꼴 파일만 따로 팔지 않는다. 고쳐서 낼 때는 예약된 글꼴 이름을 쓰지 않는다. 칼퇴는 원본 그대로 쓴다. |
 | 미확인 | HandyControl | 종류를 읽기 전에는 쓰지 않는다. |
 
