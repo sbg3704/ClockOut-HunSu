@@ -9,6 +9,7 @@ using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Ui.Controls;
+using ClockOut.Hunsu.Ui.Theme;
 using ClockOut.Hunsu.Diagnostics;
 using ClockOut.Hunsu.Excel;
 using ClockOut.Hunsu.Native;
@@ -28,8 +29,8 @@ internal sealed partial class ShellController : IDisposable
     private readonly InstanceRegistry _registry;
     private readonly HotkeyService _hotkeys;
     private readonly TrayIcon _tray;
-    private readonly DockWindow _right = new(Places.EdgeRight);
-    private readonly DockWindow _left = new(Places.EdgeLeft);
+    private readonly DockWindow _right;
+    private readonly DockWindow _left;
     private readonly List<ModuleView> _modules = [];
     private readonly Dictionary<string, PinWindow> _pins = new(StringComparer.Ordinal); // 지금 떼어 낸 것
     private readonly Dictionary<string, PinWindow> _pinWindows = new(StringComparer.Ordinal); // 모듈마다 미리 만들어 둔 창
@@ -47,6 +48,11 @@ internal sealed partial class ShellController : IDisposable
         _store = new LayoutStore(options.LayoutPath, _log);
         _settings = SettingsStore.Load(SettingsStore.PathFor(options.LayoutPath), _log);
         Parts.ListMaxRows = _settings.ListMaxRows;
+        // 테마와 패널 너비는 창을 만들기 전에 넣어야 StaticResource가 받는다(settings.theme, panelWidth).
+        string theme = ThemePicker.Apply(Application.Current, _settings.Theme, _settings.PanelWidth);
+        _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));
+        _right = new DockWindow(Places.EdgeRight);
+        _left = new DockWindow(Places.EdgeLeft);
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
         _registry.TopicReady += OnTopic;
         _registry.SummaryReady += OnSummary;

@@ -37,6 +37,12 @@ public sealed class HunsuSettings
     /// <summary>시작할 때 모듈 관리자 창을 바로 연다(처음 써 볼 때 편함).</summary>
     public bool ManagerOnStart { get; init; }
 
+    /// <summary>화면 테마: "dark"(기본), "light", "auto"(Windows 앱 모드를 따름). 켤 때 한 번 정한다(바꾸면 껐다 켬).</summary>
+    public string Theme { get; init; } = ThemeChoice.Dark;
+
+    /// <summary>도크 패널 너비(DIP). 범위 200~480. 핀 창은 끌어서 크기를 바꾼다(부르기 중).</summary>
+    public int PanelWidth { get; init; } = 240;
+
     public bool IsEnabledByDefault(string moduleId) => EnabledByDefault.Contains("*") || EnabledByDefault.Contains(moduleId);
 
     public static HunsuSettings FromJson(string? text)
@@ -68,6 +74,8 @@ public sealed class HunsuSettings
             ListMaxRows = InRange(ListMaxRows, 5, 200) ? ListMaxRows : d.ListMaxRows,
             EnabledByDefault = EnabledByDefault ?? d.EnabledByDefault,
             ManagerOnStart = ManagerOnStart,
+            Theme = ThemeChoice.Normalize(Theme),
+            PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
         };
     }
 
