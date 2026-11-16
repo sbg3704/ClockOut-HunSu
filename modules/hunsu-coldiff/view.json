@@ -1,0 +1,11 @@
+{
+  "tab": { "title": "비교", "badge": "{coldiff.diffCount:n0}", "tone": "warn" },
+  "panel": [
+    { "type": "text", "text": "{coldiff.hint}", "tone": "muted", "showWhen": "coldiff.ready == false" },
+    { "type": "text", "text": "{coldiff.rows:n0}줄 중 다른 줄 {coldiff.diffCount:n0}개", "showWhen": "coldiff.ready == true" },
+    { "type": "list", "items": "coldiff.items", "text": "{item.label} · {item.a} / {item.b}", "tone": "warn", "command": "goto", "arg.addr": "{item.addr}", "max": 30, "emptyText": "두 열이 모두 같습니다." },
+    { "type": "badge", "text": "앞의 일부만 나열했습니다", "tone": "warn", "showWhen": "coldiff.diffCount > 30" },
+    { "type": "badge", "text": "줄이 많아 앞부분만 견주었습니다", "tone": "warn", "showWhen": "coldiff.truncated == true" },
+    { "type": "text", "text": "글자는 대소문자와 공백까지 같아야 같은 칸으로 봅니다.", "tone": "muted", "showWhen": "coldiff.ready == true" }
+  ]
+}

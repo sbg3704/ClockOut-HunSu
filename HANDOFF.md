@@ -13,6 +13,13 @@
 - 다음: PC에서 `co build hunsu pr20 -Test` 확인 → 편집 모드와 도크 자유 배치(사용자가 "끌어서 어디든 놓기" 선택, docs/10) → co가 `HUNSU_BUILD_TAG`(pr번호)를 넣는 작은 PR(claude-workspace).
 - 먼저 읽을 파일: `CLAUDE.md`(판 번호 규칙), `src/ClockOut.Hunsu/Shell/BridgeUpdater.cs`, `docs/10_배치_방식_벤치마크.md`.
 
+## 2026-11-16 계정2: 엑셀 추가기능 이관 A 묶음 (브랜치 `claude/project-thread-1bfhc8`, 판 0.0.040)
+- 사용자 방향: 추가기능은 키우지 않고 새 기능은 훈수꾼에. 칼퇴 쪽 이관 지도 원문은 `협업/이관지도_칼퇴발_2026-11-16.md`, 대조·결정·진행은 `docs/11_엑셀_추가기능_이관.md`.
+- 사용자 결정(2026-11-16): 쓰기 명령은 허용하되 **실험 기능·오류 가능성을 공지하고 사용자가 확인한 뒤에만**(docs/01 9장 8번 개정). **아직 쓰기 명령은 없다.**
+- 된 것: 선택 요약 숨은 줄·열 제외(`hiddenCells`), 모듈 4종(십자 음영, 색깔별 합계, 두 열 비교, 폴더 파일 목록), 다리 0.0.015(조회 3개, `mark` 띠, 명령 `book.open`), 시나리오 문서에 시나리오 5줄과 시트 2개, 시험 5개.
+- 확인: 클라우드에서 `dotnet test` 170개 통과. **VBA 컴파일과 엑셀 실행, 화면은 못 봄.** PC에서 `co build hunsu pr<번호>`.
+- 다음: 쓰기 규칙 구현 전에 실행 취소 영향 실측(VM, COM만, 사용자 확인 후), 공지·확인 창 부품, 모듈 `params` 읽기(설정 이어받기).
+
 ## 2026-11-16 계정1 몫 6가지 (브랜치 `claude/project-thread-697fy8`, 클라우드 작업)
 - 사용자 지시: PR #13 머지(완료) → PR #14 나눔 표의 계정1 몫을 Claude 추천대로 만들기. 설계·결정·스위치는 `docs/08_계정1_틀_기능_2026-11-16.md`.
 - 된 것: 부품 bar·spark·progress, 밝은/어두운 테마(`theme`), 도크 패널 너비(`panelWidth`)·핀 창 모서리 크기 조절, 발자취(`hunsu-history`, 앱 주제 `app.*`), 시트를 넘는 수식 흐름(`flow.graph`, `hunsu-flowgraph`), 셀 위 표시층(`mark`, `marks[]` 문법, `hunsu-marks`), bench 조회 부하(`QueryLoadChecks`). 다리 0.0.014.

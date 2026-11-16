@@ -1,0 +1,12 @@
+{
+  "tab": { "title": "십자", "tone": "info" },
+  "marks": [
+    { "items": "mark.rowband", "tone": "info", "style": "fill" },
+    { "items": "mark.colband", "tone": "info", "style": "fill" }
+  ],
+  "panel": [
+    { "type": "badge", "text": "고른 칸의 행·열 · 파란 띠", "tone": "info" },
+    { "type": "text", "text": "엑셀 칸 색과 실행 취소 기록은 건드리지 않습니다. 행이나 열을 통째로 고르면 그 방향 띠는 그리지 않습니다.", "tone": "muted" },
+    { "type": "text", "text": "스크롤하면 잠깐 뒤에 띠가 따라옵니다.", "tone": "muted" }
+  ]
+}
