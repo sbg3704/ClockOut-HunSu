@@ -3,7 +3,8 @@
   "panel": [
     { "type": "text", "text": "{composition.sheet} · 사용 범위 {composition.cells:n0}칸", "tone": "muted" },
     { "type": "badge", "text": "범위가 너무 커서 세지 않았습니다", "tone": "warn", "showWhen": "composition.skipped == true" },
-    { "type": "stat", "value": "{composition.formulas:n0}", "label": "수식 칸", "tone": "info", "hideWhen": "composition.skipped == true" },
-    { "type": "text", "text": "숫자 {composition.numbers:n0} · 글자 {composition.texts:n0} · 그 밖 {composition.others:n0}", "hideWhen": "composition.skipped == true" }
+    { "type": "progress", "label": "수식", "value": "{composition.formulas}", "total": "{composition.cells}", "tone": "info", "hideWhen": "composition.skipped == true" },
+    { "type": "progress", "label": "숫자", "value": "{composition.numbers}", "total": "{composition.cells}", "tone": "good", "hideWhen": "composition.skipped == true" },
+    { "type": "progress", "label": "글자", "value": "{composition.texts}", "total": "{composition.cells}", "tone": "muted", "hideWhen": "composition.skipped == true" }
   ]
 }

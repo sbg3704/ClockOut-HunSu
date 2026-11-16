@@ -99,6 +99,7 @@ internal sealed partial class ShellController
         _right.SetAllCollapsedLabel(allCollapsed);
         _left.SetAllCollapsedLabel(allCollapsed);
         UpdateMarkLayer();
+        UpdateQuickBar();
         ModulesChanged?.Invoke();
     }
 
@@ -262,6 +263,7 @@ internal sealed partial class ShellController
 
     private void OnSummary(SummaryResult r)
     {
+        ShowCursorHud(r.Summary);
         Frames.Next(frame =>
         {
             _log.Write("render", ("excel", r.Excel.ToInt64()), ("seq", r.Seq), ("recv", r.SignalAt), ("qs", r.QueryStart), ("qd", r.QueryDone), ("frame", frame),

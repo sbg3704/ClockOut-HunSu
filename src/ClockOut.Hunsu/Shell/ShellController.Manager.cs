@@ -52,6 +52,7 @@ internal sealed partial class ShellController
         Parts.ListMaxRows = next.ListMaxRows;
         PanelFrame.SharpenOnHover = next.HoverSharpen;
         PanelFrame.MaxBodyHeight = next.PanelMaxHeight;
+        UpdateQuickBar();
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));

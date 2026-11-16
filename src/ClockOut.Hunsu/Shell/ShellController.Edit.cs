@@ -55,6 +55,9 @@ internal sealed partial class ShellController
     {
         foreach (var p in _pins.Values) p.SetInteractive(_summoned);
         foreach (var m in _modules.Where(m => m.InDock)) m.Frame.SetSummoned(_summoned);
+        if (_quick != null) _quick.EditMode = _summoned;
+        _left.SetEditMode(_summoned);
+        _right.SetEditMode(_summoned);
         _log.Write("summon", ("on", _summoned), ("pins", _pins.Count));
     }
 
@@ -65,6 +68,11 @@ internal sealed partial class ShellController
         if (!ok) return;
         _store.State.Modules.Clear();
         foreach (var kv in snap.Modules) _store.State.Modules[kv.Key] = kv.Value;
+        _store.State.Docks.Clear();
+        foreach (var kv in snap.Docks) _store.State.Docks[kv.Key] = kv.Value;
+        _left.SetCenterRatio(_store.State.DockRatio(Places.EdgeLeft));
+        _right.SetCenterRatio(_store.State.DockRatio(Places.EdgeRight));
+        _quickFollower?.Sync("move");
         foreach (var mv in _modules)
         {
             var man = mv.Module.Manifest;

@@ -57,6 +57,7 @@ internal sealed partial class ShellController : IDisposable
         _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));
         _right = new DockWindow(Places.EdgeRight, _settings);
         _left = new DockWindow(Places.EdgeLeft, _settings);
+        CreateQuick();
         _log.Write("launcher", ("shape", _settings.DockShape), ("groups", _settings.DockGroups), ("size", _settings.DockSize), ("icons", _settings.IconProfile), ("idle", _settings.IdleOpacity));
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
         _registry.TopicReady += OnTopic;
@@ -148,6 +149,7 @@ internal sealed partial class ShellController : IDisposable
         int Height(PixelRect t) => OverlayPlacement.DockHeight(t, 200);
         _followers.Add(new WindowFollower(_right.Handle, target, _log, (t, w, h) => OverlayPlacement.TopRightInside(t, w, h), Height));
         _followers.Add(new WindowFollower(_left.Handle, target, _log, (t, w, h) => OverlayPlacement.TopLeftInside(t, w, h), Height));
+        AttachQuick(target, _followers.Add);
         foreach (var f in _followers)
         {
             f.Suspended = _hiddenAll;
@@ -158,6 +160,7 @@ internal sealed partial class ShellController : IDisposable
         _markData.Clear();
         _markWindow?.Clear();
         UpdateLeftVisibility();
+        UpdateQuickBar();
     }
 
     private void OnTargetGone()
@@ -208,6 +211,7 @@ internal sealed partial class ShellController : IDisposable
         foreach (var f in _followers) f.Suspended = _hiddenAll;
         if (_followers.Count > 0) _followers[0].Sync("show");
         UpdateLeftVisibility();
+        UpdateQuickBar();
         foreach (var p in ActivePins()) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
         _tray.SetHidden(_hiddenAll);
         DrawMarks();
