@@ -62,6 +62,7 @@ internal static class User32
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static extern bool DestroyIcon(IntPtr icon);
     [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
     /// <summary>Shift 키가 지금 눌려 있는가(창이 활성화되지 않아도 읽힌다).</summary>
+    public static bool AltDown() => (GetAsyncKeyState(0x12) & 0x8000) != 0;
     public static bool ShiftDown() => (GetAsyncKeyState(0x10) & 0x8000) != 0;
     [DllImport("user32.dll")] public static extern int GetSystemMetrics(int index);
 

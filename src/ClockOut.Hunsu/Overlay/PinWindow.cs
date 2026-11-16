@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using ClockOut.Hunsu.Core;
+using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Native;
 using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Ui.Theme;
@@ -60,6 +61,9 @@ internal sealed class PinWindow : Window
 
     /// <summary>true를 돌려주면 Shift 없이도 끌어 옮길 수 있다(배치 잠금이 "free"일 때). null이면 잠금.</summary>
     public Func<bool>? FreeDrag { get; set; }
+
+    /// <summary>끌어 놓을 때 붙일 대상 사각형들(작업 영역, 엑셀 창, 다른 핀 창). null이면 붙이지 않는다. Alt를 누른 채 놓으면 붙이지 않는다.</summary>
+    public Func<IReadOnlyList<PixelRect>>? SnapTargets { get; set; }
 
     /// <summary>이 패널의 자리를 잠갔다(모듈별 잠금): 편집 모드에서도 끌거나 크기를 바꾸지 못한다.</summary>
     public bool Locked
@@ -213,6 +217,11 @@ internal sealed class PinWindow : Window
         if (!_interactive && !(FreeDrag?.Invoke() ?? false) && !User32.ShiftDown()) return;
         DragMove(); // 놓을 때까지 돌아오지 않는다
         var now = User32.WindowBounds(Handle);
+        if (SnapTargets != null && !User32.AltDown())
+        {
+            var snapped = PinPlacement.Snap(now, SnapTargets());
+            if (snapped != now) { MoveTo(snapped); now = snapped; }
+        }
         if (now != _rect)
         {
             _rect = now;
