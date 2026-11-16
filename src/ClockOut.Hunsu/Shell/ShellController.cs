@@ -23,7 +23,7 @@ internal sealed partial class ShellController : IDisposable
     private readonly AppOptions _options;
     private readonly RunLog _log;
     private readonly LayoutStore _store;
-    private readonly HunsuSettings _settings;
+    private HunsuSettings _settings;
     private ManagerWindow? _manager;
     private readonly SignalWindow _signal;
     private readonly InstanceRegistry _registry;
@@ -74,7 +74,8 @@ internal sealed partial class ShellController : IDisposable
         _tray.SummonClicked += ToggleSummon;
         _tray.HideAllClicked += ToggleHideAll;
         _tray.QuitClicked += Quit;
-        _tray.ManagerClicked += OpenManager;
+        _tray.ManagerClicked += () => OpenManager();
+        _tray.LookClicked += () => OpenManager("look");
         foreach (var d in new[] { _right, _left })
         {
             d.ModuleIconClicked += OnModuleIcon;
@@ -83,7 +84,8 @@ internal sealed partial class ShellController : IDisposable
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;
             d.QuitRequested += Quit;
-            d.ManagerRequested += OpenManager;
+            d.ManagerRequested += () => OpenManager();
+            d.LookRequested += () => OpenManager("look");
             var side = d.Side;
             d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }

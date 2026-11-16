@@ -17,7 +17,7 @@ namespace ClockOut.Hunsu.Overlay;
 public partial class DockWindow : Window
 {
     private readonly List<ModuleView> _modules = [];
-    private readonly HunsuSettings _settings;
+    private HunsuSettings _settings;
     private readonly DispatcherTimer _pointer;
     private readonly MenuItem _toggleAll = new() { Header = "패널 모두 접기" };
 
@@ -30,7 +30,7 @@ public partial class DockWindow : Window
         Column.HorizontalAlignment = left ? HorizontalAlignment.Left : HorizontalAlignment.Right;
         Launcher.HubMenu = HubMenu();
         Launcher.ModuleClicked += id => ModuleIconClicked?.Invoke(id);
-        Launcher.Configure(settings.DockShape, settings.DockGroups, LauncherShapes.Scale(settings.DockSize), settings.IdleOpacity, settings.IconProfile, mirror: left);
+        Configure();
         Resize(0);
         SourceInitialized += (_, _) =>
         {
@@ -55,6 +55,7 @@ public partial class DockWindow : Window
     public event Action? HideAllRequested;
     public event Action? QuitRequested;
     public event Action? ManagerRequested;
+    public event Action? LookRequested;
 
     /// <summary>런처의 모듈 아이콘을 눌렀다(모듈 id): 패널 열기·닫기.</summary>
     public event Action<string>? ModuleIconClicked;
@@ -84,6 +85,18 @@ public partial class DockWindow : Window
         RefreshLauncher();
         Relayout();
     }
+
+    /// <summary>설정 창 [모양]에서 바꾼 모양을 바로 쓴다(창 너비와 패널 자리도 다시 잰다).</summary>
+    internal void ApplyLook(HunsuSettings settings)
+    {
+        _settings = settings;
+        Configure();
+        Resize(_modules.Count);
+        Relayout();
+    }
+
+    private void Configure() =>
+        Launcher.Configure(_settings.DockShape, _settings.DockGroups, LauncherShapes.Scale(_settings.DockSize), _settings.IdleOpacity, _settings.IconProfile, mirror: Side == Places.EdgeLeft);
 
     /// <summary>런처 아이콘(이름, 아이콘, 배지, 열림)을 지금 모듈 상태로 다시 넣는다.</summary>
     internal void RefreshLauncher() =>
@@ -171,6 +184,7 @@ public partial class DockWindow : Window
         menu.Items.Add(Item("부르기 · 닫기", "Ctrl+Alt+H", () => SummonRequested?.Invoke()));
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
+        menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("훈수꾼 끄기", "", () => QuitRequested?.Invoke()));
         return menu;

@@ -17,6 +17,7 @@ internal sealed class TrayIcon : IDisposable
         _hideItem = new System.Windows.Forms.ToolStripMenuItem("전부 숨기기\tCtrl+Alt+Shift+H", null, (_, _) => HideAllClicked?.Invoke());
         menu.Items.Add(_hideItem);
         menu.Items.Add("모듈 관리…", null, (_, _) => ManagerClicked?.Invoke());
+        menu.Items.Add("모양 바꾸기…", null, (_, _) => LookClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("훈수꾼 끄기", null, (_, _) => QuitClicked?.Invoke());
         _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = "훈수꾼", ContextMenuStrip = menu, Visible = true };
@@ -27,6 +28,7 @@ internal sealed class TrayIcon : IDisposable
     public event Action? HideAllClicked;
     public event Action? QuitClicked;
     public event Action? ManagerClicked;
+    public event Action? LookClicked;
 
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";
 

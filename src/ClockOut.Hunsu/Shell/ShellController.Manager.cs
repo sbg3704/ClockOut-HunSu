@@ -1,4 +1,4 @@
-// 기능: 모듈 관리자가 쓰는 동작(ShellController의 일부). 켜기·끄기, 순서 바꾸기, 자리 옮기기, 배치 처음으로, 관리자 창 열기.
+// 기능: 모듈 관리자가 쓰는 동작(ShellController의 일부). 켜기·끄기, 순서 바꾸기, 자리 옮기기, 배치 처음으로, 도크 모양 바꾸기, 관리자 창 열기.
 // 사용법: ManagerWindow가 shell.SetEnabled / MoveOrder / PlaceFromManager / ResetLayout 을 부르고 shell.ModulesChanged로 목록을 다시 그린다(docs/07).
 // 의존: ShellController.Modules.cs(Save, Pin, MoveToDock, RefreshDocks), Core/Layout/OrderPlan, Core/TopicRouting, Shell/ManagerWindow.
 using ClockOut.Hunsu.Core;
@@ -20,6 +20,22 @@ internal sealed partial class ShellController
     internal string SettingsPath => SettingsStore.PathFor(_options.LayoutPath);
 
     internal HunsuSettings Settings => _settings;
+
+    /// <summary>도크 모양이 바뀌었다(설정 창 [모양]이 미리보기를 다시 그린다).</summary>
+    internal event Action? LookChanged;
+
+    /// <summary>설정 창 [모양]에서 고른 값: 두 도크에 바로 반영하고 settings.json에 쓴다. 묶음·순서·켜짐은 그대로다.</summary>
+    internal void ApplyLook(DockLook look)
+    {
+        var next = _settings.WithLook(look);
+        if (next.Look == _settings.Look) return;
+        _settings = next;
+        _right.ApplyLook(next);
+        _left.ApplyLook(next);
+        SettingsStore.Save(SettingsPath, next, _log);
+        _log.Write("launcher", ("shape", next.DockShape), ("groups", next.DockGroups), ("size", next.DockSize), ("icons", next.IconProfile), ("idle", next.IdleOpacity));
+        LookChanged?.Invoke();
+    }
 
     /// <summary>모듈 켜기·끄기. 꺼진 모듈은 도크·핀 창에서 빠지고 엑셀 조회도 하지 않는다. 켤 때는 지금 값을 한 번 채운다.</summary>
     internal void SetEnabled(ModuleView mv, bool enabled)
@@ -85,10 +101,11 @@ internal sealed partial class ShellController
 
     private IEnumerable<PinWindow> ActivePins() => _pins.Where(kv => !_modules.Any(m => m.Id == kv.Key && m.Placement.Hidden)).Select(kv => kv.Value);
 
-    private void OpenManager()
+    /// <summary>설정 창을 연다(page: "modules" | "look"). 이미 열려 있으면 그 쪽으로 넘기고 앞으로 가져온다.</summary>
+    private void OpenManager(string page = "modules")
     {
-        if (_manager is { IsLoaded: true }) { _manager.Activate(); return; }
-        _manager = new ManagerWindow(this);
+        if (_manager is { IsLoaded: true }) { _manager.ShowPage(page); _manager.Activate(); return; }
+        _manager = new ManagerWindow(this, page);
         _manager.Show();
         _manager.Activate();
     }

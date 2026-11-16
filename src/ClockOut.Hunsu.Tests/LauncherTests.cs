@@ -1,4 +1,4 @@
-// 기능: 엑셀 옆 아이콘 런처의 순수 계산 시험: 기능 묶음 나누기, 배지 합·톤, 배치 모양 5종의 자리, 설정 범위, 모듈 icon 칸 (docs/09 2장).
+// 기능: 엑셀 옆 아이콘 런처의 순수 계산 시험: 기능 묶음 나누기, 배지 합·톤, 배치 모양 5종의 자리, 설정 범위, 설정 창 [모양]의 WithLook, 모듈 icon 칸 (docs/09 2장).
 // 사용법: dotnet test
 // 의존: ClockOut.Hunsu.Core(Layout/LauncherLayout, Settings, Manifest)
 using ClockOut.Hunsu.Core.Layout;
@@ -98,6 +98,19 @@ public class LauncherTests
         Assert.Equal(("fan", false, "l", "tabler", 0.8), (s.DockShape, s.DockGroups, s.DockSize, s.IconProfile, s.IdleOpacity));
         var bad = HunsuSettings.FromJson("""{"dockShape":"star","dockSize":"xl","iconProfile":"emoji","idleOpacity":0}""");
         Assert.Equal(("crescent", "m", "fluent", 0.45), (bad.DockShape, bad.DockSize, bad.IconProfile, bad.IdleOpacity));
+    }
+
+    [Fact]
+    public void WithLook_ChangesOnlyLookAndClamps()
+    {
+        var s = HunsuSettings.FromJson("""{"queryDragGapMs":300,"panelWidth":280,"enabledByDefault":["*"]}""");
+        var t = s.WithLook(new DockLook("rail", false, "l", "tabler", 0.6));
+        Assert.Equal(new DockLook("rail", false, "l", "tabler", 0.6), t.Look);
+        Assert.Equal((300, 280, true), (t.QueryDragGapMs, t.PanelWidth, t.IsEnabledByDefault("hunsu-x")));
+        var bad = s.WithLook(new DockLook("star", true, "xl", "emoji", 0));
+        Assert.Equal(DockLook.Default, bad.Look);
+        Assert.Equal(t.Look, HunsuSettings.FromJson(t.ToJson()).Look); // 저장해도 그대로
+        Assert.DoesNotContain("\"look\"", t.ToJson());
     }
 
     [Fact]
