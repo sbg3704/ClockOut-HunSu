@@ -1,0 +1,7 @@
+{
+  "tab": { "title": "표", "badge": "{tables.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "list", "items": "tables.items", "text": "{item.name}", "sub": "{item.sheet} · {item.addr} · {item.rows:n0}줄", "command": "goto", "arg.sheet": "{item.sheet}", "arg.addr": "{item.addr}", "max": 12, "emptyText": "이 통합 문서에는 표(Ctrl+T)가 없습니다." },
+    { "type": "badge", "text": "앞의 일부만 조회했습니다", "tone": "warn", "showWhen": "tables.truncated == true" }
+  ]
+}

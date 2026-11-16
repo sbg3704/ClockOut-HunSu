@@ -1,0 +1,19 @@
+{
+  "tab": { "title": "셀", "badge": "{cell.info.addr}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{cell.info.sheet} ! {cell.info.addr}" },
+    { "type": "badge", "text": "수식", "tone": "info", "showWhen": "cell.info.hasFormula == true" },
+    { "type": "text", "text": "{cell.info.formula}", "tone": "muted", "showWhen": "cell.info.hasFormula == true" },
+    { "type": "badge", "text": "오류 값", "tone": "bad", "showWhen": "cell.info.kind == \"error\"" },
+    { "type": "badge", "text": "텍스트", "tone": "muted", "showWhen": "cell.info.kind == \"text\"" },
+    { "type": "badge", "text": "숫자", "tone": "good", "showWhen": "cell.info.kind == \"number\"" },
+    { "type": "badge", "text": "날짜", "tone": "good", "showWhen": "cell.info.kind == \"date\"" },
+    { "type": "badge", "text": "참/거짓", "tone": "info", "showWhen": "cell.info.kind == \"bool\"" },
+    { "type": "badge", "text": "빈 칸", "tone": "muted", "showWhen": "cell.info.kind == \"empty\"" },
+    { "type": "divider" },
+    { "type": "text", "text": "서식 {cell.info.format}", "tone": "muted" },
+    { "type": "badge", "text": "병합된 칸", "tone": "warn", "showWhen": "cell.info.merged == true" },
+    { "type": "badge", "text": "메모 있음", "tone": "info", "showWhen": "cell.info.hasNote == true" },
+    { "type": "badge", "text": "잠금 해제(보호 시 수정 가능)", "tone": "muted", "showWhen": "cell.info.locked == false" }
+  ]
+}
