@@ -2,10 +2,10 @@
   "tab": { "title": "색", "badge": "{color.sum.fillKinds:n0}", "tone": "info" },
   "panel": [
     { "type": "text", "text": "채우기 색별", "tone": "muted" },
-    { "type": "list", "items": "color.sum.fill", "text": "{item.label}", "sub": "{item.count:n0}칸 · 합계 {item.sum:n}", "max": 12, "emptyText": "고른 칸에 값이 있는 칸이 없습니다." },
+    { "type": "bar", "items": "color.sum.fill", "label": "{item.label} · 합계 {item.sum:n}", "value": "{item.count}", "tone": "info", "max": 8, "emptyText": "고른 칸에 값이 있는 칸이 없습니다." },
     { "type": "divider" },
     { "type": "text", "text": "글자 색별(값이 있는 칸)", "tone": "muted" },
-    { "type": "list", "items": "color.sum.font", "text": "{item.label}", "sub": "{item.count:n0}칸 · 합계 {item.sum:n}", "max": 12, "emptyText": "고른 칸에 값이 있는 칸이 없습니다." },
+    { "type": "bar", "items": "color.sum.font", "label": "{item.label} · 합계 {item.sum:n}", "value": "{item.count}", "tone": "info", "max": 8, "emptyText": "고른 칸에 값이 있는 칸이 없습니다." },
     { "type": "badge", "text": "칸이 많아 앞 {color.sum.scanned:n0}칸만 셌습니다", "tone": "warn", "showWhen": "color.sum.truncated == true" },
     { "type": "badge", "text": "색이 너무 많아 {color.sum.otherCount:n0}칸은 뺐습니다", "tone": "warn", "showWhen": "color.sum.otherCount > 0" },
     { "type": "text", "text": "칸에 직접 칠한 색만 봅니다(조건부 서식 색 제외). 합계는 숫자 칸만 더합니다.", "tone": "muted" }

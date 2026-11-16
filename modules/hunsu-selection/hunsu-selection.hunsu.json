@@ -12,6 +12,7 @@
   ],
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
+  "form": "hud",
   "order": 100,
   "icon": "sum",
   "data": [
