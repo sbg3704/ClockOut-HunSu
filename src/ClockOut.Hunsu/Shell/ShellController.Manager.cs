@@ -114,6 +114,26 @@ internal sealed partial class ShellController
         RefreshDocks();
     }
 
+    /// <summary>작업 프로필 적용: 프로필의 모듈은 켜고 순서대로 왼쪽 도크(떼어 둔 것은 그대로)에, 나머지는 끈다. 켜고 끄기는 설정 창 [모듈]에서 언제든 바꿀 수 있다.</summary>
+    internal void ApplyProfile(string id)
+    {
+        var profile = Profiles.Find(id);
+        if (profile == null) return;
+        var plan = Profiles.Plan(profile, _modules.Select(m => m.Id));
+        foreach (var mv in _modules)
+        {
+            if (!plan.TryGetValue(mv.Id, out var step)) continue;
+            if (step.Order is int order)
+            {
+                Save(mv, p => p with { Order = order, Place = mv.InDock ? Places.EdgeLeft : p.Place });
+            }
+            if (mv.Placement.Hidden == step.Enabled) SetEnabled(mv, step.Enabled);
+        }
+        RefreshDocks();
+        ApplySetting("profile", profile.Id);
+        _log.Write("profile", ("id", profile.Id));
+    }
+
     /// <summary>패널 투명도를 한 단계 바꾼다(제목줄 단추와 설정 창 ◐ 단추가 같이 씀). 5단계를 돌아 처음으로 간다.</summary>
     internal void CycleOpacity(ModuleView mv)
     {

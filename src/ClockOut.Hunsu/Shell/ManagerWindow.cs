@@ -24,6 +24,7 @@ internal sealed class ManagerWindow : Window
     private ScrollViewer? _modulesView;
     private LookPage? _look;
     private GeneralPage? _general;
+    private ProfilesPage? _profiles;
     private string _page = "modules";
 
     public ManagerWindow(ShellController shell, string page = "modules")
@@ -50,12 +51,18 @@ internal sealed class ManagerWindow : Window
     /// <summary>[모듈] 또는 [모양] 쪽을 보인다("modules" | "look").</summary>
     internal void ShowPage(string page)
     {
-        _page = page is "look" or "general" ? page : "modules";
+        _page = page is "look" or "general" or "profiles" ? page : "modules";
         if (_page == "look")
         {
             _look ??= new LookPage(_shell);
             _body.Child = _look;
             _look.Rebuild();
+        }
+        else if (_page == "profiles")
+        {
+            _profiles ??= new ProfilesPage(_shell);
+            _body.Child = _profiles;
+            _profiles.Rebuild();
         }
         else if (_page == "general")
         {
@@ -66,6 +73,7 @@ internal sealed class ManagerWindow : Window
         else _body.Child = _modulesView;
         _tabs.Children.Clear();
         _tabs.Children.Add(ManagerParts.Chip(this, "모듈", _page == "modules", () => ShowPage("modules")));
+        _tabs.Children.Add(ManagerParts.Chip(this, "프로필", _page == "profiles", () => ShowPage("profiles")));
         _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
         _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
     }
