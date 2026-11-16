@@ -39,6 +39,9 @@
   <ItemGroup>
     <!-- 고양이 아이콘: 실행 파일 아이콘이자 알림 영역 아이콘 원본. 원본 SVG는 assets/icon, 만드는 법은 tools/icons/make_app_icon.mjs. -->
     <EmbeddedResource Include="Assets\hunsu.ico" LogicalName="hunsu.ico" />
+    <!-- 색연필 수식 흐름의 손글씨 이름표 글꼴: Nanum Pen Script(OFL 1.1, 원본 그대로). 라이선스 전문은 실행 파일 옆에도 둔다(vendor/SOURCES.md). -->
+    <Resource Include="Assets\Fonts\NanumPenScript-Regular.ttf" />
+    <None Include="Assets\Fonts\OFL-NanumPenScript.txt" Link="fonts\OFL-NanumPenScript.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClockOut.Hunsu.Core\ClockOut.Hunsu.Core.csproj" />

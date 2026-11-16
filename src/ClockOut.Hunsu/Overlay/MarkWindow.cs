@@ -1,7 +1,7 @@
 // 기능: 셀 위 표시층 창. 엑셀 창과 같은 자리·크기의 투명 창에 칸 테두리·옅은 칠·밑줄을 그린다(docs/08). 늘 클릭이 지나가고 활성화되지 않는다.
-//       엑셀 창의 소유 창이라 엑셀 위에 있고, 엑셀을 최소화하면 같이 숨는다.
-// 사용법: var w = new MarkWindow(); w.SetOwner(excel); w.Draw(excelRect, [(box, brush, "outline"), ...]); w.Clear(); w.Hide()
-// 의존: Core/Marks(MarkBox), Native/User32. 자리는 Core/Marks/MarkGeometry가 계산해 준다(이 창은 그리기만).
+//       엑셀 창의 소유 창이라 엑셀 위에 있고, 엑셀을 최소화하면 같이 숨는다. 색연필 수식 흐름(PencilPainter)은 같은 창의 위 캔버스에 그린다.
+// 사용법: var w = new MarkWindow(); w.SetOwner(excel); w.Draw(excelRect, [(box, brush, "outline"), ...], sketchPlan, tone => brush, animate); w.Clear(); w.Hide()
+// 의존: Core/Marks(MarkBox, SketchPlan), Overlay/PencilPainter, Native/User32. 자리는 Core/Marks/MarkGeometry가 계산해 준다(이 창은 그리기만).
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -16,6 +16,8 @@ namespace ClockOut.Hunsu.Overlay;
 internal sealed class MarkWindow : Window
 {
     private readonly Canvas _canvas = new() { IsHitTestVisible = false };
+    private readonly Canvas _pencilCanvas = new() { IsHitTestVisible = false };
+    private readonly PencilPainter _pencil;
     private IntPtr _owner;
     private PixelRect _rect;
 
@@ -30,7 +32,8 @@ internal sealed class MarkWindow : Window
         Focusable = false;
         IsHitTestVisible = false;
         Title = "훈수꾼 표시층";
-        Content = _canvas;
+        _pencil = new PencilPainter(_pencilCanvas);
+        Content = new Grid { IsHitTestVisible = false, Children = { _canvas, _pencilCanvas } };
         SourceInitialized += (_, _) =>
         {
             Handle = new WindowInteropHelper(this).Handle;
@@ -53,11 +56,12 @@ internal sealed class MarkWindow : Window
     }
 
     /// <summary>엑셀 창 자리에 맞추고 표시를 새로 그린다. 같은 자리면 옮기지 않는다(레이어드 창 다시 그리기를 줄임).</summary>
-    public void Draw(PixelRect excel, IReadOnlyList<(MarkBox Box, Brush Brush, string Style)> marks)
+    public void Draw(PixelRect excel, IReadOnlyList<(MarkBox Box, Brush Brush, string Style)> marks, SketchPlan? sketch = null, Func<string, Brush>? tone = null, bool animate = false)
     {
         _canvas.Children.Clear();
         foreach (var (box, brush, style) in marks) _canvas.Children.Add(Shape(box, brush, style));
-        if (marks.Count == 0) { Hide(); return; }
+        bool hasSketch = sketch is { IsEmpty: false };
+        if (marks.Count == 0 && !hasSketch) { _pencil.Clear(); Hide(); return; }
         if (!IsVisible) Show();
         if (excel != _rect || !User32.IsWindowVisible(Handle))
         {
@@ -65,11 +69,13 @@ internal sealed class MarkWindow : Window
             var after = _owner != IntPtr.Zero ? User32.InsertAfterJustAbove(Handle, _owner) : IntPtr.Zero;
             User32.SetWindowPos(Handle, after, excel.X, excel.Y, excel.Width, excel.Height, User32.SWP_NOACTIVATE | User32.SWP_SHOWWINDOW);
         }
+        _pencil.Paint(hasSketch ? sketch! : SketchPlan.Empty, tone ?? (_ => Brushes.Gray), animate);
     }
 
     public void Clear()
     {
         _canvas.Children.Clear();
+        _pencil.Clear();
         Hide();
     }
 

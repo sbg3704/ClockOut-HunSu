@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-16 갱신)
 
+## 2026-11-16 색연필 수식 흐름 (브랜치 `claude/project-thread-3tmnq0`, 판 0.0.056)
+- 사용자 요청: 수식 흐름이 손글씨 색연필 느낌으로 셀 위에 휙휙휙 그려지게. 새 모듈 `hunsu-pencilflow`(기본 꺼짐, 형광펜과 같이 켜면 겹침). 선택·구조·바꾸는 곳은 `docs/12_색연필_수식_흐름.md`.
+- 된 것: 표시층 `style: "pencil"` + `role`, 계산(`Core/Marks/PencilStroke·FlowSketch·PencilGrain`)과 그리기(`Overlay/PencilPainter`), 손글씨 글꼴 번들(Nanum Pen Script OFL, `vendor/SOURCES.md`), 시나리오 [흐름] 시트에 B6:B10 블록. 다리(VBA)는 안 바꿈. 클라우드에서 빌드 0경고, 시험 통과.
+- 못 본 것: 실제 화면(투명 창의 움직임·결 무늬·글꼴). PC에서 `co build hunsu main` 후 [흐름]의 B8 등을 눈으로. 끊기면 `FlowSketch.MaxPerGroup`을 줄이거나 프레임 수를 낮춤.
+- 먼저 읽을 파일: `docs/12_색연필_수식_흐름.md`, `src/ClockOut.Hunsu.Core/Marks/FlowSketch.cs`, `src/ClockOut.Hunsu/Overlay/PencilPainter.cs`.
+
 ## 2026-11-16 계정2: 이관 남은 항목 마무리 (판 0.0.044, 다리 0.0.019)
 - 끝: 한글 금액, 자연 정렬, 입력값 비우기, 시트 이름 바꾸기, 탭 정렬, 공유 전 정리, 고른 시트만 남기기. 시나리오 반영. 그룹 C(visible-copy, image-fit, 라이브러리)는 엑셀에 남김.
 - 못 한 것: VBA 컴파일·엑셀 실행은 못 해 봤다. 한글 금액 표기 규칙은 가장 단순하게 했다(docs/11 2장).
