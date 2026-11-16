@@ -15,7 +15,7 @@ public static class DockShapes
     public static string Normalize(string? shape)
     {
         string s = (shape ?? "").Trim().ToLowerInvariant();
-        return All.Contains(s) ? s : Crescent;
+        return All.Contains(s) ? s : Rail;
     }
 }
 

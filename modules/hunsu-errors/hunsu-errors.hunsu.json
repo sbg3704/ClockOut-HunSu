@@ -11,7 +11,7 @@
     {"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "오류 셀 조회(errors)와 이동(goto)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["tab", "panel", "window"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 200,
   "icon": "warning",
   "data": [

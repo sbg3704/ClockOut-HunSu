@@ -93,11 +93,11 @@ public class LauncherTests
     public void Settings_LauncherDefaultsAndClamp()
     {
         var d = HunsuSettings.FromJson("");
-        Assert.Equal(("crescent", true, "m", "fluent", 0.45), (d.DockShape, d.DockGroups, d.DockSize, d.IconProfile, d.IdleOpacity));
+        Assert.Equal(("rail", true, "m", "fluent", 0.3), (d.DockShape, d.DockGroups, d.DockSize, d.IconProfile, d.IdleOpacity));
         var s = HunsuSettings.FromJson("""{"dockShape":"Fan","dockGroups":false,"dockSize":"L","iconProfile":"Tabler","idleOpacity":0.8}""");
         Assert.Equal(("fan", false, "l", "tabler", 0.8), (s.DockShape, s.DockGroups, s.DockSize, s.IconProfile, s.IdleOpacity));
         var bad = HunsuSettings.FromJson("""{"dockShape":"star","dockSize":"xl","iconProfile":"emoji","idleOpacity":0}""");
-        Assert.Equal(("crescent", "m", "fluent", 0.45), (bad.DockShape, bad.DockSize, bad.IconProfile, bad.IdleOpacity));
+        Assert.Equal(("rail", "m", "fluent", 0.3), (bad.DockShape, bad.DockSize, bad.IconProfile, bad.IdleOpacity));
     }
 
     [Fact]

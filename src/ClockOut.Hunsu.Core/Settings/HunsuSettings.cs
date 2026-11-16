@@ -51,7 +51,7 @@ public sealed class HunsuSettings
     public int MarkPollMs { get; init; } = 400;
 
     /// <summary>엑셀 옆 아이콘 배치 모양: crescent(기본)·fan·cluster·rail·pills (docs/09 2.1장).</summary>
-    public string DockShape { get; init; } = Layout.DockShapes.Crescent;
+    public string DockShape { get; init; } = Layout.DockShapes.Rail;
 
     /// <summary>모듈을 기능 묶음(order 범위)으로 묶어 2단계로 보인다. false면 모두 1단계.</summary>
     public bool DockGroups { get; init; } = true;
@@ -63,7 +63,7 @@ public sealed class HunsuSettings
     public string IconProfile { get; init; } = "fluent";
 
     /// <summary>마우스가 멀 때 아이콘 진하기. 범위 0.15~1.</summary>
-    public double IdleOpacity { get; init; } = 0.45;
+    public double IdleOpacity { get; init; } = 0.3;
 
     /// <summary>패널에 마우스를 올리면 투명도와 상관없이 선명해진다(true, 기본). false면 정한 투명도를 올려도 그대로 둔다.</summary>
     public bool HoverSharpen { get; init; } = true;
