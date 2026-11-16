@@ -59,7 +59,7 @@ try {
     Write-Host "오류 처리"
     $u = (& $run 'CoHunsu_Query' 'no.such' '{}') | ConvertFrom-Json
     Check 'query_unknown' ($u.ok -eq $false -and $u.code -eq 'query_unknown')
-    $d = (& $run 'CoHunsu_Do' 'goto' '{}') | ConvertFrom-Json
+    $d = (& $run 'CoHunsu_Do' 'no.such.command' '{}') | ConvertFrom-Json
     Check '명령 없음 → query_unknown' ($d.ok -eq $false -and $d.code -eq 'query_unknown')
 
     Write-Host "bridge.stats (틀 창이 없으면 신호를 보내지 않고 시간만 잰다)"
