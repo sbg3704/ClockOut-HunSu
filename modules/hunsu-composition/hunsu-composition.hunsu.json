@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-composition",
+  "name": "시트 구성",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "요약",
+  "author": "ClockOut",
+  "description": "사용 범위가 수식, 숫자, 글자로 어떻게 이루어졌는지 칸 수로 보여 줍니다. 값은 읽지 않습니다.",
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 180,
+  "data": [{"topic": "composition", "on": ["sheet"], "weight": "normal"}],
+  "commands": [],
+  "scope": "sheet",
+  "params": []
+}

@@ -2,8 +2,8 @@
 
 ## 2026-11-16 계정2: 모듈 5종 + 기능 나눔 (브랜치 `claude/project-thread-8lvni7`, PR #14)
 - 사용자 지시: 기능을 최대한 만들고, 계정1도 시킬 테니 서로 나눈다. 나눔 표: `협업/기능_나눔_2026-11-16.md`(계정1은 C# 틀·화면, 계정2는 선언 모듈·다리 조회).
-- 더한 것: 모듈 `hunsu-cell`, `hunsu-comments`, `hunsu-links`, `hunsu-tables`, `hunsu-sheetinfo`(전부 기본 꺼짐), 다리 0.0.013 조회 5개. 규격은 docs/02, 표는 docs/07.
-- 확인: 클라우드에서 `dotnet test`(Core·시험) 85개 통과(모듈 선언·view 일관성 포함). **VBA 컴파일과 엑셀 실행은 못 함**: PC에서 `co build hunsu pr14`로 빌드·다리 컴파일 후 모듈 관리자에서 켜 보고 눈으로 확인.
+- 더한 것: 모듈 9종 `hunsu-cell`, `hunsu-comments`, `hunsu-links`, `hunsu-tables`, `hunsu-sheetinfo`, `hunsu-validation`, `hunsu-condrules`, `hunsu-hidden`, `hunsu-composition`(전부 기본 꺼짐), 다리 0.0.013 조회 9개. 규격은 docs/02, 표는 docs/07.
+- 확인: 클라우드에서 `dotnet test`(Core·시험) 89개 통과(모듈 선언·view 일관성 포함). **VBA 컴파일과 엑셀 실행은 못 함**: PC에서 `co build hunsu pr14`로 빌드·다리 컴파일 후 모듈 관리자에서 켜 보고 눈으로 확인.
 - 클라우드 컴파일 방법: `apt-get update && apt-get install dotnet-sdk-10.0`(판이 global.json과 달라 임시로 판을 맞춤, 커밋하지 않음).
 
 ## 2026-11-13 떨림 고침 마무리 (브랜치 `claude/h-perf-305-on-pr10`, PR #10 위, 일#305)
