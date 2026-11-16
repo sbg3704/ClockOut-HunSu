@@ -13,6 +13,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 200,
+  "icon": "warning",
   "data": [
     {"topic": "errors", "on": ["change", "calc", "sheet", "book"], "weight": "normal"}
   ],

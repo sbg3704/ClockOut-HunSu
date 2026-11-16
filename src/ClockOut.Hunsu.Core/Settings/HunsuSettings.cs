@@ -46,6 +46,23 @@ public sealed class HunsuSettings
     /// <summary>셀 위 표시층(mark)을 쓰는 모듈이 켜져 있을 때, 엑셀이 앞에 있으면 이 간격(ms)으로 자리를 다시 묻는다(스크롤에는 엑셀 이벤트가 없음). 0이면 신호 때만. 범위 0 또는 150~5000.</summary>
     public int MarkPollMs { get; init; } = 400;
 
+    /// <summary>엑셀 옆 아이콘 배치 모양: crescent(기본)·fan·cluster·rail·pills (docs/09 2.1장).</summary>
+    public string DockShape { get; init; } = Layout.DockShapes.Crescent;
+
+    /// <summary>모듈을 기능 묶음(order 범위)으로 묶어 2단계로 보인다. false면 모두 1단계.</summary>
+    public bool DockGroups { get; init; } = true;
+
+    /// <summary>아이콘 크기: s(0.86배)·m·l(1.16배).</summary>
+    public string DockSize { get; init; } = "m";
+
+    /// <summary>아이콘 세트 프로필: fluent(기본)·lucide·phosphor·tabler·material·iconoir (docs/09 3.1장).</summary>
+    public string IconProfile { get; init; } = "fluent";
+
+    /// <summary>마우스가 멀 때 아이콘 진하기. 범위 0.15~1.</summary>
+    public double IdleOpacity { get; init; } = 0.45;
+
+    public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
+
     public bool IsEnabledByDefault(string moduleId) => EnabledByDefault.Contains("*") || EnabledByDefault.Contains(moduleId);
 
     public static HunsuSettings FromJson(string? text)
@@ -80,6 +97,11 @@ public sealed class HunsuSettings
             Theme = ThemeChoice.Normalize(Theme),
             PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
             MarkPollMs = MarkPollMs == 0 || InRange(MarkPollMs, 150, 5000) ? MarkPollMs : d.MarkPollMs,
+            DockShape = Layout.DockShapes.Normalize(DockShape),
+            DockGroups = DockGroups,
+            DockSize = (DockSize ?? "").Trim().ToLowerInvariant() is "s" or "m" or "l" ? DockSize!.Trim().ToLowerInvariant() : d.DockSize,
+            IconProfile = IconProfiles.Contains((IconProfile ?? "").Trim().ToLowerInvariant()) ? IconProfile!.Trim().ToLowerInvariant() : d.IconProfile,
+            IdleOpacity = IdleOpacity is >= 0.15 and <= 1 ? IdleOpacity : d.IdleOpacity,
         };
     }
 

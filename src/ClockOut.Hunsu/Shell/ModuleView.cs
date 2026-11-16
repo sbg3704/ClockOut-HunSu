@@ -37,6 +37,16 @@ internal sealed class ModuleView
         ApplyCollapsed(placement.Collapsed, animate: false, done: null);
     }
 
+    /// <summary>런처(엑셀 옆 아이콘)를 쓰는 도크에서는 손잡이(tab)를 그리지 않는다. 접힌 패널은 아이콘으로만 남는다(docs/09 2장).</summary>
+    public bool UseTab { get; set; } = true;
+
+    /// <summary>손잡이에 쓰던 배지 글과 톤(런처 아이콘 배지에도 쓴다).</summary>
+    public string Badge { get; private set; } = "";
+    public string Tone { get; private set; } = "info";
+
+    /// <summary>배지나 톤이 바뀌었다(런처를 다시 그리게).</summary>
+    public event Action? BadgeChanged;
+
     /// <summary>단추나 목록 줄을 눌렀다(명령 이름, 인자 JSON). 허용 여부는 ShellController가 확인한다.</summary>
     public event Action<string, string>? CommandRequested;
 
@@ -84,6 +94,11 @@ internal sealed class ModuleView
         _renderer.Update(_scope);
         var (title, badge, tone) = _renderer.TabText(_scope, Module.Manifest.Name);
         Tab.SetContent(title, badge, tone);
+        if (badge != Badge || tone != Tone)
+        {
+            (Badge, Tone) = (badge, tone);
+            BadgeChanged?.Invoke();
+        }
     }
 
     public void SetForcedCollapsed(bool forced)
@@ -97,7 +112,7 @@ internal sealed class ModuleView
     public void ApplyCollapsed(bool collapsed, bool animate, Action<long>? done)
     {
         if (!_slot.Children.Contains(Frame)) { done?.Invoke(0); return; }
-        Tab.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
+        Tab.Visibility = collapsed && UseTab ? Visibility.Visible : Visibility.Collapsed;
         Frame.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
         if (collapsed || !animate)
         {

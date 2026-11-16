@@ -13,6 +13,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 410,
+  "icon": "graph",
   "data": [
     {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"}
   ],

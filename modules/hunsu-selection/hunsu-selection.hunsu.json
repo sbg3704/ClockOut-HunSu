@@ -13,6 +13,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 100,
+  "icon": "sum",
   "data": [
     {"topic": "selection.summary", "on": ["sel"], "weight": "light"}
   ],

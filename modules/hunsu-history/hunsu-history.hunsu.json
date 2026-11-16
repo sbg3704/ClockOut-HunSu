@@ -13,6 +13,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 320,
+  "icon": "history",
   "data": [
     {"topic": "selection.summary", "on": ["sel"], "weight": "light"},
     {"topic": "app.history", "on": [], "weight": "light"}

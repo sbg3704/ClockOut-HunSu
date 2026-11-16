@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 350,
+  "icon": "tag",
   "data": [{"topic": "names", "on": ["book", "sheet"], "weight": "normal"}],
   "commands": ["goto"],
   "scope": "book",

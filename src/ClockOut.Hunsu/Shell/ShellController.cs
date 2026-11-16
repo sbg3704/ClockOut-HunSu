@@ -51,8 +51,9 @@ internal sealed partial class ShellController : IDisposable
         // 테마와 패널 너비는 창을 만들기 전에 넣어야 StaticResource가 받는다(settings.theme, panelWidth).
         string theme = ThemePicker.Apply(Application.Current, _settings.Theme, _settings.PanelWidth);
         _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));
-        _right = new DockWindow(Places.EdgeRight);
-        _left = new DockWindow(Places.EdgeLeft);
+        _right = new DockWindow(Places.EdgeRight, _settings);
+        _left = new DockWindow(Places.EdgeLeft, _settings);
+        _log.Write("launcher", ("shape", _settings.DockShape), ("groups", _settings.DockGroups), ("size", _settings.DockSize), ("icons", _settings.IconProfile), ("idle", _settings.IdleOpacity));
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
         _registry.TopicReady += OnTopic;
         _registry.SummaryReady += OnSummary;
@@ -76,7 +77,8 @@ internal sealed partial class ShellController : IDisposable
         _tray.ManagerClicked += OpenManager;
         foreach (var d in new[] { _right, _left })
         {
-            d.PillClicked += ToggleAllCollapsed;
+            d.ModuleIconClicked += OnModuleIcon;
+            d.ModuleMenu = ModuleIconMenu;
             d.ToggleAllRequested += ToggleAllCollapsed;
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;

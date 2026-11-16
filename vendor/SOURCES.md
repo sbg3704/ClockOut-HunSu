@@ -37,12 +37,29 @@
 | 글꼴(숫자·코드) | IBM Plex Sans KR | 칼퇴에 번들된 판(판 번호 미기록) | 최신판 **미확인** | OFL 1.1 (칼퇴의 `OFL-IBMPlexSansKR.txt`) | 해당 없음 | 약 1MB × 2굵기 | |
 | VBA에서 JSON | VBA-JSON | `clockout-vendor-data`에 이미 있음 | — | MIT | 해당 없음 | — | 새로 받을 것 없음. |
 
+## 아이콘 세트 (2026-11-16 받음, docs/09 3.1장)
+사용자 요청(2026-11-16): 아이콘 세트를 **통째로** 받아 두고 출처를 적는다. 세트마다 한 모양·한 크기의 SVG 전체를 압축 파일 하나로 `vendor/icons/<세트>/`에 두고, 원본 라이선스 파일을 옆에 둔다. npm 레지스트리(registry.npmjs.org)의 공개 패키지에서 받았고, 판은 받은 날 기준 2주 넘게 지난 최신판이다.
+
+| 프로필 | 세트 | 받은 것(npm 패키지 판, 안의 폴더) | 그림 수 | 라이선스 | 원 저장소 | 파일 |
+|---|---|---|---|---|---|---|
+| `fluent`(기본) | Fluent UI System Icons | `@fluentui/svg-icons` 1.1.345, `icons/*_24_regular.svg` | 2,478 | MIT (Microsoft, 패키지에 파일이 없어 GitHub `main`의 LICENSE를 받음) | github.com/microsoft/fluentui-system-icons | `vendor/icons/fluent/` |
+| `lucide` | Lucide | `lucide-static` 1.66.0, `icons/*.svg` | 2,292 | ISC (일부 MIT, Feather에서 온 것) | github.com/lucide-icons/lucide | `vendor/icons/lucide/` |
+| `phosphor` | Phosphor Icons | `@phosphor-icons/core` 2.1.1, `assets/regular/*.svg` | 1,512 | MIT | github.com/phosphor-icons/core | `vendor/icons/phosphor/` |
+| `tabler` | Tabler Icons | `@tabler/icons` 3.50.0, `icons/outline/*.svg` | 5,203 | MIT | github.com/tabler/tabler-icons | `vendor/icons/tabler/` |
+| `material` | Material Symbols | `@material-symbols/svg-400` 0.48.2, `outlined/*.svg` | 7,874 | Apache-2.0 (Google, 패키지에 NOTICE 없음) | github.com/google/material-design-icons, github.com/marella/material-symbols | `vendor/icons/material/` |
+| `iconoir` | Iconoir | `iconoir` 7.12.1, `icons/regular/*.svg` | 1,383 | MIT | github.com/iconoir-icons/iconoir | `vendor/icons/iconoir/` |
+
+- 앱은 SVG를 실행 중에 읽지 않는다. `vendor/icons/profiles.json`(뜻 이름 → 세트별 그림 이름)에 짝지은 그림만 `python tools/icons/make_icon_data.py`로 꺼내 `src/ClockOut.Hunsu.Ui/Icons/IconData.g.cs`에 넣는다. 새 뜻 이름을 쓰려면 profiles.json에 여섯 세트 이름을 다 적고 도구를 다시 돌린다.
+- 배포 묶음에는 쓰는 세트의 LICENSE 여섯 개를 함께 넣는다(아래 라이선스 고지 표에 더함).
+
 ## 라이선스 고지
 배포물에는 받은 라이브러리마다 **라이선스 전문(저작권 줄 포함)을 함께 넣는다**(`docs/01` 3.5장). 아래는 조건 요약이고 법률 자문이 아니다.
 
 | 라이선스 | 해당 | 지켜야 할 것 |
 |---|---|---|
-| MIT | WPF-UI, MaterialDesignThemes, CsWin32, SkiaSharp 3종, LottieSharp, Microsoft.Msagl 2종, Msagl.WpfGraphControl, FluentIcons.Wpf | 저작권 줄과 MIT 전문을 배포물에 함께 넣는다. 보증 없음. |
+| MIT | 아이콘 Fluent·Phosphor·Tabler·Iconoir, WPF-UI, MaterialDesignThemes, CsWin32, SkiaSharp 3종, LottieSharp, Microsoft.Msagl 2종, Msagl.WpfGraphControl, FluentIcons.Wpf | 저작권 줄과 MIT 전문을 배포물에 함께 넣는다. 보증 없음. |
+| ISC | 아이콘 Lucide | 저작권 줄과 ISC 전문을 함께 넣는다(MIT와 거의 같음). |
+| Apache-2.0 | 아이콘 Material Symbols | 라이선스 전문을 함께 넣고, 고친 파일은 고쳤다고 적는다(경로 형식만 바꿔 쓴다). NOTICE 파일이 있으면 함께 넣는다(이 패키지엔 없음). |
 | OFL 1.1 | Pretendard, SUIT, IBM Plex Sans KR | `OFL-*.txt`를 함께 넣는다. 글꼴 파일만 따로 팔지 않는다. 고쳐서 낼 때는 예약된 글꼴 이름을 쓰지 않는다. 칼퇴는 원본 그대로 쓴다. |
 | 미확인 | HandyControl | 종류를 읽기 전에는 쓰지 않는다. |
 

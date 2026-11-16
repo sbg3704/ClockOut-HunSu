@@ -1,0 +1,194 @@
+{
+ "sum": {
+  "fluent": "autosum",
+  "lucide": "sigma",
+  "phosphor": "sigma",
+  "tabler": "sum",
+  "material": "functions",
+  "iconoir": "sigma-function"
+ },
+ "warning": {
+  "fluent": "warning",
+  "lucide": "triangle-alert",
+  "phosphor": "warning",
+  "tabler": "alert-triangle",
+  "material": "warning",
+  "iconoir": "warning-triangle"
+ },
+ "sheets": {
+  "fluent": "table_multiple",
+  "lucide": "sheet",
+  "phosphor": "table",
+  "tabler": "table",
+  "material": "table",
+  "iconoir": "table-2-columns"
+ },
+ "flow": {
+  "fluent": "flow",
+  "lucide": "workflow",
+  "phosphor": "flow-arrow",
+  "tabler": "sitemap",
+  "material": "account_tree",
+  "iconoir": "git-merge"
+ },
+ "tag": {
+  "fluent": "tag",
+  "lucide": "tag",
+  "phosphor": "tag",
+  "tabler": "tag",
+  "material": "sell",
+  "iconoir": "label"
+ },
+ "audit": {
+  "fluent": "shield_checkmark",
+  "lucide": "shield-check",
+  "phosphor": "shield-check",
+  "tabler": "shield-check",
+  "material": "verified_user",
+  "iconoir": "shield-check"
+ },
+ "book": {
+  "fluent": "book",
+  "lucide": "book-open",
+  "phosphor": "book-open",
+  "tabler": "book",
+  "material": "menu_book",
+  "iconoir": "book"
+ },
+ "keyboard": {
+  "fluent": "keyboard",
+  "lucide": "keyboard",
+  "phosphor": "keyboard",
+  "tabler": "keyboard",
+  "material": "keyboard",
+  "iconoir": "key-command"
+ },
+ "graph": {
+  "fluent": "organization",
+  "lucide": "network",
+  "phosphor": "graph",
+  "tabler": "binary-tree",
+  "material": "hub",
+  "iconoir": "network"
+ },
+ "history": {
+  "fluent": "history",
+  "lucide": "history",
+  "phosphor": "clock-counter-clockwise",
+  "tabler": "history",
+  "material": "history",
+  "iconoir": "clock-rotate-right"
+ },
+ "mark": {
+  "fluent": "border_outside",
+  "lucide": "square-dashed",
+  "phosphor": "selection",
+  "tabler": "marquee-2",
+  "material": "select",
+  "iconoir": "frame-select"
+ },
+ "info": {
+  "fluent": "info",
+  "lucide": "info",
+  "phosphor": "info",
+  "tabler": "info-circle",
+  "material": "info",
+  "iconoir": "info-circle"
+ },
+ "cell": {
+  "fluent": "table_cell_edit",
+  "lucide": "grid-3x3",
+  "phosphor": "grid-nine",
+  "tabler": "grid-3x3",
+  "material": "grid_on",
+  "iconoir": "view-grid"
+ },
+ "link": {
+  "fluent": "link",
+  "lucide": "link",
+  "phosphor": "link",
+  "tabler": "link",
+  "material": "link",
+  "iconoir": "link"
+ },
+ "note": {
+  "fluent": "comment",
+  "lucide": "message-square",
+  "phosphor": "chat-text",
+  "tabler": "message",
+  "material": "comment",
+  "iconoir": "chat-bubble"
+ },
+ "table": {
+  "fluent": "table",
+  "lucide": "table",
+  "phosphor": "table",
+  "tabler": "table",
+  "material": "table_chart",
+  "iconoir": "table"
+ },
+ "check": {
+  "fluent": "checkbox_checked",
+  "lucide": "list-checks",
+  "phosphor": "check-square",
+  "tabler": "checkbox",
+  "material": "fact_check",
+  "iconoir": "check-circle"
+ },
+ "format": {
+  "fluent": "paint_brush",
+  "lucide": "paintbrush",
+  "phosphor": "paint-brush",
+  "tabler": "brush",
+  "material": "format_paint",
+  "iconoir": "design-pencil"
+ },
+ "hidden": {
+  "fluent": "eye_off",
+  "lucide": "eye-off",
+  "phosphor": "eye-slash",
+  "tabler": "eye-off",
+  "material": "visibility_off",
+  "iconoir": "eye-closed"
+ },
+ "layers": {
+  "fluent": "layer",
+  "lucide": "layers",
+  "phosphor": "stack",
+  "tabler": "stack-2",
+  "material": "layers",
+  "iconoir": "multiple-pages"
+ },
+ "more": {
+  "fluent": "more_horizontal",
+  "lucide": "ellipsis",
+  "phosphor": "dots-three",
+  "tabler": "dots",
+  "material": "more_horiz",
+  "iconoir": "more-horiz"
+ },
+ "search": {
+  "fluent": "search",
+  "lucide": "search",
+  "phosphor": "magnifying-glass",
+  "tabler": "search",
+  "material": "search",
+  "iconoir": "search"
+ },
+ "chart": {
+  "fluent": "data_bar_vertical",
+  "lucide": "chart-column",
+  "phosphor": "chart-bar",
+  "tabler": "chart-bar",
+  "material": "bar_chart",
+  "iconoir": "stats-report"
+ },
+ "settings": {
+  "fluent": "settings",
+  "lucide": "settings",
+  "phosphor": "gear",
+  "tabler": "settings",
+  "material": "settings",
+  "iconoir": "settings"
+ }
+}
