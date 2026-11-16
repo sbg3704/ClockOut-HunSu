@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 250,
+  "icon": "audit",
   "data": [{"topic": "book.audit", "on": ["book", "sheet"], "weight": "normal"}],
   "commands": [],
   "scope": "book",

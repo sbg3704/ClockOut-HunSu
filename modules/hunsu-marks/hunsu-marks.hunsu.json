@@ -13,6 +13,7 @@
   "shapes": ["mark", "tab", "panel"],
   "place": "edge-right",
   "order": 210,
+  "icon": "mark",
   "data": [
     {"topic": "mark", "on": ["sel", "change", "sheet", "calc"], "weight": "normal"}
   ],

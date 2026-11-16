@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 380,
+  "icon": "check",
   "data": [{"topic": "validation", "on": ["sheet", "change"], "weight": "normal"}],
   "commands": ["goto"],
   "scope": "sheet",

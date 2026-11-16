@@ -30,7 +30,47 @@ internal sealed partial class ShellController
             Save(mv, p => p with { Opacity = next });
         };
         mv.Frame.ContextMenu = SideMenu(mv);
+        mv.BadgeChanged += () => DockOf(mv)?.RefreshLauncher();
         return mv;
+    }
+
+    private DockWindow? DockOf(ModuleView mv) => !mv.InDock ? null : mv.Placement.Place == Places.EdgeLeft ? _left : _right;
+
+    /// <summary>런처 아이콘을 눌렀다: 그 모듈 패널을 열거나 닫는다(핀 창에 있으면 도크로 되돌리지 않고 그대로 둔다).</summary>
+    private void OnModuleIcon(string id)
+    {
+        var mv = _modules.FirstOrDefault(m => m.Id == id);
+        if (mv == null || !mv.InDock) return;
+        bool open = !mv.ShowsPanel;
+        _log.Write("launcher_click", ("id", id), ("open", open));
+        SetCollapsed(mv, !open, null);
+    }
+
+    /// <summary>런처 모듈 아이콘의 우클릭 메뉴: 열기·닫기, 핀 창으로 떼기, 반대쪽 도크로, 모듈 관리.</summary>
+    private ContextMenu? ModuleIconMenu(string id)
+    {
+        var mv = _modules.FirstOrDefault(m => m.Id == id);
+        if (mv == null) return null;
+        var menu = new ContextMenu();
+        var open = new MenuItem();
+        open.Click += (_, _) => OnModuleIcon(id);
+        var pin = new MenuItem { Header = "핀 창으로 떼기" };
+        pin.Click += (_, _) => { if (mv.InDock) Pin(mv, null); };
+        var other = new MenuItem();
+        other.Click += (_, _) => MoveToDock(mv, mv.Placement.Place == Places.EdgeLeft ? Places.EdgeRight : Places.EdgeLeft);
+        var manager = new MenuItem { Header = "모듈 관리…" };
+        manager.Click += (_, _) => OpenManager();
+        menu.Items.Add(open);
+        menu.Items.Add(pin);
+        menu.Items.Add(other);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(manager);
+        menu.Opened += (_, _) =>
+        {
+            open.Header = mv.ShowsPanel ? "패널 닫기" : "패널 열기";
+            other.Header = mv.Placement.Place == Places.EdgeLeft ? "오른쪽 도크로" : "왼쪽 도크로";
+        };
+        return menu;
     }
 
     private ContextMenu SideMenu(ModuleView mv)
@@ -60,6 +100,7 @@ internal sealed partial class ShellController
         UpdateLeftVisibility();
         bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
         _right.SetAllCollapsedLabel(allCollapsed);
+        _left.SetAllCollapsedLabel(allCollapsed);
         UpdateMarkLayer();
         ModulesChanged?.Invoke();
     }

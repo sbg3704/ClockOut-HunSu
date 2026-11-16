@@ -8,3 +8,6 @@ TestResults/
 # 바이너리는 커밋하지 않고 Release로 올린다(docs/05 5장)
 *.xlam
 *.zip
+
+# 아이콘 세트 원본(통째로 받아 둔 압축, vendor/SOURCES.md)은 저장소에 둔다
+!vendor/icons/**/*.zip

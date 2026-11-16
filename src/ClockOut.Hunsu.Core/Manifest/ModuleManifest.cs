@@ -15,6 +15,9 @@ public sealed record ModuleManifest(
     int Spec, string Id, string Name, string Version, string Category, string Description,
     IReadOnlyList<string> Shapes, string Place, int Order, IReadOnlyList<DataSubscription> Data, IReadOnlyList<string> Commands)
 {
+    /// <summary>아이콘 뜻 이름(선택, 예: "sum"). 그림은 사용자가 고른 아이콘 프로필이 정한다(docs/09 3.1장). 없으면 이름 첫 글자.</summary>
+    public string Icon { get; init; } = "";
+
     /// <summary>틀이 아는 가장 높은 선언 규격 번호.</summary>
     public const int SupportedSpec = 0;
 
@@ -61,7 +64,7 @@ public sealed record ModuleManifest(
                 }
             }
             if (errors.Count > 0) return (null, errors);
-            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")), errors);
+            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant() }, errors);
         }
         catch (JsonException ex)
         {

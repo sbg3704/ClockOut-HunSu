@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 390,
+  "icon": "format",
   "data": [{"topic": "condrules", "on": ["sheet", "change"], "weight": "normal"}],
   "commands": ["goto"],
   "scope": "sheet",

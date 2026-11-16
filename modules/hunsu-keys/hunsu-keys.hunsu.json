@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 900,
+  "icon": "keyboard",
   "data": [],
   "commands": [],
   "scope": "selection",

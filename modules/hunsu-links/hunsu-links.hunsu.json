@@ -11,6 +11,7 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 260,
+  "icon": "link",
   "data": [{"topic": "links", "on": ["book"], "weight": "normal"}],
   "commands": [],
   "scope": "book",
