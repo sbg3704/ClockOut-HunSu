@@ -4,7 +4,7 @@ Attribute VB_Name = "CoHunsuApi"
 '       조회: hello, selection.summary, bridge.stats, errors, flow.neighbors, sheets, book.info, book.audit, names, cell.info, comments, links, tables, sheet.info, validation, condrules, hidden, composition, flow.graph, mark, color.sum, coldiff, folder.files.  명령: sheet.activate, goto, book.open, write.*(실험 쓰기 명령, 앱이 확인한 뒤에만).
 ' 사용법: Application.Run "'clockout-hunsu.xlam'!CoHunsu_Query", "selection.summary", "{}"
 '         인자와 반환은 모두 JSON 문자열. 어떤 경우에도 오류 창을 띄우지 않는다(docs/02 1장).
-' 의존: CoHunsuJson, CoHunsuEntry, CoHunsuQ_SelectionSummary, CoHunsuQ_BridgeStats, CoHunsuQ_Errors, CoHunsuQ_Flow, CoHunsuQ_Sheets, CoHunsuQ_Book, CoHunsuQ_Names, CoHunsuQ_Cell, CoHunsuQ_Comments, CoHunsuQ_Links, CoHunsuQ_Tables, CoHunsuQ_SheetInfo, CoHunsuQ_Validation, CoHunsuQ_CondRules, CoHunsuQ_Hidden, CoHunsuQ_Composition, CoHunsuQ_FlowGraph, CoHunsuQ_Mark, CoHunsuQ_ColorSum, CoHunsuQ_ColDiff, CoHunsuQ_Folder, CoHunsuDo_Write, CoHunsuDo_WriteValues
+' 의존: CoHunsuJson, CoHunsuEntry, CoHunsuQ_SelectionSummary, CoHunsuQ_BridgeStats, CoHunsuQ_Errors, CoHunsuQ_Flow, CoHunsuQ_Sheets, CoHunsuQ_Book, CoHunsuQ_Names, CoHunsuQ_Cell, CoHunsuQ_Comments, CoHunsuQ_Links, CoHunsuQ_Tables, CoHunsuQ_SheetInfo, CoHunsuQ_Validation, CoHunsuQ_CondRules, CoHunsuQ_Hidden, CoHunsuQ_Composition, CoHunsuQ_FlowGraph, CoHunsuQ_Mark, CoHunsuQ_ColorSum, CoHunsuQ_ColDiff, CoHunsuQ_Folder, CoHunsuDo_Write, CoHunsuDo_WriteValues, CoHunsuDo_WriteBook
 ' 참고: docs/02 2장은 진입점을 .cls로 적었으나 Application.Run은 표준 모듈의 프로시저만 부를 수 있어 .bas로 둔다(0단계 확인).
 '==============================================================
 Option Explicit
@@ -96,6 +96,8 @@ Public Function CoHunsu_Do(ByVal cmdName As String, ByVal argsJson As String) As
             CoHunsu_Do = Do_BookOpen(argsJson)
         Case "write.sheets.unhide", "write.sheets.rehide", "write.links.break", "write.names.delete_broken", "write.names.restore", "write.lastcell.fix"
             CoHunsu_Do = Do_Write(cmdName, argsJson)
+        Case "write.book.sheets_from_list", "write.book.split_by_group", "write.book.index", "write.book.delete_sheets", "write.book.export_each", "write.book.pdf", "write.book.backup"
+            CoHunsu_Do = Do_WriteBook(cmdName, argsJson)
         Case "write.values.clean", "write.values.tonum", "write.values.round", "write.values.flip", "write.values.affix", "write.values.tovalue", "write.values.iferror", "write.values.filldown", "write.values.todate", "write.values.unmerge", "write.values.mergecenter", "write.values.undo"
             CoHunsu_Do = Do_WriteValues(cmdName, argsJson)
         Case Else
@@ -116,7 +118,7 @@ Private Function HelloData() As String
     HelloData = "{" & CoHunsuJson_Pair("version", CoHunsuJson_Str(HUNSU_VERSION)) & "," & _
         CoHunsuJson_Pair("proto", CStr(HUNSU_PROTO)) & "," & _
         CoHunsuJson_Pair("queries", "[""hello"",""selection.summary"",""bridge.stats"",""errors"",""flow.neighbors"",""sheets"",""book.info"",""book.audit"",""names"",""cell.info"",""comments"",""links"",""tables"",""sheet.info"",""validation"",""condrules"",""hidden"",""composition"",""flow.graph"",""mark"",""color.sum"",""coldiff"",""folder.files""]") & "," & _
-        CoHunsuJson_Pair("commands", "[""sheet.activate"",""goto"",""book.open"",""write.sheets.unhide"",""write.sheets.rehide"",""write.links.break"",""write.names.delete_broken"",""write.names.restore"",""write.lastcell.fix"",""write.values.clean"",""write.values.tonum"",""write.values.round"",""write.values.flip"",""write.values.affix"",""write.values.tovalue"",""write.values.iferror"",""write.values.filldown"",""write.values.todate"",""write.values.unmerge"",""write.values.mergecenter"",""write.values.undo""]") & "," & _
+        CoHunsuJson_Pair("commands", "[""sheet.activate"",""goto"",""book.open"",""write.sheets.unhide"",""write.sheets.rehide"",""write.links.break"",""write.names.delete_broken"",""write.names.restore"",""write.lastcell.fix"",""write.values.clean"",""write.values.tonum"",""write.values.round"",""write.values.flip"",""write.values.affix"",""write.values.tovalue"",""write.values.iferror"",""write.values.filldown"",""write.values.todate"",""write.values.unmerge"",""write.values.mergecenter"",""write.values.undo"",""write.book.sheets_from_list"",""write.book.split_by_group"",""write.book.index"",""write.book.delete_sheets"",""write.book.export_each"",""write.book.pdf"",""write.book.backup""]") & "," & _
         CoHunsuJson_Pair("signals", "[""sel"",""change"",""sheet"",""book"",""calc""]") & "," & _
         CoHunsuJson_Pair("office", "{" & CoHunsuJson_Pair("version", CoHunsuJson_Str(Application.Version)) & "," & _
             CoHunsuJson_Pair("bits", CStr(bits)) & "}") & "}"
