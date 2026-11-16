@@ -88,6 +88,8 @@ internal sealed partial class ShellController : IDisposable
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
             var side = d.Side;
+            d.SetCenterRatio(_store.State.DockRatio(side));
+            d.HubDropped += (ratio, x) => OnHubDropped(side, ratio, x);
             d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }
     }

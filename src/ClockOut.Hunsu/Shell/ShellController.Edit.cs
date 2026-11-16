@@ -91,6 +91,31 @@ internal sealed partial class ShellController
         _store.SaveSoon();
     }
 
+    /// <summary>훈 원을 놓았다: 세로 위치를 저장하고, 엑셀 창의 반대쪽 절반에 놓았으면 그 도크의 모듈을 모두 반대편 도크로 옮긴다.</summary>
+    private void OnHubDropped(string side, double ratio, int cursorX)
+    {
+        var from = side == Places.EdgeLeft ? _left : _right;
+        string target = side;
+        if (_target != IntPtr.Zero && cursorX != int.MinValue)
+        {
+            var b = User32.VisibleBounds(_target);
+            int mid = b.X + b.Width / 2;
+            target = cursorX < mid ? Places.EdgeLeft : Places.EdgeRight;
+        }
+        _store.State.Docks[target] = ratio;
+        var to = target == Places.EdgeLeft ? _left : _right;
+        to.SetCenterRatio(ratio);
+        if (target != side)
+        {
+            from.SetCenterRatio(_store.State.DockRatio(side));
+            foreach (var mv in _modules.Where(m => m.InDock && m.Placement.Place == side).ToList())
+                Save(mv, p => p with { Place = target });
+            RefreshDocks();
+        }
+        _store.SaveSoon();
+        _log.Write("hub_drop", ("from", side), ("to", target), ("ratio", Math.Round(ratio, 3)));
+    }
+
     /// <summary>패널의 자물쇠 단추: 이 모듈의 자리를 잠그거나 푼다.</summary>
     private void ToggleLock(ModuleView mv)
     {

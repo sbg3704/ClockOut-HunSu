@@ -30,6 +30,8 @@ public partial class DockWindow : Window
         Column.HorizontalAlignment = left ? HorizontalAlignment.Left : HorizontalAlignment.Right;
         Launcher.HubMenu = HubMenu();
         Launcher.ModuleClicked += id => ModuleIconClicked?.Invoke(id);
+        Launcher.HubDragMoved += OnHubDragMoved;
+        Launcher.HubDragEnded += OnHubDragEnded;
         Configure();
         Resize(0);
         SourceInitialized += (_, _) =>
@@ -56,6 +58,39 @@ public partial class DockWindow : Window
     public event Action? QuitRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
+
+    /// <summary>편집 모드에서 훈 원을 놓았다: (새 세로 위치 비율, 놓은 곳의 화면 가로 좌표).</summary>
+    public event Action<double, int>? HubDropped;
+
+    private double _centerRatio = Core.Layout.LayoutState.DefaultDockRatio;
+    private double _dragStartY;
+    private bool _dragStarted;
+    private double _dragRatio;
+
+    /// <summary>훈 원의 세로 위치(0~1). 편집 모드에서 끌어 바꾼 값이다.</summary>
+    public void SetCenterRatio(double ratio) { _centerRatio = ratio; Launcher.CenterRatio = ratio; }
+
+    /// <summary>편집 모드: 훈 원을 끌어 옮길 수 있게 한다.</summary>
+    public void SetEditMode(bool on) => Launcher.EditMode = on;
+
+    private void OnHubDragMoved()
+    {
+        if (!User32.GetCursorPos(out var pt)) return;
+        double y = PointFromScreen(new Point(pt.X, pt.Y)).Y;
+        if (!_dragStarted) { _dragStarted = true; _dragStartY = y; }
+        double h = Math.Max(1, Launcher.ActualHeight);
+        _dragRatio = Math.Clamp(_centerRatio + (y - _dragStartY) / h, 0.1, 0.9);
+        Launcher.SetDragOffset((_dragRatio - _centerRatio) * h);
+    }
+
+    private void OnHubDragEnded()
+    {
+        if (!_dragStarted) return;
+        _dragStarted = false;
+        Launcher.SetDragOffset(0);
+        if (User32.GetCursorPos(out var pt)) HubDropped?.Invoke(_dragRatio, pt.X);
+        else HubDropped?.Invoke(_dragRatio, int.MinValue);
+    }
 
     /// <summary>런처의 모듈 아이콘을 눌렀다(모듈 id): 패널 열기·닫기.</summary>
     public event Action<string>? ModuleIconClicked;
