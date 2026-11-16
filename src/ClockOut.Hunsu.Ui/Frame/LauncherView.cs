@@ -203,14 +203,16 @@ public sealed class LauncherView : Canvas
         if (_plan == null) return;
         bool dim = _plan.Rest == "dim";
         if (_hub != null) Fade(_hub, Awake ? 1 : Math.Max(_idle, 0.6), animate);
-        foreach (var (_, el, p) in _items)
+        foreach (var (item, el, p) in _items)
         {
             var tr = (TranslateTransform)((TransformGroup)el.RenderTransform).Children[1];
+            // 줄어든(패널이 안 열린) 모듈 아이콘은 잠든 때도 보인다: 줄여 놓고 어디 갔는지 모르는 일이 없게(2026-11-16 사용자).
+            bool minimized = !item.Open;
             double dx = (_plan.Hub.X - p.X) * 0.5, dy = (_plan.Hub.Y - p.Y) * 0.5;
-            if (Awake || dim)
+            if (Awake || dim || minimized)
             {
                 el.Visibility = Visibility.Visible;
-                Fade(el, Awake ? 1 : _idle, animate);
+                Fade(el, Awake ? 1 : minimized ? Math.Max(_idle, 0.75) : _idle, animate);
                 Move(tr, 0, 0, animate);
             }
             else
