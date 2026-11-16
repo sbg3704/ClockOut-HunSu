@@ -1,5 +1,6 @@
 // 기능: 사용자가 손으로 고칠 수 있는 설정 한 벌(settings.json). 결정이 열린 곳을 코드를 고치지 않고 이 파일의 숫자·목록 하나로 바꾸게 한다.
 // 사용법: var s = HunsuSettings.FromJson(text); s.QueryDragGapMs ...;  s.IsEnabledByDefault("hunsu-errors");  s.ToJson()
+//   도크 모양 5칸은 s.Look으로 묶어 읽고, 설정 창 [모양]에서 고른 값은 s.WithLook(look)으로 나머지 칸을 그대로 둔 새 설정을 만든다.
 //   모르는 키는 무시하고, 없거나 범위를 벗어난 값은 기본값으로 되돌린다(앱이 설정 때문에 못 켜지는 일이 없다).
 // 의존: System.Text.Json. 파일 읽기·쓰기는 앱(Shell/SettingsStore)이 맡는다. 셀 값이나 경로는 담지 않는다.
 using System.Text.Json;
@@ -63,6 +64,22 @@ public sealed class HunsuSettings
 
     public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
 
+    /// <summary>도크 모양 5칸(설정 창 [모양]이 바꾸는 값).</summary>
+    [JsonIgnore]
+    public DockLook Look => new(DockShape, DockGroups, DockSize, IconProfile, IdleOpacity);
+
+    /// <summary>모양 5칸만 바꾼 새 설정(다른 칸은 그대로, 범위 밖 값은 기본값).</summary>
+    public HunsuSettings WithLook(DockLook look)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(ToJson())!;
+        node["dockShape"] = look.Shape;
+        node["dockGroups"] = look.Groups;
+        node["dockSize"] = look.Size;
+        node["iconProfile"] = look.IconProfile;
+        node["idleOpacity"] = look.IdleOpacity;
+        return FromJson(node.ToJsonString());
+    }
+
     public bool IsEnabledByDefault(string moduleId) => EnabledByDefault.Contains("*") || EnabledByDefault.Contains(moduleId);
 
     public static HunsuSettings FromJson(string? text)
@@ -106,4 +123,10 @@ public sealed class HunsuSettings
     }
 
     private static bool InRange(int v, int lo, int hi) => v >= lo && v <= hi;
+}
+
+/// <summary>도크 모양 한 벌: 배치 모양, 기능 묶음, 크기(s·m·l), 아이콘 세트, 쉴 때 진하기.</summary>
+public sealed record DockLook(string Shape, bool Groups, string Size, string IconProfile, double IdleOpacity)
+{
+    public static DockLook Default { get; } = new HunsuSettings().Look;
 }

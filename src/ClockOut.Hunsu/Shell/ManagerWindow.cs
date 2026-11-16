@@ -1,7 +1,8 @@
-// 기능: 모듈 관리자 창. 설치된 모듈을 카드로 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
+// 기능: 훈수꾼 설정 창. 위의 [모듈] [모양] 두 쪽. [모듈]: 설치된 모듈을 카드로 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
 //       새 모듈을 받는 일은 칼퇴 왼쪽 레일(카탈로그 modules 구역)이 맡고, 여기서는 받은 모듈을 다룬다(docs/07).
-// 사용법: 알림 영역 아이콘 → "모듈 관리…", 오른쪽 알약 우클릭 → "모듈 관리…", 또는 settings.json의 managerOnStart. new ManagerWindow(shell).Show()
-// 의존: Shell/ShellController(SetEnabled, MoveOrder, PlaceFromManager, ResetLayout, Modules, ModulesChanged), Ui Theme. 값은 Theme 이름으로만 쓴다.
+//       [모양]: 도크 배치 모양·묶음·크기·아이콘 세트·쉴 때 진하기를 미리보기와 함께 고른다(Shell/LookPage).
+// 사용법: 알림 영역 아이콘 → "모듈 관리…", 훈 원 우클릭 → "모듈 관리…" / "모양 바꾸기…", 또는 settings.json의 managerOnStart. new ManagerWindow(shell, "look").Show()
+// 의존: Shell/ShellController(SetEnabled, MoveOrder, PlaceFromManager, ResetLayout, Modules, ModulesChanged), Shell/LookPage, Shell/ManagerParts, Ui Theme. 값은 Theme 이름으로만 쓴다.
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -18,11 +19,16 @@ internal sealed class ManagerWindow : Window
     private readonly ShellController _shell;
     private readonly StackPanel _cards = new();
     private readonly TextBlock _summary = new();
+    private readonly Border _body = new();
+    private readonly StackPanel _tabs = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+    private ScrollViewer? _modulesView;
+    private LookPage? _look;
+    private string _page = "modules";
 
-    public ManagerWindow(ShellController shell)
+    public ManagerWindow(ShellController shell, string page = "modules")
     {
         _shell = shell;
-        Title = "훈수꾼 · 모듈 관리";
+        Title = "훈수꾼 · 설정";
         Width = 580;
         Height = 660;
         MinWidth = 480;
@@ -37,6 +43,23 @@ internal sealed class ManagerWindow : Window
         _shell.ModulesChanged += Rebuild;
         Closed += (_, _) => _shell.ModulesChanged -= Rebuild;
         Rebuild();
+        ShowPage(page);
+    }
+
+    /// <summary>[모듈] 또는 [모양] 쪽을 보인다("modules" | "look").</summary>
+    internal void ShowPage(string page)
+    {
+        _page = page == "look" ? "look" : "modules";
+        if (_page == "look")
+        {
+            _look ??= new LookPage(_shell);
+            _body.Child = _look;
+            _look.Rebuild();
+        }
+        else _body.Child = _modulesView;
+        _tabs.Children.Clear();
+        _tabs.Children.Add(ManagerParts.Chip(this, "모듈", _page == "modules", () => ShowPage("modules")));
+        _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
     }
 
     private UIElement BuildLayout()
@@ -67,7 +90,7 @@ internal sealed class ManagerWindow : Window
         var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         titles.Children.Add(new TextBlock
         {
-            Text = "모듈 관리",
+            Text = "설정",
             FontFamily = (FontFamily)FindResource("Hunsu.FontTitle"),
             FontSize = (double)FindResource("Hunsu.FontTitleSize") + 5,
             FontWeight = FontWeights.SemiBold,
@@ -77,19 +100,16 @@ internal sealed class ManagerWindow : Window
         titles.Children.Add(_summary);
         Grid.SetColumn(titles, 1);
         header.Children.Add(titles);
-        var bulk = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        bulk.Children.Add(Chip("모두 켜기", false, () => _shell.SetAllEnabled(true)));
-        bulk.Children.Add(Chip("모두 끄기", false, () => _shell.SetAllEnabled(false)));
-        Grid.SetColumn(bulk, 2);
-        header.Children.Add(bulk);
+        Grid.SetColumn(_tabs, 2);
+        header.Children.Add(_tabs);
         DockPanel.SetDock(header, Dock.Top);
         dock.Children.Add(header);
 
         var footer = new StackPanel { Margin = new Thickness(22, 10, 22, 14) };
         var buttons = new WrapPanel();
-        buttons.Children.Add(Chip("배치 처음으로", false, ConfirmReset));
-        buttons.Children.Add(Chip("설정 파일 열기", false, () => Open(_shell.SettingsPath)));
-        buttons.Children.Add(Chip("모듈 폴더 열기", false, () => Open(Path.Combine(AppContext.BaseDirectory, "modules"))));
+        buttons.Children.Add(ManagerParts.Chip(this, "배치 처음으로", false, ConfirmReset));
+        buttons.Children.Add(ManagerParts.Chip(this, "설정 파일 열기", false, () => Open(_shell.SettingsPath)));
+        buttons.Children.Add(ManagerParts.Chip(this, "모듈 폴더 열기", false, () => Open(Path.Combine(AppContext.BaseDirectory, "modules"))));
         footer.Children.Add(buttons);
         footer.Children.Add(new TextBlock
         {
@@ -104,7 +124,8 @@ internal sealed class ManagerWindow : Window
         dock.Children.Add(footerBox);
 
         _cards.Margin = new Thickness(22, 4, 22, 8);
-        dock.Children.Add(new ScrollViewer { Content = _cards, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        _modulesView = new ScrollViewer { Content = _cards, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        dock.Children.Add(_body);
         return dock;
     }
 
@@ -114,6 +135,10 @@ internal sealed class ManagerWindow : Window
         var list = _shell.Modules.OrderBy(m => m.Placement.Hidden).ThenBy(m => m.Placement.Place, StringComparer.Ordinal).ThenBy(m => m.Placement.Order).ToList();
         int on = list.Count(m => !m.Placement.Hidden);
         _summary.Text = $"설치된 모듈 {list.Count}개 · 켜짐 {on}개";
+        var bulk = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 4, 0, 0) };
+        bulk.Children.Add(ManagerParts.Chip(this, "모두 켜기", false, () => _shell.SetAllEnabled(true)));
+        bulk.Children.Add(ManagerParts.Chip(this, "모두 끄기", false, () => _shell.SetAllEnabled(false)));
+        _cards.Children.Add(bulk);
         if (list.Count == 0) _cards.Children.Add(new TextBlock { Text = "설치된 모듈이 없습니다. modules 폴더를 확인하세요.", Foreground = (Brush)FindResource(ThemeKeys.Muted), Margin = new Thickness(0, 12, 0, 0) });
         bool? lastOn = null;
         foreach (var mv in list)
@@ -121,21 +146,12 @@ internal sealed class ManagerWindow : Window
             bool isOn = !mv.Placement.Hidden;
             if (lastOn != isOn)
             {
-                _cards.Children.Add(SectionTitle(isOn ? "켜짐" : "꺼짐"));
+                _cards.Children.Add(ManagerParts.Caption(this, isOn ? "켜짐" : "꺼짐"));
                 lastOn = isOn;
             }
             _cards.Children.Add(Card(mv));
         }
     }
-
-    private TextBlock SectionTitle(string text) => new()
-    {
-        Text = text,
-        Margin = new Thickness(2, 10, 0, 8),
-        FontSize = (double)FindResource("Hunsu.FontCaption"),
-        FontWeight = FontWeights.SemiBold,
-        Foreground = (Brush)FindResource(ThemeKeys.Muted),
-    };
 
     /// <summary>분류 알약(점검, 이동 등). 톤 색 15% 바탕.</summary>
     private Border CategoryPill(string text)
@@ -160,7 +176,7 @@ internal sealed class ManagerWindow : Window
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var toggle = Switch(enabled, () => _shell.SetEnabled(mv, !enabled));
+        var toggle = ManagerParts.Switch(this, enabled, () => _shell.SetEnabled(mv, !enabled));
         toggle.VerticalAlignment = VerticalAlignment.Top;
         toggle.Margin = new Thickness(0, 2, 14, 0);
         grid.Children.Add(toggle);
@@ -179,13 +195,13 @@ internal sealed class ManagerWindow : Window
         var controls = new StackPanel { Margin = new Thickness(12, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Right };
         string place = mv.Placement.Place;
         var placeRow = new StackPanel { Orientation = Orientation.Horizontal };
-        placeRow.Children.Add(Chip("왼쪽", place == Places.EdgeLeft, () => _shell.PlaceFromManager(mv, Places.EdgeLeft)));
-        placeRow.Children.Add(Chip("오른쪽", place == Places.EdgeRight, () => _shell.PlaceFromManager(mv, Places.EdgeRight)));
-        placeRow.Children.Add(Chip("떼기", place == Places.Pin, () => _shell.PlaceFromManager(mv, Places.Pin)));
+        placeRow.Children.Add(ManagerParts.Chip(this, "왼쪽", place == Places.EdgeLeft, () => _shell.PlaceFromManager(mv, Places.EdgeLeft)));
+        placeRow.Children.Add(ManagerParts.Chip(this, "오른쪽", place == Places.EdgeRight, () => _shell.PlaceFromManager(mv, Places.EdgeRight)));
+        placeRow.Children.Add(ManagerParts.Chip(this, "떼기", place == Places.Pin, () => _shell.PlaceFromManager(mv, Places.Pin)));
         controls.Children.Add(placeRow);
         var order = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Right };
-        order.Children.Add(Chip("▲ 위", false, () => _shell.MoveOrder(mv, -1)));
-        order.Children.Add(Chip("▼ 아래", false, () => _shell.MoveOrder(mv, 1)));
+        order.Children.Add(ManagerParts.Chip(this, "▲ 위", false, () => _shell.MoveOrder(mv, -1)));
+        order.Children.Add(ManagerParts.Chip(this, "▼ 아래", false, () => _shell.MoveOrder(mv, 1)));
         controls.Children.Add(order);
         Grid.SetColumn(controls, 2);
         grid.Children.Add(controls);
@@ -210,64 +226,6 @@ internal sealed class ManagerWindow : Window
         Places.Pin => "떼어 낸 창",
         _ => place,
     };
-
-    /// <summary>켜짐/꺼짐 스위치(누르면 act).</summary>
-    private FrameworkElement Switch(bool on, Action act)
-    {
-        var knob = new Border
-        {
-            Width = 16,
-            Height = 16,
-            CornerRadius = new CornerRadius(8),
-            Background = (Brush)FindResource(on ? "Hunsu.AccentInk" : "Hunsu.Text"),
-            HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-            Margin = new Thickness(3),
-        };
-        var track = new Border
-        {
-            Width = 42,
-            Height = 22,
-            CornerRadius = new CornerRadius(11),
-            Background = on ? (Brush)FindResource("Hunsu.Accent") : (Brush)FindResource("Hunsu.Line"),
-            Child = knob,
-            Cursor = Cursors.Hand,
-            ToolTip = on ? "끄기" : "켜기",
-        };
-        track.MouseLeftButtonUp += (_, e) => { e.Handled = true; act(); };
-        return track;
-    }
-
-    /// <summary>작은 단추. selected이면 강조색.</summary>
-    private Border Chip(string text, bool selected, Action act)
-    {
-        Brush rest = selected ? (Brush)FindResource("Hunsu.Accent") : (Brush)FindResource("Hunsu.GlassAlt");
-        var label = new TextBlock
-        {
-            Text = text,
-            FontSize = (double)FindResource("Hunsu.FontSmall"),
-            Foreground = (Brush)FindResource(selected ? "Hunsu.AccentInk" : ThemeKeys.Text),
-            FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal,
-        };
-        var chip = new Border
-        {
-            Child = label,
-            Padding = new Thickness(10, 4, 10, 4),
-            Margin = new Thickness(0, 0, 6, 0),
-            CornerRadius = (CornerRadius)FindResource("Hunsu.RowRadius"),
-            Background = rest,
-            BorderBrush = (Brush)FindResource("Hunsu.Line"),
-            BorderThickness = new Thickness(1),
-            Cursor = Cursors.Hand,
-        };
-        Brush hover = (Brush)FindResource("Hunsu.GlassHover");
-        if (!selected)
-        {
-            chip.MouseEnter += (_, _) => chip.Background = hover;
-            chip.MouseLeave += (_, _) => chip.Background = rest;
-        }
-        chip.MouseLeftButtonUp += (_, e) => { e.Handled = true; act(); };
-        return chip;
-    }
 
     private void ConfirmReset()
     {

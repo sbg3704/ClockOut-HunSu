@@ -44,6 +44,14 @@ public sealed class LauncherView : Canvas
     public ContextMenu? HubMenu { get; set; }
 
     public bool Awake { get; private set; }
+
+    /// <summary>미리보기용(설정 창): 커서와 관계없이 깨어 있거나(true) 잠든(false) 모습으로 멈춘다. null이면 평소처럼 커서를 따른다.</summary>
+    public bool? Hold
+    {
+        get => _hold;
+        set { _hold = value; _sleep.Stop(); if (value is bool b) { Awake = b; if (!b) Collapse(); ApplyAwake(animate: false); } }
+    }
+    private bool? _hold;
     public string? ExpandedGroup { get; private set; }
 
     /// <summary>훈 원 자리(이 부품 기준 논리 px). 측정 도구가 클릭 받는 구역으로 쓴다.</summary>
@@ -65,7 +73,7 @@ public sealed class LauncherView : Canvas
     /// <summary>커서 위치(이 부품 기준), 창 밖이면 null. 가장자리 가까이면 깨우고, 멀어지면 잠깐 뒤 잠든다.</summary>
     public void UpdatePointer(Point? p)
     {
-        if (_plan == null || ActualWidth <= 0) return;
+        if (_plan == null || ActualWidth <= 0 || _hold != null) return;
         bool inside = p is { } q && q.Y >= 0 && q.Y <= ActualHeight && q.X >= 0 && q.X <= ActualWidth;
         double edge = inside ? (_mirror ? p!.Value.X : ActualWidth - p!.Value.X) : double.MaxValue;
         bool near = inside && edge <= _plan.WakeDistance;
