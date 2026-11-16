@@ -153,6 +153,7 @@ internal sealed partial class ShellController
         w.SetInteractive(_summoned);
         w.Host(mv.DetachFrame());
         _pins[mv.Id] = w;
+        StartPinHover();
         if (!restoring) Save(mv, p => p with { Place = Places.Pin, PinRect = rect });
         // 그림은 나타나는 움직임이 끝난 뒤에 찍는다(첫 프레임은 투명도 0이라 빈 그림).
         Action<long> shown = t => { done?.Invoke(t); if (!restoring) Snap("pin.png", w); };
@@ -162,11 +163,24 @@ internal sealed partial class ShellController
         LogPlacement(mv);
     }
 
+    private System.Windows.Threading.DispatcherTimer? _pinHover;
+
+    /// <summary>떼어 낸 패널이 있는 동안만 60ms마다 마우스를 읽어, 제목줄 위에서만 클릭을 받게 한다(평소엔 클릭이 엑셀로 지나가서 핀 단추가 안 눌리던 문제).</summary>
+    private void StartPinHover()
+    {
+        _pinHover ??= new System.Windows.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(60), System.Windows.Threading.DispatcherPriority.Input, (_, _) =>
+        {
+            if (_pins.Count == 0 || _hiddenAll || !User32.GetCursorPos(out var pt)) return;
+            foreach (var p in _pins.Values) p.UpdateHover(pt.X, pt.Y);
+        }, System.Windows.Application.Current.Dispatcher);
+        _pinHover.Start();
+    }
+
     /// <summary>모듈마다 핀 창을 한 번만 만든다(처음 뗄 때 빨리 뜨게 시작할 때 미리 만듦).</summary>
     private PinWindow PinWindowFor(ModuleView mv)
     {
         if (_pinWindows.TryGetValue(mv.Id, out var w)) return w;
-        w = new PinWindow(_target);
+        w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free" };
         w.Moved += r => Save(mv, p => p with { PinRect = r });
         w.Prepare();
         _pinWindows[mv.Id] = w;
@@ -178,6 +192,7 @@ internal sealed partial class ShellController
     {
         if (!_pins.Remove(mv.Id, out var w)) { done?.Invoke(0); return; }
         w.Release();
+        if (_pins.Count == 0) _pinHover?.Stop();
         string side = Places.IsDock(mv.Module.Manifest.Place) ? mv.Module.Manifest.Place : Places.EdgeRight;
         Save(mv, p => p with { Place = side, Collapsed = false });
         mv.AttachFrameToSlot();

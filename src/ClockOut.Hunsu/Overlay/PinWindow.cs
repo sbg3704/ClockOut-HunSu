@@ -25,6 +25,7 @@ internal sealed class PinWindow : Window
     private PixelRect _rect;
     private IntPtr _owner;
     private bool _interactive;
+    private bool _hover; // 제목줄 위에 마우스가 있어 이 순간만 클릭을 받는다(핀 단추 등을 평소에도 누를 수 있게)
 
     public PinWindow(IntPtr owner)
     {
@@ -56,6 +57,9 @@ internal sealed class PinWindow : Window
 
     public FrameworkElement Root => _host;
 
+    /// <summary>true를 돌려주면 Shift 없이도 끌어 옮길 수 있다(배치 잠금이 "free"일 때). null이면 잠금.</summary>
+    public Func<bool>? FreeDrag { get; set; }
+
     /// <summary>사용자가 끌어 옮긴 뒤 새 자리(실제 픽셀).</summary>
     public event Action<PixelRect>? Moved;
 
@@ -68,6 +72,7 @@ internal sealed class PinWindow : Window
         frame.IsPinned = true;
         frame.Width = double.NaN;
         frame.TitleDragStarted += OnTitleDrag;
+        frame.SetTitleTip("Shift를 누른 채 끌어 옮기기(Ctrl+Alt+H로 부르면 그냥 끌기)");
         _host.Child = frame;
         frame.SetSummoned(_interactive);
         _grip.Visibility = _interactive ? Visibility.Visible : Visibility.Collapsed;
@@ -116,11 +121,29 @@ internal sealed class PinWindow : Window
         ApplyStyle();
     }
 
+    /// <summary>마우스(화면 픽셀)가 제목줄 위에 있으면 그 순간만 클릭을 받는다. 본문은 계속 클릭이 지나간다. 앱이 60ms마다 부른다.</summary>
+    public void UpdateHover(int screenX, int screenY)
+    {
+        if (_interactive || Handle == IntPtr.Zero || !IsVisible || _frame == null) { SetHover(false); return; }
+        var r = User32.WindowBounds(Handle);
+        double scale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
+        var margin = _host.Margin;
+        int strip = (int)Math.Round((margin.Top + (double)FindResource("Hunsu.TitleBarHeight")) * scale);
+        SetHover(r.Contains(screenX, screenY) && screenY < r.Y + strip);
+    }
+
+    private void SetHover(bool on)
+    {
+        if (_hover == on) return;
+        _hover = on;
+        ApplyStyle();
+    }
+
     private void ApplyStyle()
     {
         if (Handle == IntPtr.Zero) return;
         long ex = User32.GetWindowLongPtr(Handle, User32.GWL_EXSTYLE).ToInt64() | User32.WS_EX_NOACTIVATE | User32.WS_EX_TOOLWINDOW;
-        ex = _interactive ? ex & ~User32.WS_EX_TRANSPARENT : ex | User32.WS_EX_TRANSPARENT;
+        ex = _interactive || _hover ? ex & ~User32.WS_EX_TRANSPARENT : ex | User32.WS_EX_TRANSPARENT;
         User32.SetWindowLongPtr(Handle, User32.GWL_EXSTYLE, new IntPtr(ex));
         User32.ApplyStyleChange(Handle);
     }
@@ -169,7 +192,9 @@ internal sealed class PinWindow : Window
 
     private void OnTitleDrag(MouseButtonEventArgs e)
     {
-        if (!_interactive || e.ButtonState != MouseButtonState.Pressed) return;
+        if (!(_interactive || _hover) || e.ButtonState != MouseButtonState.Pressed) return;
+        // 잠금(기본)이면 Shift를 누른 채만 옮긴다. 부르기(편집 모드) 중이거나 잠금이 free면 그냥 옮긴다.
+        if (!_interactive && !(FreeDrag?.Invoke() ?? false) && !User32.ShiftDown()) return;
         DragMove(); // 놓을 때까지 돌아오지 않는다
         var now = User32.WindowBounds(Handle);
         if (now != _rect)
@@ -191,6 +216,7 @@ internal sealed class PinWindow : Window
         _host.Child = null;
         _frame = null;
         _grip.Visibility = Visibility.Collapsed;
+        _hover = false;
         BeginAnimation(OpacityProperty, null);
         Hide();
         return frame;
