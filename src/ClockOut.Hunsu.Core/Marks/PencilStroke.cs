@@ -103,6 +103,28 @@ public static class PencilStroke
         return pts;
     }
 
+    /// <summary>손으로 그린 네모 한 획: 네 변을 이어 긋되 모서리마다 조금 지나치고 어긋난다.</summary>
+    public static IReadOnlyList<PointD> Box(MarkBox box, HandRng rng, double pad = 2)
+    {
+        double l = box.X - pad, t = box.Y - pad, r = box.X + box.W + pad, b = box.Y + box.H + pad;
+        var corners = new[] { new PointD(l, t), new PointD(r, t), new PointD(r, b), new PointD(l, b), new PointD(l, t) };
+        var pts = new List<PointD>();
+        for (int i = 0; i < 4; i++) pts.AddRange(Wobbly(corners[i], corners[i + 1], rng, rng.Range(-1.5, 1.5), 1.0));
+        return pts;
+    }
+
+    /// <summary>범위를 감싸는 대괄호 한 짝(left면 [ , 아니면 ]). 위·아래 끝이 안쪽으로 꺾인다.</summary>
+    public static IReadOnlyList<PointD> Bracket(MarkBox box, HandRng rng, bool left, double pad = 3)
+    {
+        double x = left ? box.X - pad : box.X + box.W + pad, t = box.Y - pad, b = box.Y + box.H + pad;
+        double arm = Math.Min(10, box.W / 3 + 3) * (left ? 1 : -1);
+        var pts = new List<PointD>();
+        pts.AddRange(Wobbly(new PointD(x + arm, t), new PointD(x, t), rng, 0, 0.6));
+        pts.AddRange(Wobbly(new PointD(x, t), new PointD(x, b), rng, rng.Range(-2, 2), 1.2));
+        pts.AddRange(Wobbly(new PointD(x, b), new PointD(x + arm, b), rng, 0, 0.6));
+        return pts;
+    }
+
     /// <summary>칸 안을 비스듬히 오가며 칠하는 한 줄 스크리블. 줄 수는 maxLines로 줄인다(큰 칸도 가볍게).</summary>
     public static IReadOnlyList<PointD> Scribble(MarkBox box, HandRng rng, double spacing = 5, int maxLines = 14)
     {
