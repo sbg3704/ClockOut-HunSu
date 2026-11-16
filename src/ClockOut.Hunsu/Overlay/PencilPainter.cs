@@ -97,6 +97,7 @@ internal sealed class PencilPainter
         var ink = new SolidColorBrush(Color.FromRgb((byte)(c.R * 0.55), (byte)(c.G * 0.55), (byte)(c.B * 0.55)));
         var paper = new SolidColorBrush(Color.FromArgb(0xD8, 0xFF, 0xF7, 0xDA));
         ink.Freeze(); paper.Freeze();
+        if (l.Badge) return Badge(l, ink, paper, c, animate);
         var box = new Border
         {
             Background = paper,
@@ -111,6 +112,28 @@ internal sealed class PencilPainter
         if (!animate) return box;
         box.Opacity = 0;
         var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(110)) { BeginTime = TimeSpan.FromMilliseconds(l.StartMs) };
+        Timeline.SetDesiredFrameRate(fade, 30);
+        box.BeginAnimation(UIElement.OpacityProperty, fade);
+        return box;
+    }
+
+    /// <summary>화살표 한가운데의 작은 번호표: 종이색 동그라미에 톤 색 테두리와 손글씨 숫자.</summary>
+    private static FrameworkElement Badge(SketchLabel l, Brush ink, Brush paper, Color c, bool animate)
+    {
+        var ring = new SolidColorBrush(c);
+        ring.Freeze();
+        var box = new Border
+        {
+            Width = 19, Height = 19, CornerRadius = new CornerRadius(10),
+            Background = paper, BorderBrush = ring, BorderThickness = new Thickness(1.6),
+            IsHitTestVisible = false,
+            Child = new TextBlock { Text = l.Text, FontFamily = Hand, FontSize = 15, Foreground = ink, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false },
+        };
+        Canvas.SetLeft(box, l.X - 9.5);
+        Canvas.SetTop(box, l.Y - 9.5);
+        if (!animate) return box;
+        box.Opacity = 0;
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(90)) { BeginTime = TimeSpan.FromMilliseconds(l.StartMs) };
         Timeline.SetDesiredFrameRate(fade, 30);
         box.BeginAnimation(UIElement.OpacityProperty, fade);
         return box;

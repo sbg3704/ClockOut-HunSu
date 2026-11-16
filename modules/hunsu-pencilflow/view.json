@@ -6,9 +6,9 @@
     { "items": "mark.dep", "tone": "good", "style": "pencil", "role": "dep" }
   ],
   "panel": [
-    { "type": "badge", "text": "주황 · 지금 고른 칸", "tone": "warn" },
-    { "type": "badge", "text": "파랑 · 쓰는 칸(여기서 옴)", "tone": "info" },
-    { "type": "badge", "text": "초록 · 쓰이는 칸(여기로 감)", "tone": "good" },
+    { "type": "badge", "text": "주황 두 겹 고리 · 지금 고른 칸", "tone": "warn" },
+    { "type": "badge", "text": "파랑 네모/대괄호 · 쓰는 칸(여기서 옴)", "tone": "info" },
+    { "type": "badge", "text": "초록 동그라미 · 쓰이는 칸(여기로 감)", "tone": "good" },
     { "type": "text", "text": "수식이 든 칸이나 다른 수식이 쓰는 칸을 고르면 색연필로 그어집니다. 같은 시트의 보이는 칸만 그리고, 스크롤하면 움직임 없이 따라옵니다.", "tone": "muted" },
     { "type": "text", "text": "보이는 곳에 표시가 많아 일부만 그렸습니다.", "tone": "warn", "showWhen": "mark.truncated == true" }
   ]

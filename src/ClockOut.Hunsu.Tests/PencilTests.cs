@@ -104,7 +104,7 @@ public class PencilTests
         double firstInfo = plan.Strokes.Where(s => s.Tone == "info").Min(s => s.StartMs);
         Assert.True(firstInfo > 0);
         Assert.Equal("흐름|D1|A1,B1,C1|E1", plan.Key);
-        Assert.Contains(plan.Labels, l => l.Text == "C1 (쓰는 칸)");
+        Assert.Contains(plan.Labels, l => l.Text == "A1 (쓰는 칸)");
         Assert.Contains(plan.Labels, l => l.Text == "E1 (쓰이는 칸)");
     }
 
@@ -126,9 +126,43 @@ public class PencilTests
     {
         var pre = Enumerable.Range(0, 40).Select(i => Cell("A" + (i + 1), 10 + i * 5, 300 + i * 10)).ToList();
         var plan = FlowSketch.Plan("s", [Cell("Z1", 600, 100)], pre, [], Tones);
-        Assert.Equal(FlowSketch.MaxPerGroup, plan.Labels.Count(l => l.Tone == "info"));
+        Assert.Equal(FlowSketch.MaxPerGroup, plan.Labels.Count(l => l.Tone == "info" && !l.Badge));
         var big = FlowSketch.Plan("s", [Cell("Z1", 600, 100)], [Cell("A1", 10, 10, 800, 400)], [], Tones);
         Assert.DoesNotContain(big.Strokes, s => s.Shade); // 큰 범위는 칠하지 않고 둘레만
+    }
+
+    [Fact]
+    public void Plan_NumbersArrowsInReadingOrder_AcrossGroups()
+    {
+        var pre = new[] { Cell("C2", 200, 140), Cell("A1", 10, 100), Cell("B1", 100, 100) }; // 일부러 섞어 줌
+        var plan = FlowSketch.Plan("s", [Cell("D1", 400, 100)], pre, [Cell("E1", 500, 100), Cell("E2", 500, 140)], Tones);
+        var badges = plan.Labels.Where(l => l.Badge).ToList();
+        Assert.Equal(["1", "2", "3", "4", "5"], badges.Select(b => b.Text).ToArray());
+        Assert.True(badges.Zip(badges.Skip(1)).All(p => p.First.StartMs <= p.Second.StartMs)); // 번호 순서대로 그려진다
+        Assert.Equal("A1 (쓰는 칸)", plan.Labels.First(l => !l.Badge && l.Tone == "info").Text); // 읽는 순서 맨 앞이 첫 이웃
+    }
+
+    [Fact]
+    public void Plan_ProfilesDiffer_ByRoleAndRange()
+    {
+        var active = Cell("D1", 300, 100);
+        int Count(IReadOnlyList<SketchCell> pre, IReadOnlyList<SketchCell> dep, string tone) => FlowSketch.Plan("s", [active], pre, dep, Tones).Strokes.Count(s => s.Tone == tone && !s.Shade);
+        var one = Cell("A1", 10, 100); var rng = Cell("A1", 10, 100, 200, 80);
+        // 쓰는 칸: 한 칸(네모+화살표+화살촉 각 2패스) < 범위(대괄호 두 짝이라 획이 더 많다)
+        Assert.True(Count([rng], [], "info") > Count([one], [], "info"));
+        // 쓰이는 칸 범위는 물결 밑줄이 더해진다
+        Assert.True(Count([], [Cell("E1", 500, 100, 200, 80)], "good") > Count([], [Cell("E1", 500, 100)], "good"));
+    }
+
+    [Fact]
+    public void Box_And_Bracket_AreAroundBox()
+    {
+        var box = new MarkBox(100, 100, 80, 40);
+        var b = PencilStroke.Box(box, new HandRng(4), 2);
+        Assert.True(b.Min(p => p.X) < 100 && b.Max(p => p.X) > 180 && b.Min(p => p.Y) < 100 && b.Max(p => p.Y) > 140);
+        var left = PencilStroke.Bracket(box, new HandRng(4), true);
+        var right = PencilStroke.Bracket(box, new HandRng(4), false);
+        Assert.True(left.Max(p => p.X) < 120 && right.Min(p => p.X) > 160);
     }
 
     [Fact]

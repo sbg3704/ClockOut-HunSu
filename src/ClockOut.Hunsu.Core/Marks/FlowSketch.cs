@@ -13,8 +13,8 @@ public sealed record SketchCell(string Addr, MarkBox Box);
 /// <summary>획 하나. StartMs부터 DurationMs 동안 처음에서 끝으로 그려진다. Shade는 칠하기(스크리블).</summary>
 public sealed record SketchStroke(IReadOnlyList<PointD> Points, string Tone, double Width, double Alpha, double StartMs, double DurationMs, bool Shade = false);
 
-/// <summary>손글씨 이름표. StartMs에 나타난다. Angle은 도.</summary>
-public sealed record SketchLabel(string Text, double X, double Y, double Angle, string Tone, double StartMs);
+/// <summary>손글씨 이름표. StartMs에 나타난다. Angle은 도. Badge면 (X,Y)가 가운데인 작은 동그라미 번호표.</summary>
+public sealed record SketchLabel(string Text, double X, double Y, double Angle, string Tone, double StartMs, bool Badge = false);
 
 public sealed record SketchTones(string Active, string Pre, string Dep);
 
@@ -63,12 +63,16 @@ public static class FlowSketch
         var rngA = new HandRng(HandRng.Seed(sheet + "!" + a.Addr + "*"));
         var ring = PencilStroke.Loop(a.Box, rngA, 3.5);
         cursor = AddPencil(strokes, ring, tones.Active, 3.0, 0.95, cursor, 3.2, rngA);
+        cursor = AddPencil(strokes, PencilStroke.Loop(a.Box, rngA, 7), tones.Active, 2.0, 0.8, cursor - 60, 3.2, rngA); // 겹 고리: 고른 칸은 두 겹
         labels.Add(new SketchLabel("여기", a.Box.X + a.Box.W + 2, a.Box.Y - 15, -4, tones.Active, 60));
 
         var ac = Center(a.Box);
+        int number = 0;
         foreach (var (group, tone, isPre) in new[] { (pre, tones.Pre, true), (dep, tones.Dep, false) })
         {
-            var near = group.Where(c => c.Addr != a.Addr).OrderBy(c => Dist(Center(c.Box), ac)).Take(MaxPerGroup).ToList();
+            // 가까운 칸부터 한도만큼 고르고, 번호는 읽는 순서(위→아래, 왼쪽→오른쪽)로 붙인다. 그리는 순서도 같다.
+            var near = group.Where(c => c.Addr != a.Addr).OrderBy(c => Dist(Center(c.Box), ac)).Take(MaxPerGroup)
+                .OrderBy(c => Math.Round(c.Box.Y / 12)).ThenBy(c => c.Box.X).ToList();
             for (int i = 0; i < near.Count; i++)
             {
                 var c = near[i];
@@ -81,8 +85,8 @@ public static class FlowSketch
                     if (scr.Count > 1) strokes.Add(new SketchStroke(scr, tone, 1.5, 0.5, cc, Clamp(PencilStroke.Length(scr) / 4.5, 80, 220), true));
                     cc += 40;
                 }
-                var loop = PencilStroke.Loop(c.Box, rng, 2.5);
-                cc = AddPencil(strokes, loop, tone, 2.3, 0.9, cc, 3.0, rng);
+                bool range = c.Box.W > a.Box.W * 1.4 || c.Box.H > a.Box.H * 1.4;
+                cc = DrawProfile(strokes, c.Box, isPre, range, tone, cc, rng);
                 // 화살표: 앞은 이웃 → 활성, 뒤는 활성 → 이웃
                 var from = isPre ? c : a;
                 var to = isPre ? a : c;
@@ -93,7 +97,11 @@ public static class FlowSketch
                 {
                     double bow = Math.Min(40, len * 0.14) * (rng.Coin() ? 1 : -1);
                     var line = PencilStroke.Wobbly(p0, p1, rng, bow, 1.6);
+                    double lineStart = cc;
                     cc = AddPencil(strokes, line, tone, 2.8, 0.95, cc, 2.6, rng);
+                    // 번호표: 화살표 한가운데에 작은 동그라미 숫자(이 순서로 따라가면 된다)
+                    var mid = line[line.Count / 2];
+                    labels.Add(new SketchLabel((++number).ToString(), mid.X, mid.Y, 0, tone, lineStart + (cc - lineStart) * 0.5, true));
                     var last = line[^1]; var prev = line[Math.Max(0, line.Count - 3)];
                     var head = PencilStroke.Arrowhead(last, last.X - prev.X, last.Y - prev.Y, rng);
                     strokes.Add(new SketchStroke(head, tone, 2.8, 0.95, cc - 30, 80));
@@ -116,6 +124,21 @@ public static class FlowSketch
         }
         string key = sheet + "|" + a.Addr + "|" + string.Join(",", pre.Select(c => c.Addr)) + "|" + string.Join(",", dep.Select(c => c.Addr));
         return new SketchPlan(key, strokes, labels, total);
+    }
+
+    /// <summary>이웃 칸의 "프로필"(모양): 쓰는 칸은 네모(범위면 대괄호 한 쌍), 쓰이는 칸은 동그라미(범위면 동그라미 + 물결 밑줄). 모양만 봐도 앞/뒤와 한 칸/범위가 구별된다.</summary>
+    private static double DrawProfile(List<SketchStroke> list, MarkBox box, bool isPre, bool range, string tone, double start, HandRng rng)
+    {
+        if (isPre && !range) return AddPencil(list, PencilStroke.Box(box, rng, 2.5), tone, 2.3, 0.9, start, 3.0, rng);
+        if (isPre)
+        {
+            double e = AddPencil(list, PencilStroke.Bracket(box, rng, true), tone, 2.5, 0.9, start, 3.0, rng);
+            return AddPencil(list, PencilStroke.Bracket(box, rng, false), tone, 2.5, 0.9, e - 40, 3.0, rng);
+        }
+        double end = AddPencil(list, PencilStroke.Loop(box, rng, 2.5), tone, 2.3, 0.9, start, 3.0, rng);
+        if (!range) return end;
+        var under = PencilStroke.Wobbly(new PointD(box.X, box.Y + box.H + 6), new PointD(box.X + box.W, box.Y + box.H + 6), rng, 0, 3.0);
+        return AddPencil(list, under, tone, 2.0, 0.85, end - 40, 3.0, rng);
     }
 
     /// <summary>획 하나(굵은 첫 줄)와 덧그린 얇은 둘째 줄을 더하고, 이 획이 끝나는 시각을 돌려준다. speed는 px/ms.</summary>
