@@ -16,6 +16,9 @@ function Step([string]$name, [scriptblock]$body) {
     & $body
     if ($LASTEXITCODE -ne 0) { Write-Host "[실패] $name (종료 코드 $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
+# 판 번호를 올렸는지 본다(프로그램을 바꾸고 번호가 그대로면 실패). python이 없으면 건너뛴다.
+$py = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($py) { Push-Location $repo; try { Step '판 번호 확인' { & $py.Source tools/check_version.py } } finally { Pop-Location } }
 Step 'C# 빌드' { dotnet build $sln -c $cfg --nologo -v q }
 Step 'Core 시험' { dotnet test (Join-Path $repo 'src\ClockOut.Hunsu.Tests') -c $cfg --nologo --no-build -v q }
 if (-not $NoExcel) {

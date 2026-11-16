@@ -6,6 +6,13 @@
 - 확인: 클라우드에서 앱 프로젝트 빌드 0경고·0오류. **트레이에서 실제로 어떻게 보이는지는 PC에서 눈으로 확인 필요**(`co build hunsu pr<N>`).
 - 남은 것: 도크 중앙 "훈" 원(`LauncherParts.Hub`)과 칼퇴 카탈로그의 `icon = 'hunsu'` 그림은 손대지 않았다. 카탈로그/칼퇴 레일 아이콘은 `assets/icon/png/hunsu-256.png`를 쓰면 된다(칼퇴 쪽 파일 위치 확인 필요).
 
+## 2026-11-16 계정2: 사용 피드백 반영 (브랜치 `claude/project-thread-8lvni7`, PR #20, 판 0.0.020)
+- 사용자 지시: 새 런처·설정 창을 써 보고 준 피드백(고정 안 풀림, 아이콘 겹침, 켜고 끄기 불편, 모듈 카드 큼, 위치 고정적, 잠금 방식, 팝업 글 정리, 판이 계속 001, 다리가 자동 갱신 안 됨, 설정은 파일 말고 창에서).
+- 된 것: 떼어 낸 창 고정 풀림과 Shift 끌기 잠금, 아이콘 간격, 설정 창 묶음 목록·[일반] 쪽·줄 팝업, 패널 글 정리, 투명도 5단계, 판 표시(`v0.0.020c · abc1234`)와 판 번호 검사(`tools/check_version.py`), 엑셀 COM 호출 거부 재시도(`tools/_com.ps1`), **다리 자동 갱신**(`Shell/BridgeUpdater.cs`: 깔린 다리가 묶음의 다리보다 낮거나 내용이 다르면 AddIns 폴더에서 바꿈, 엑셀이 잡고 있으면 30초마다 다시 시도), docs/10 와우 애드온 4종 소스 분석.
+- 확인: 클라우드에서 빌드 0경고, 테스트 177개 통과. **화면, pwsh 스크립트, 다리 교체(실제 AddIns 폴더, 엑셀 잠금)는 실행해 보지 못함**.
+- 다음: PC에서 `co build hunsu pr20 -Test` 확인 → 편집 모드와 도크 자유 배치(사용자가 "끌어서 어디든 놓기" 선택, docs/10) → co가 `HUNSU_BUILD_TAG`(pr번호)를 넣는 작은 PR(claude-workspace).
+- 먼저 읽을 파일: `CLAUDE.md`(판 번호 규칙), `src/ClockOut.Hunsu/Shell/BridgeUpdater.cs`, `docs/10_배치_방식_벤치마크.md`.
+
 ## 2026-11-16 계정1 몫 6가지 (브랜치 `claude/project-thread-697fy8`, 클라우드 작업)
 - 사용자 지시: PR #13 머지(완료) → PR #14 나눔 표의 계정1 몫을 Claude 추천대로 만들기. 설계·결정·스위치는 `docs/08_계정1_틀_기능_2026-11-16.md`.
 - 된 것: 부품 bar·spark·progress, 밝은/어두운 테마(`theme`), 도크 패널 너비(`panelWidth`)·핀 창 모서리 크기 조절, 발자취(`hunsu-history`, 앱 주제 `app.*`), 시트를 넘는 수식 흐름(`flow.graph`, `hunsu-flowgraph`), 셀 위 표시층(`mark`, `marks[]` 문법, `hunsu-marks`), bench 조회 부하(`QueryLoadChecks`). 다리 0.0.014.

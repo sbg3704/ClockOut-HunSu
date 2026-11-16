@@ -40,8 +40,8 @@ public static class DockLayout
 /// <summary>패널 투명도 단계. 평소(마우스가 없을 때) 불투명도이고, 마우스를 올리면 늘 1.0이다(docs/03 3장: 읽을 때는 선명하게).</summary>
 public static class OpacityLevels
 {
-    public static readonly double[] Rest = [1.0, 0.8, 0.55];
-    public static readonly string[] Names = ["선명", "반투명", "흐림"];
+    public static readonly double[] Rest = [1.0, 0.8, 0.55, 0.4, 0.25];
+    public static readonly string[] Names = ["선명 100%", "80%", "55%", "40%", "25%"];
 
     public static int Next(int level) => (Math.Clamp(level, 0, Rest.Length - 1) + 1) % Rest.Length;
 

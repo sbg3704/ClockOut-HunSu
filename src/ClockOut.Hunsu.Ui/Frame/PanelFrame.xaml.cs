@@ -75,5 +75,8 @@ public partial class PanelFrame : UserControl
 
     private void OpacityButton_Click(object sender, RoutedEventArgs e) => OpacityClicked?.Invoke();
 
+    /// <summary>제목줄에 설명(툴팁)을 붙인다(null이면 없앰). 핀 창에서 "Shift를 누른 채 끌어 옮기기" 안내에 쓴다.</summary>
+    public void SetTitleTip(string? tip) => TitleBar.ToolTip = tip;
+
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => TitleDragStarted?.Invoke(e);
 }

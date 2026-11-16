@@ -29,6 +29,7 @@ internal sealed partial class ShellController : IDisposable
     private readonly InstanceRegistry _registry;
     private readonly HotkeyService _hotkeys;
     private readonly TrayIcon _tray;
+    private BridgeUpdater? _bridgeUpdater;
     private readonly DockWindow _right;
     private readonly DockWindow _left;
     private readonly List<ModuleView> _modules = [];
@@ -93,6 +94,9 @@ internal sealed partial class ShellController : IDisposable
 
     public void Start()
     {
+        // 이미 깔린 다리가 이 묶음의 다리보다 낮으면 스스로 바꾼다(엑셀이 잡고 있으면 놓을 때까지 기다림).
+        _bridgeUpdater = new BridgeUpdater(_log, text => Application.Current.Dispatcher.BeginInvoke(() => _tray.Balloon(text)));
+        _bridgeUpdater.Start();
         var roots = new[] { Path.Combine(AppContext.BaseDirectory, "modules") };
         foreach (var lm in ModuleCatalog.Load(roots, _log)) _modules.Add(CreateView(lm));
         foreach (var mv in _modules.Where(m => m.Module.Manifest.Shapes.Contains("window") || m.Module.Manifest.Shapes.Contains("panel"))) PinWindowFor(mv);
@@ -233,6 +237,7 @@ internal sealed partial class ShellController : IDisposable
         _log.Write("exit");
         foreach (var f in _followers) f.Dispose();
         _hotkeys.Dispose();
+        _bridgeUpdater?.Dispose();
         _tray.Dispose();
         _registry.Dispose();
         _signal.Dispose();
