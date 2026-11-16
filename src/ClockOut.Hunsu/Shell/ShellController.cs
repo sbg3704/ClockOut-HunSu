@@ -1,7 +1,7 @@
 // 기능: 훈수꾼 틀의 연결부. 도크 창(왼·오), 핀 창, 모듈, 배치 저장, 신호·조회, 단축키, 알림 영역 아이콘을 서로 잇는다.
 //       따라갈 엑셀 창을 정하고(보통: 보이는 XLMAIN, 앞으로 나온 엑셀로 바꿈 / 측정: --follow), 부르기·전부 숨김 상태를 맡는다.
 // 사용법: App.OnStartup에서 new ShellController(options).Start();  끝낼 때 Dispose()
-// 의존: Overlay/*, Shell/*, Excel/InstanceRegistry, Signal/SignalWindow, Diagnostics/*. 모듈 동작은 ShellController.Modules.cs, 측정 메시지는 ShellController.Bench.cs.
+// 의존: Overlay/*, Shell/*, Excel/InstanceRegistry, Signal/SignalWindow, Diagnostics/*. 모듈 동작은 ShellController.Modules.cs, 최근 이동은 .History.cs, 셀 위 표시층은 .Marks.cs, 측정 메시지는 ShellController.Bench.cs.
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -9,6 +9,7 @@ using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Ui.Controls;
+using ClockOut.Hunsu.Ui.Theme;
 using ClockOut.Hunsu.Diagnostics;
 using ClockOut.Hunsu.Excel;
 using ClockOut.Hunsu.Native;
@@ -28,8 +29,8 @@ internal sealed partial class ShellController : IDisposable
     private readonly InstanceRegistry _registry;
     private readonly HotkeyService _hotkeys;
     private readonly TrayIcon _tray;
-    private readonly DockWindow _right = new(Places.EdgeRight);
-    private readonly DockWindow _left = new(Places.EdgeLeft);
+    private readonly DockWindow _right;
+    private readonly DockWindow _left;
     private readonly List<ModuleView> _modules = [];
     private readonly Dictionary<string, PinWindow> _pins = new(StringComparer.Ordinal); // 지금 떼어 낸 것
     private readonly Dictionary<string, PinWindow> _pinWindows = new(StringComparer.Ordinal); // 모듈마다 미리 만들어 둔 창
@@ -47,6 +48,11 @@ internal sealed partial class ShellController : IDisposable
         _store = new LayoutStore(options.LayoutPath, _log);
         _settings = SettingsStore.Load(SettingsStore.PathFor(options.LayoutPath), _log);
         Parts.ListMaxRows = _settings.ListMaxRows;
+        // 테마와 패널 너비는 창을 만들기 전에 넣어야 StaticResource가 받는다(settings.theme, panelWidth).
+        string theme = ThemePicker.Apply(Application.Current, _settings.Theme, _settings.PanelWidth);
+        _log.Write("theme", ("name", theme), ("panelWidth", _settings.PanelWidth));
+        _right = new DockWindow(Places.EdgeRight);
+        _left = new DockWindow(Places.EdgeLeft);
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
         _registry.TopicReady += OnTopic;
         _registry.SummaryReady += OnSummary;
@@ -136,6 +142,8 @@ internal sealed partial class ShellController : IDisposable
             f.Start();
         }
         foreach (var p in _pinWindows.Values) p.SetOwner(target);
+        _markData.Clear();
+        _markWindow?.Clear();
         UpdateLeftVisibility();
     }
 
@@ -143,6 +151,7 @@ internal sealed partial class ShellController : IDisposable
     {
         _log.Write("target_gone", ("target", _target.ToInt64()));
         foreach (var p in _pins.Values) p.Hide();
+        _markWindow?.Clear();
         if (_options.FollowHwnd == 0) HideDocksAndWait();
     }
 
@@ -197,6 +206,7 @@ internal sealed partial class ShellController : IDisposable
         UpdateLeftVisibility();
         foreach (var p in ActivePins()) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
         _tray.SetHidden(_hiddenAll);
+        DrawMarks();
         _log.Write("hide_all", ("on", _hiddenAll));
     }
 

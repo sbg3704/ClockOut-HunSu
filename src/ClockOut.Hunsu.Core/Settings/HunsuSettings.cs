@@ -37,6 +37,15 @@ public sealed class HunsuSettings
     /// <summary>시작할 때 모듈 관리자 창을 바로 연다(처음 써 볼 때 편함).</summary>
     public bool ManagerOnStart { get; init; }
 
+    /// <summary>화면 테마: "dark"(기본), "light", "auto"(Windows 앱 모드를 따름). 켤 때 한 번 정한다(바꾸면 껐다 켬).</summary>
+    public string Theme { get; init; } = ThemeChoice.Dark;
+
+    /// <summary>도크 패널 너비(DIP). 범위 200~480. 핀 창은 끌어서 크기를 바꾼다(부르기 중).</summary>
+    public int PanelWidth { get; init; } = 240;
+
+    /// <summary>셀 위 표시층(mark)을 쓰는 모듈이 켜져 있을 때, 엑셀이 앞에 있으면 이 간격(ms)으로 자리를 다시 묻는다(스크롤에는 엑셀 이벤트가 없음). 0이면 신호 때만. 범위 0 또는 150~5000.</summary>
+    public int MarkPollMs { get; init; } = 400;
+
     public bool IsEnabledByDefault(string moduleId) => EnabledByDefault.Contains("*") || EnabledByDefault.Contains(moduleId);
 
     public static HunsuSettings FromJson(string? text)
@@ -68,6 +77,9 @@ public sealed class HunsuSettings
             ListMaxRows = InRange(ListMaxRows, 5, 200) ? ListMaxRows : d.ListMaxRows,
             EnabledByDefault = EnabledByDefault ?? d.EnabledByDefault,
             ManagerOnStart = ManagerOnStart,
+            Theme = ThemeChoice.Normalize(Theme),
+            PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
+            MarkPollMs = MarkPollMs == 0 || InRange(MarkPollMs, 150, 5000) ? MarkPollMs : d.MarkPollMs,
         };
     }
 

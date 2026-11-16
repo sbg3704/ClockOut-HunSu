@@ -1,5 +1,13 @@
 # 인수인계 (2026-11-16 갱신)
 
+## 2026-11-16 계정1 몫 6가지 (브랜치 `claude/project-thread-697fy8`, 클라우드 작업)
+- 사용자 지시: PR #13 머지(완료) → PR #14 나눔 표의 계정1 몫을 Claude 추천대로 만들기. 설계·결정·스위치는 `docs/08_계정1_틀_기능_2026-11-16.md`.
+- 된 것: 부품 bar·spark·progress, 밝은/어두운 테마(`theme`), 도크 패널 너비(`panelWidth`)·핀 창 모서리 크기 조절, 발자취(`hunsu-history`, 앱 주제 `app.*`), 시트를 넘는 수식 흐름(`flow.graph`, `hunsu-flowgraph`), 셀 위 표시층(`mark`, `marks[]` 문법, `hunsu-marks`), bench 조회 부하(`QueryLoadChecks`). 다리 0.0.014.
+- 확인: 클라우드에서 빌드 0경고·0오류, Core 시험 138개 통과, bench 컴파일. **VBA 컴파일·엑셀 실행·화면은 아직**.
+- 다음: PC에서 `tools\build.ps1` → `tools\build_bridge.ps1` → `tools\test_bridge.ps1`(새 시험 4개) → 앱에서 새 모듈 3개 켜 보기 → 확대·배율에서 표시층이 칸에 맞는지 → `run_bench.ps1`.
+- 계정2(PR #14)와 겹치는 곳: `CoHunsuApi.bas`의 Select Case·hello 목록 2줄, `RepoModules()` 한 줄, 다리 판(0.0.014). 나중에 머지하는 쪽이 한 줄씩 이어 붙인다.
+- 먼저 읽을 파일: `docs/08_계정1_틀_기능_2026-11-16.md`, `src/ClockOut.Hunsu/Shell/ShellController.Marks.cs`, `addins/clockout-hunsu/CoHunsuQ_FlowGraph.bas`.
+
 ## 2026-11-16 계정2: 모듈 5종 + 기능 나눔 (브랜치 `claude/project-thread-8lvni7`, PR #14)
 - 사용자 지시: 기능을 최대한 만들고, 계정1도 시킬 테니 서로 나눈다. 나눔 표: `협업/기능_나눔_2026-11-16.md`(계정1은 C# 틀·화면, 계정2는 선언 모듈·다리 조회).
 - 더한 것: 모듈 9종 `hunsu-cell`, `hunsu-comments`, `hunsu-links`, `hunsu-tables`, `hunsu-sheetinfo`, `hunsu-validation`, `hunsu-condrules`, `hunsu-hidden`, `hunsu-composition`(전부 기본 꺼짐), 다리 0.0.013 조회 9개. 규격은 docs/02, 표는 docs/07.
@@ -113,3 +121,6 @@
   2. **범위를 끌어 선택하면 패널이 떨리고 엑셀이 버벅인다.** 원인 추정과 고칠 방향은 `docs/06_알려진_문제_범위선택_떨림.md`. PC 측정으로 순서를 확인한 뒤 고친다.
 - 사용자 결정(2026-11-12): 배포 판이 아니므로 우선 **버그와 방향만 문서로 남기고** 코드는 나중에 고친다.
 - 주의: 이 PR은 HANDOFF.md 끝에만 덧붙인다. PR #6·#7도 HANDOFF.md를 바꾸므로 머지 순서에 따라 충돌이 날 수 있다(끝부분 덧붙임이라 손으로 풀기 쉽다).
+## 2026-11-16 디자인 철학과 도크 시안 (브랜치 `claude/project-thread-h5zrmb`, 문서만)
+- Overwolf 도크를 참고해 엑셀 옆 모듈 아이콘 배치를 정했다. 사용자가 선택지 6개를 모두 골랐다(철학 "조용한 훈수", 초승달 + 기능 묶음(처음 고른 반달 부채에서 바꿈), 단색 선, 반투명 잠듦 45%, 매끄러운 감속, Fluent 아이콘 + 로고만 직접). `docs/09_디자인_철학.md`, 시안 `docs/시안/hunsu-dock.html`, `docs/03` 1장에 한 줄.
+- 남은 일: 지금의 "훈수꾼" 알약을 초승달 + 묶음 훈 원으로 바꾸는 구현(PR #15 머지 뒤), Fluent UI System Icons 판 고정과 `vendor/SOURCES.md` 기록, 배치 모양 5종 설정(`dockShape` 등, docs/09 2.1장), 모듈 선언에 `icon` 뜻 이름 칸과 아이콘 프로필(세트 6종, docs/09 3.1장) 넣기.
