@@ -72,7 +72,7 @@ Public Function Do_WriteValues(ByVal cmdName As String, ByVal argsJson As String
                 Do_WriteValues = CoHunsuJson_Fail("command_failed", "붙일 글자가 없습니다")
                 Exit Function
             End If
-        Case "clean", "tonum", "flip", "tovalue", "iferror", "filldown", "todate", "unmerge", "mergecenter"
+        Case "clean", "tonum", "flip", "tovalue", "iferror", "filldown", "todate", "unmerge", "mergecenter", "won", "clearinput", "natsort"
         Case Else
             Do_WriteValues = CoHunsuJson_Fail("query_unknown", "다리에 없는 값 정리 도구: " & op)
             Exit Function
@@ -80,6 +80,10 @@ Public Function Do_WriteValues(ByVal cmdName As String, ByVal argsJson As String
     If apply Then Set mUndo = New Collection
     If op = "unmerge" Or op = "mergecenter" Then
         n = DoMerges(op, used, apply)
+    ElseIf op = "natsort" Then
+        For Each area In used.Areas
+            n = n + DoNatSort(area, apply)
+        Next area
     Else
         For Each area In used.Areas
             n = n + DoArea(op, area, apply, unit, mode, pre, suf)
@@ -121,6 +125,9 @@ Private Function Describe(ByVal op As String, ByVal n As Double, ByVal unit As D
         Case "iferror": Describe = c & "칸의 수식을 IFERROR(수식,0)으로 감쌉니다. (이미 IFERROR이거나 배열 수식이면 건너뜁니다.)"
         Case "filldown": Describe = c & "개의 빈 칸을 같은 열의 바로 위 값으로 채웁니다."
         Case "todate": Describe = c & "칸의 날짜 모양 글자(2026.11.08, 20261108 등)를 진짜 날짜로 바꿉니다."
+        Case "won": Describe = c & "칸의 0 이상 정수를 한글 금액 글자(예: 일천이백삼십사원)로 바꿉니다. 숫자가 글자가 됩니다."
+        Case "clearinput": Describe = c & "칸의 입력값(수식이 아닌 상수)을 비웁니다. 수식과 서식은 그대로입니다."
+        Case "natsort": Describe = c & "칸의 자리를 바꿔 고른 열의 상수를 자연 순서(품목2 < 품목10)로 정렬합니다. 열 하나씩만 정렬합니다."
         Case "unmerge": Describe = c & "개의 병합을 풀고 병합됐던 모든 칸에 원래 값을 채웁니다. 되돌리기 없음."
         Case "mergecenter": Describe = c & "개의 병합을 풀고 같은 범위를 '선택 영역의 가운데'로 바꿉니다. 되돌리기 없음."
     End Select
@@ -176,6 +183,19 @@ Private Function DoArea(ByVal op As String, ByVal area As Range, ByVal apply As 
                             n = n + 1
                             If apply Then Snap area.Cells(i, j): SetText area.Cells(i, j), pre & CStr(area.Cells(i, j).Text) & suf, True
                         End If
+                    End If
+                Case "won"
+                    If Not isF And IsNumeric2(x) Then
+                        d = CDbl(x)
+                        If d >= 0 And d < 10000000000000000# And d = Int(d) Then
+                            n = n + 1
+                            If apply Then Snap area.Cells(i, j): SetText area.Cells(i, j), HangulWon(d), True
+                        End If
+                    End If
+                Case "clearinput"
+                    If Not isF And Not IsEmpty(x) Then
+                        n = n + 1
+                        If apply Then Snap area.Cells(i, j): area.Cells(i, j).ClearContents
                     End If
                 Case "tovalue"
                     If isF And Not IsError(x) Then
@@ -267,6 +287,104 @@ Private Function DoMerges(ByVal op As String, ByVal used As Range, ByVal apply A
         End If
     Next a
     DoMerges = n
+End Function
+
+'' 한글 금액: 1234 -> 일천이백삼십사원. 0은 영원. 만, 억, 조 단위로 네 자리씩 끊는다.
+Private Function HangulWon(ByVal d As Double) As String
+    Dim digits As Variant, units As Variant, big As Variant, s As String, grp As Long, part As Double, g As String, k As Long, dg As Long, p As Long
+    If d = 0 Then HangulWon = "영원": Exit Function
+    digits = Array("", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구")
+    units = Array("", "십", "백", "천")
+    big = Array("", "만", "억", "조")
+    For grp = 3 To 0 Step -1
+        part = Int(d / (10000# ^ grp))
+        part = part - Int(part / 10000#) * 10000#
+        If part > 0 Then
+            g = ""
+            For k = 3 To 0 Step -1
+                p = CLng(Int(part / (10 ^ k))) Mod 10
+                dg = p
+                If dg > 0 Then g = g & digits(dg) & units(k)
+            Next k
+            s = s & g & big(grp)
+        End If
+    Next grp
+    HangulWon = s & "원"
+End Function
+
+' 자연 정렬: 한 영역의 열마다 상수(수식·빈 칸 제외)를 자연 순서로 정렬해 같은 칸들에 다시 쓴다.
+Private Function DoNatSort(ByVal area As Range, ByVal apply As Boolean) As Double
+    Dim col As Long, r As Long, v As Variant, f As Variant, cnt As Long, pos() As Long, vals() As Variant, i As Long, j As Long, tmp As Variant, n As Double, c As Range
+    v = Grid(area, False)
+    f = Grid(area, True)
+    For col = 1 To UBound(v, 2)
+        cnt = 0
+        ReDim pos(1 To UBound(v, 1))
+        ReDim vals(1 To UBound(v, 1))
+        For r = 1 To UBound(v, 1)
+            If Len(CStr(f(r, col))) > 0 And Left$(CStr(f(r, col)), 1) <> "=" And Not IsError(v(r, col)) Then
+                cnt = cnt + 1
+                pos(cnt) = r
+                vals(cnt) = v(r, col)
+            End If
+        Next r
+        If cnt > 1 And cnt <= UNDO_LIMIT Then
+            For i = 2 To cnt
+                tmp = vals(i)
+                j = i - 1
+                Do While j >= 1
+                    If NatCompare(CStr(vals(j)), CStr(tmp)) <= 0 Then Exit Do
+                    vals(j + 1) = vals(j)
+                    j = j - 1
+                Loop
+                vals(j + 1) = tmp
+            Next i
+            For i = 1 To cnt
+                If CStr(vals(i)) <> CStr(v(pos(i), col)) Or VarType(vals(i)) <> VarType(v(pos(i), col)) Then
+                    n = n + 1
+                    If apply Then
+                        Set c = area.Cells(pos(i), col)
+                        Snap c
+                        If VarType(vals(i)) = vbString Then SetText c, CStr(vals(i)), False Else c.Value2 = vals(i)
+                    End If
+                End If
+            Next i
+        End If
+    Next col
+    DoNatSort = n
+End Function
+
+' 자연 비교: 숫자 덩어리는 크기로, 나머지는 대소문자 무시 글자로. 앞이 작으면 -1, 같으면 0, 크면 1.
+Private Function NatCompare(ByVal a As String, ByVal b As String) As Long
+    Dim i As Long, j As Long, ca As String, cb As String, na As String, nb As String
+    i = 1: j = 1
+    Do While i <= Len(a) And j <= Len(b)
+        ca = Mid$(a, i, 1): cb = Mid$(b, j, 1)
+        If ca >= "0" And ca <= "9" And cb >= "0" And cb <= "9" Then
+            na = "": nb = ""
+            Do While i <= Len(a)
+                If Mid$(a, i, 1) >= "0" And Mid$(a, i, 1) <= "9" Then na = na & Mid$(a, i, 1): i = i + 1 Else Exit Do
+            Loop
+            Do While j <= Len(b)
+                If Mid$(b, j, 1) >= "0" And Mid$(b, j, 1) <= "9" Then nb = nb & Mid$(b, j, 1): j = j + 1 Else Exit Do
+            Loop
+            na = StripZeros(na): nb = StripZeros(nb)
+            If Len(na) <> Len(nb) Then NatCompare = IIf(Len(na) < Len(nb), -1, 1): Exit Function
+            If na <> nb Then NatCompare = IIf(na < nb, -1, 1): Exit Function
+        Else
+            ca = LCase$(ca): cb = LCase$(cb)
+            If ca <> cb Then NatCompare = IIf(StrComp(ca, cb, vbBinaryCompare) < 0, -1, 1): Exit Function
+            i = i + 1: j = j + 1
+        End If
+    Loop
+    If Len(a) - i = Len(b) - j Then NatCompare = 0 Else NatCompare = IIf(Len(a) - i < Len(b) - j, -1, 1)
+End Function
+
+Private Function StripZeros(ByVal s As String) As String
+    Do While Len(s) > 1 And Left$(s, 1) = "0"
+        s = Mid$(s, 2)
+    Loop
+    StripZeros = s
 End Function
 
 ' ---- 되돌리기 ----
