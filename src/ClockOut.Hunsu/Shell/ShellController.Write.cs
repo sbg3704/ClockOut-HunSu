@@ -28,8 +28,21 @@ internal sealed partial class ShellController
                 SettingsStore.Save(SettingsPath, _settings, _log);
                 _log.Write("write_notice_ack", ("version", WritePolicy.NoticeVersion));
             }
-            var planCall = await _registry.DoAsync(_target, command, argsJson);
-            var planResp = planCall.Ok ? BridgeResponse.Parse(planCall.Json) : BridgeResponse.Failed(planCall.ErrorCode, "엑셀 호출 실패");
+            BridgeResponse planResp;
+            for (int round = 0; ; round++)
+            {
+                var planCall = await _registry.DoAsync(_target, command, argsJson);
+                planResp = planCall.Ok ? BridgeResponse.Parse(planCall.Json) : BridgeResponse.Failed(planCall.ErrorCode, "엑셀 호출 실패");
+                var needs = WritePolicy.ReadNeeds(planResp);
+                if (needs == null || round >= 3) break;
+                var answers = WriteDialog.AskInputs(mv.Module.Manifest.Name, needs);
+                if (answers == null)
+                {
+                    _log.Write("write_input_declined", ("module", mv.Id), ("cmd", command));
+                    return;
+                }
+                argsJson = WritePolicy.MergeAnswers(argsJson, answers);
+            }
             var plan = WritePolicy.ReadPlan(planResp);
             if (plan == null)
             {

@@ -13,6 +13,9 @@ public sealed record WritePlan(long Count, string Summary);
 /// <summary>다리가 "실행" 단계에서 돌려준 것: 실제로 바뀐 개수, 결과 글, 되돌릴 수 있으면 그 명령과 인자.</summary>
 public sealed record WriteResult(long Changed, string Message, string? UndoCommand, string? UndoArgs);
 
+/// <summary>다리가 입력이 모자랄 때 물어 달라고 한 칸 하나(key는 인자 이름, label은 질문, Default는 기본값).</summary>
+public sealed record WriteNeed(string Key, string Label, string Default);
+
 public static class WritePolicy
 {
     public const string Prefix = "write.";
@@ -46,9 +49,36 @@ public static class WritePolicy
         return obj.ToJsonString();
     }
 
+    /// <summary>다리 응답이 "입력이 더 필요합니다"(phase=need)면 물을 칸 목록, 아니면 null.</summary>
+    public static IReadOnlyList<WriteNeed>? ReadNeeds(BridgeResponse r)
+    {
+        if (!r.Ok || r.Data.ValueKind != JsonValueKind.Object) return null;
+        if (Str(r.Data, "phase") != "need") return null;
+        if (!r.Data.TryGetProperty("needs", out var arr) || arr.ValueKind != JsonValueKind.Array) return null;
+        var list = new List<WriteNeed>();
+        foreach (var e in arr.EnumerateArray())
+        {
+            string key = Str(e, "key");
+            if (key.Length == 0 || key == "confirm") continue;
+            list.Add(new WriteNeed(key, Str(e, "label"), Str(e, "default")));
+        }
+        return list.Count == 0 ? null : list;
+    }
+
+    /// <summary>명령 인자(평평한 글자 객체 JSON)에 사용자가 적은 답(키→값)을 합친다. 같은 키는 답이 이긴다.</summary>
+    public static string MergeAnswers(string? argsJson, IReadOnlyDictionary<string, string> answers)
+    {
+        JsonObject obj;
+        try { obj = JsonNode.Parse(string.IsNullOrWhiteSpace(argsJson) ? "{}" : argsJson) as JsonObject ?? new JsonObject(); }
+        catch (JsonException) { obj = new JsonObject(); }
+        foreach (var kv in answers) obj[kv.Key] = kv.Value;
+        return obj.ToJsonString();
+    }
+
     public static WritePlan? ReadPlan(BridgeResponse r)
     {
         if (!r.Ok || r.Data.ValueKind != JsonValueKind.Object) return null;
+        if (Str(r.Data, "phase") == "need") return null;
         if (!r.Data.TryGetProperty("count", out var c) || !c.TryGetInt64(out var count)) return null;
         return new WritePlan(count, Str(r.Data, "summary"));
     }

@@ -67,4 +67,25 @@ public class WritePolicyTests
         Assert.Null(res!.UndoCommand);
         Assert.Null(res.UndoArgs);
     }
+
+    [Fact]
+    public void ReadNeeds_ParsesNeedPhase_AndPlanIgnoresIt()
+    {
+        var r = BridgeResponse.Parse("""{"ok":true,"proto":0,"data":{"phase":"need","needs":[{"key":"unit","label":"단위","default":"10"},{"key":"confirm","label":"x","default":""}]}}""");
+        var needs = WritePolicy.ReadNeeds(r)!;
+        Assert.Single(needs);
+        Assert.Equal("unit", needs[0].Key);
+        Assert.Equal("10", needs[0].Default);
+        Assert.Null(WritePolicy.ReadPlan(r));
+        Assert.Null(WritePolicy.ReadNeeds(BridgeResponse.Parse("""{"ok":true,"proto":0,"data":{"phase":"plan","count":1,"summary":"s"}}""")));
+    }
+
+    [Fact]
+    public void MergeAnswers_AddsAnswersAndKeepsOtherArgs()
+    {
+        var merged = JsonNode.Parse(WritePolicy.MergeAnswers("""{"a":"1","unit":"5"}""", new Dictionary<string, string> { ["unit"] = "100", ["mode"] = "올림" }))!;
+        Assert.Equal("1", (string?)merged["a"]);
+        Assert.Equal("100", (string?)merged["unit"]);
+        Assert.Equal("올림", (string?)merged["mode"]);
+    }
 }

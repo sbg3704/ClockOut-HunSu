@@ -61,4 +61,38 @@ internal sealed class WriteDialog : Window
         w.ShowDialog();
         return w._choice;
     }
+
+    /// <summary>입력 칸 여러 개를 묻는 창. 확인하면 키→글 사전, 취소하면 null.</summary>
+    internal static Dictionary<string, string>? AskInputs(string title, IReadOnlyList<ClockOut.Hunsu.Core.Write.WriteNeed> needs)
+    {
+        var win = new Window
+        {
+            Title = "훈수꾼", Width = 420, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize,
+            Topmost = true, ShowInTaskbar = true, WindowStartupLocation = WindowStartupLocation.CenterScreen,
+        };
+        win.Background = (Brush)win.FindResource("Hunsu.Surface");
+        win.Foreground = (Brush)win.FindResource(ThemeKeys.Text);
+        win.FontFamily = (FontFamily)win.FindResource("Hunsu.Font");
+        win.FontSize = (double)win.FindResource("Hunsu.FontBody");
+        var root = new StackPanel { Margin = new Thickness(22, 20, 22, 18) };
+        root.Children.Add(new TextBlock { Text = title, FontSize = (double)win.FindResource("Hunsu.FontTitleSize"), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 10) });
+        var boxes = new List<(string Key, TextBox Box)>();
+        foreach (var n in needs)
+        {
+            root.Children.Add(new TextBlock { Text = n.Label, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 3) });
+            var box = new TextBox { Text = n.Default, Padding = new Thickness(6, 4, 6, 4) };
+            boxes.Add((n.Key, box));
+            root.Children.Add(box);
+        }
+        bool ok = false;
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
+        buttons.Children.Add(ManagerParts.Chip(win, "취소", false, () => win.Close()));
+        buttons.Children.Add(ManagerParts.Chip(win, "다음", true, () => { ok = true; win.Close(); }));
+        root.Children.Add(buttons);
+        win.Content = root;
+        win.KeyDown += (_, e) => { if (e.Key == Key.Escape) win.Close(); };
+        win.Loaded += (_, _) => { if (boxes.Count > 0) boxes[0].Box.Focus(); };
+        win.ShowDialog();
+        return ok ? boxes.ToDictionary(b => b.Key, b => b.Box.Text) : null;
+    }
 }

@@ -39,17 +39,17 @@ Fail:
     Do_Write = CoHunsuJson_Fail("command_failed", "쓰기 실패: " & Err.Description)
 End Function
 
-Private Function Plan(ByVal count As Double, ByVal summary As String) As String
-    Plan = CoHunsuJson_Ok("{" & CoHunsuJson_Pair("phase", """plan""") & "," & CoHunsuJson_Pair("count", CoHunsuJson_Num(count)) & "," & _
+Public Function Write_Plan(ByVal count As Double, ByVal summary As String) As String
+    Write_Plan = CoHunsuJson_Ok("{" & CoHunsuJson_Pair("phase", """plan""") & "," & CoHunsuJson_Pair("count", CoHunsuJson_Num(count)) & "," & _
         CoHunsuJson_Pair("summary", CoHunsuJson_Str(summary)) & "}")
 End Function
 
-Private Function Applied(ByVal changed As Double, ByVal message As String, ByVal undoCmd As String, ByVal undoArgsJson As String) As String
+Public Function Write_Applied(ByVal changed As Double, ByVal message As String, ByVal undoCmd As String, ByVal undoArgsJson As String) As String
     Dim u As String
     If Len(undoCmd) > 0 Then
         u = "," & CoHunsuJson_Pair("undoCmd", CoHunsuJson_Str(undoCmd)) & "," & CoHunsuJson_Pair("undoArgs", CoHunsuJson_Str(undoArgsJson))
     End If
-    Applied = CoHunsuJson_Ok("{" & CoHunsuJson_Pair("phase", """apply""") & "," & CoHunsuJson_Pair("changed", CoHunsuJson_Num(changed)) & "," & _
+    Write_Applied = CoHunsuJson_Ok("{" & CoHunsuJson_Pair("phase", """apply""") & "," & CoHunsuJson_Pair("changed", CoHunsuJson_Num(changed)) & "," & _
         CoHunsuJson_Pair("message", CoHunsuJson_Str(message)) & u & "}")
 End Function
 
@@ -69,10 +69,10 @@ Private Function SheetsUnhide(ByVal apply As Boolean) As String
         End If
     Next ws
     If Not apply Then
-        SheetsUnhide = Plan(n, "숨은 시트 " & CStr(n) & "개를 보이게 합니다. (아주 숨김 시트는 그대로 둡니다.)")
+        SheetsUnhide = Write_Plan(n, "숨은 시트 " & CStr(n) & "개를 보이게 합니다. (아주 숨김 시트는 그대로 둡니다.)")
         Exit Function
     End If
-    SheetsUnhide = Applied(SetVisible(names, xlSheetVisible), "숨은 시트를 보이게 했습니다.", "write.sheets.rehide", "{" & CoHunsuJson_Pair("names", CoHunsuJson_Str(names)) & "}")
+    SheetsUnhide = Write_Applied(SetVisible(names, xlSheetVisible), "숨은 시트를 보이게 했습니다.", "write.sheets.rehide", "{" & CoHunsuJson_Pair("names", CoHunsuJson_Str(names)) & "}")
 End Function
 
 Private Function SheetsRehide(ByVal names As String, ByVal apply As Boolean) As String
@@ -80,10 +80,10 @@ Private Function SheetsRehide(ByVal names As String, ByVal apply As Boolean) As 
     n = UBound(Split(names, vbTab)) + 1
     If Len(names) = 0 Then n = 0
     If Not apply Then
-        SheetsRehide = Plan(n, "시트 " & CStr(n) & "개를 다시 숨깁니다.")
+        SheetsRehide = Write_Plan(n, "시트 " & CStr(n) & "개를 다시 숨깁니다.")
         Exit Function
     End If
-    SheetsRehide = Applied(SetVisible(names, xlSheetHidden), "시트를 다시 숨겼습니다.", "", "")
+    SheetsRehide = Write_Applied(SetVisible(names, xlSheetHidden), "시트를 다시 숨겼습니다.", "", "")
 End Function
 
 ' 이름 목록(탭으로 구분)의 시트를 정해진 보임 상태로. 못 바꾼 시트는 건너뛰고 바뀐 수를 돌려준다.
@@ -108,7 +108,7 @@ Private Function LinksBreak(ByVal apply As Boolean) As String
     v = ActiveWorkbook.LinkSources(xlExcelLinks)
     If Not IsEmpty(v) Then n = UBound(v) - LBound(v) + 1
     If Not apply Then
-        LinksBreak = Plan(n, "다른 파일을 가리키는 링크 " & CStr(n) & "개를 끊고, 그 링크를 쓰던 수식을 지금 값으로 바꿉니다. 되돌릴 수 없습니다.")
+        LinksBreak = Write_Plan(n, "다른 파일을 가리키는 링크 " & CStr(n) & "개를 끊고, 그 링크를 쓰던 수식을 지금 값으로 바꿉니다. 되돌릴 수 없습니다.")
         Exit Function
     End If
     If n > 0 Then
@@ -120,7 +120,7 @@ Private Function LinksBreak(ByVal apply As Boolean) As String
             On Error GoTo 0
         Next i
     End If
-    LinksBreak = Applied(done, "외부 링크 " & CStr(done) & "개를 끊었습니다.", "", "")
+    LinksBreak = Write_Applied(done, "외부 링크 " & CStr(done) & "개를 끊었습니다.", "", "")
 End Function
 
 ' ---- 이름 ----
@@ -136,7 +136,7 @@ Private Function NamesDeleteBroken(ByVal apply As Boolean) As String
         End If
     Next i
     If Not apply Then
-        NamesDeleteBroken = Plan(n, "참조가 깨진(#REF!) 이름 " & CStr(n) & "개를 지웁니다. 이름 목록은 되돌리기로 다시 만들 수 있습니다.")
+        NamesDeleteBroken = Write_Plan(n, "참조가 깨진(#REF!) 이름 " & CStr(n) & "개를 지웁니다. 이름 목록은 되돌리기로 다시 만들 수 있습니다.")
         Exit Function
     End If
     For Each one In list
@@ -150,7 +150,7 @@ Private Function NamesDeleteBroken(ByVal apply As Boolean) As String
         Err.Clear
         On Error GoTo 0
     Next one
-    NamesDeleteBroken = Applied(done, "깨진 이름 " & CStr(done) & "개를 지웠습니다.", "write.names.restore", "{" & CoHunsuJson_Pair("records", CoHunsuJson_Str(records)) & "}")
+    NamesDeleteBroken = Write_Applied(done, "깨진 이름 " & CStr(done) & "개를 지웠습니다.", "write.names.restore", "{" & CoHunsuJson_Pair("records", CoHunsuJson_Str(records)) & "}")
 End Function
 
 Private Function NamesRestore(ByVal records As String, ByVal apply As Boolean) As String
@@ -160,7 +160,7 @@ Private Function NamesRestore(ByVal records As String, ByVal apply As Boolean) A
         n = UBound(lines) + 1
     End If
     If Not apply Then
-        NamesRestore = Plan(n, "지운 이름 " & CStr(n) & "개를 다시 만듭니다.")
+        NamesRestore = Write_Plan(n, "지운 이름 " & CStr(n) & "개를 다시 만듭니다.")
         Exit Function
     End If
     For i = 0 To n - 1
@@ -173,7 +173,7 @@ Private Function NamesRestore(ByVal records As String, ByVal apply As Boolean) A
             On Error GoTo 0
         End If
     Next i
-    NamesRestore = Applied(done, "이름 " & CStr(done) & "개를 다시 만들었습니다.", "", "")
+    NamesRestore = Write_Applied(done, "이름 " & CStr(done) & "개를 다시 만들었습니다.", "", "")
 End Function
 
 ' ---- 마지막 칸 ----
@@ -211,11 +211,11 @@ Private Function LastCellFix(ByVal apply As Boolean) As String
     If extraR < 0 Then extraR = 0
     If extraC < 0 Then extraC = 0
     If Not apply Then
-        LastCellFix = Plan(extraR + extraC, "시트 '" & ws.Name & "'의 서식만 남은 빈 행 " & CStr(extraR) & "개와 빈 열 " & CStr(extraC) & "개를 지워 마지막 칸을 " & ws.Cells(lastR, lastC).Address(False, False) & "로 바로잡습니다. 되돌릴 수 없습니다.")
+        LastCellFix = Write_Plan(extraR + extraC, "시트 '" & ws.Name & "'의 서식만 남은 빈 행 " & CStr(extraR) & "개와 빈 열 " & CStr(extraC) & "개를 지워 마지막 칸을 " & ws.Cells(lastR, lastC).Address(False, False) & "로 바로잡습니다. 되돌릴 수 없습니다.")
         Exit Function
     End If
     If extraR > 0 Then ws.Rows(CStr(lastR + 1) & ":" & CStr(usedR)).Delete
     If extraC > 0 Then ws.Range(ws.Columns(lastC + 1), ws.Columns(usedC)).Delete
     Set u = ws.UsedRange
-    LastCellFix = Applied(extraR + extraC, "마지막 칸을 바로잡았습니다.", "", "")
+    LastCellFix = Write_Applied(extraR + extraC, "마지막 칸을 바로잡았습니다.", "", "")
 End Function
