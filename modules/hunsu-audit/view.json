@@ -8,6 +8,7 @@
     { "type": "divider" },
     { "type": "text", "text": "보호된 시트 {book.audit.protectedSheets:n0}개 · 이름 {book.audit.names:n0}개" },
     { "type": "badge", "text": "다른 파일로 가는 외부 링크 {book.audit.links:n0}개", "tone": "warn", "showWhen": "book.audit.links > 0" },
-    { "type": "text", "text": "외부 링크 없음", "tone": "muted", "showWhen": "book.audit.links == 0" }
+    { "type": "text", "text": "외부 링크 없음", "tone": "muted", "showWhen": "book.audit.links == 0" },
+    { "type": "button", "text": "숨은 시트 모두 보이기 (실험)", "command": "write.sheets.unhide", "showWhen": "book.audit.hidden > 0" }
   ]
 }
