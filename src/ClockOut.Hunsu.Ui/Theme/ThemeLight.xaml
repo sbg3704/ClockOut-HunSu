@@ -1,0 +1,23 @@
+<!-- 기능: 밝은 테마의 색 한 벌. Theme.xaml(어두운 테마)과 같은 이름의 색만 다시 정한다. 크기·글꼴·움직임은 Theme.xaml 그대로 쓴다. -->
+<!-- 사용법: 앱이 켜질 때 settings.json의 theme이 light(또는 auto이고 Windows가 밝은 앱 모드)면 ThemePicker가 Theme.xaml 뒤에 합친다. 화면은 켤 때 한 번 정한다(바꾸면 껐다 켬). -->
+<!-- 의존: 없음. 이름은 Theme.xaml과 같아야 한다(빠진 이름은 어두운 값이 남는다). 작은 단추 스타일은 DynamicResource라 여기 색을 따른다. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Color x:Key="Hunsu.GlassColor">#EDF7F9FC</Color>
+  <SolidColorBrush x:Key="Hunsu.Glass" Color="#EDF7F9FC" />
+  <SolidColorBrush x:Key="Hunsu.Surface" Color="#F7F9FC" />
+  <SolidColorBrush x:Key="Hunsu.GlassAlt" Color="#0F0B1520" />
+  <SolidColorBrush x:Key="Hunsu.GlassHover" Color="#170B1520" />
+  <SolidColorBrush x:Key="Hunsu.Line" Color="#220B1520" />
+  <SolidColorBrush x:Key="Hunsu.Text" Color="#13202E" />
+  <SolidColorBrush x:Key="Hunsu.Muted" Color="#5B6B7B" />
+  <SolidColorBrush x:Key="Hunsu.Accent" Color="#0E8FA3" />
+  <SolidColorBrush x:Key="Hunsu.AccentInk" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Info" Color="#0E8FA3" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Good" Color="#23895A" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Warn" Color="#B9650F" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Bad" Color="#CC3B30" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Muted" Color="#5B6B7B" />
+  <DropShadowEffect x:Key="Hunsu.Shadow1" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#0B1520" RenderingBias="Performance" />
+  <DropShadowEffect x:Key="Hunsu.Shadow2" BlurRadius="22" ShadowDepth="4" Direction="270" Opacity="0.22" Color="#0B1520" RenderingBias="Performance" />
+</ResourceDictionary>

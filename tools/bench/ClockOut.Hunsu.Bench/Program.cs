@@ -1,7 +1,8 @@
 // 기능: 0단계 측정 도구 시작점. 보이지 않는 엑셀 + 시험 창 + 훈수꾼 앱을 띄워 차례로 재고, 결과를 out\bench에 저장한 뒤 모두 정리한다.
 // 사용법: ClockOut.Hunsu.Bench.exe --app <ClockOut.Hunsu.exe> --xlam <clockout-hunsu.xlam> --out <폴더> [--n 100]
 //         보통은 tools\bench\run_bench.ps1이 빌드부터 한 번에 한다.
-// 의존: HiddenExcel, TargetWindow, AppUnderTest, WindowChecks, ExcelChecks, FrameChecks, Report. 키보드·마우스 조작 없음. 사용자 엑셀은 건드리지 않음.
+// 의존: HiddenExcel, TargetWindow, AppUnderTest, WindowChecks, ExcelChecks, QueryLoadChecks, FrameChecks, Report.
+//         조회 부하 시험은 기본으로 돌고 --no-queries로 끈다(횟수는 --n과 20 중 작은 값). 키보드·마우스 조작 없음. 사용자 엑셀은 건드리지 않음.
 using System.Diagnostics;
 using ClockOut.Hunsu.Bench;
 using ClockOut.Hunsu.Core;
@@ -69,6 +70,7 @@ internal static class Program
             Stage("바쁨 시험");
             ExcelChecks.Instances(rep, xl, app, Path.GetFullPath(xlam));
             Stage("엑셀 여러 개 시험");
+            if (!args.Contains("--no-queries")) { QueryLoadChecks.Run(rep, xl, Math.Min(n, 20)); Stage("조회 부하 시험"); }
             DragChecks.Run(rep, xl, app);
             Stage("큰 범위 끌기 시험");
             rep.Check("측정 중 앱이 죽지 않음", app.Alive);

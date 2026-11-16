@@ -56,6 +56,21 @@ try {
     $m = (& $run 'CoHunsu_Query' 'selection.summary' '{}') | ConvertFrom-Json
     Check '여러 영역 A1:B2,A4' ($m.ok -and $m.data.count -eq 5 -and [math]::Abs($m.data.sum - 50.5) -lt 1e-9) "$($m.data.addr) sum=$($m.data.sum)"
 
+    Write-Host "flow.graph (시트를 넘는 수식 흐름, 다리 0.0.014)"
+    $ws2 = $wb.Worksheets.Add([Type]::Missing, $ws)
+    $ws2.Range('B1').Formula = "='$($ws.Name)'!A4*3"
+    $null = $ws.Activate(); $null = $ws.Range('A4').Select()
+    $fg = (& $run 'CoHunsu_Query' 'flow.graph' '{}') | ConvertFrom-Json
+    Check 'flow.graph ok, 앞쪽에 A1' ($fg.ok -and ($fg.data.pre.items | Where-Object { $_.addr -eq 'A1' })) ($fg | ConvertTo-Json -Compress -Depth 6)
+    Check 'flow.graph 뒤쪽에 다른 시트 B1(cross)' ($fg.ok -and ($fg.data.dep.items | Where-Object { $_.addr -eq 'B1' -and $_.cross })) ($fg.data.dep | ConvertTo-Json -Compress -Depth 4)
+    $ws2.Range('C1').Formula = "='$($ws.Name)'!A1+1"
+    $fg2 = (& $run 'CoHunsu_Query' 'flow.graph' '{}') | ConvertFrom-Json
+    Check 'flow.graph 값이 바뀌면 캐시를 버림(cached false)' ($fg2.ok -and -not $fg2.data.cached) "cached=$($fg2.data.cached)"
+
+    Write-Host "mark (칸 자리)"
+    $mk = (& $run 'CoHunsu_Query' 'mark' '{}') | ConvertFrom-Json
+    Check 'mark ok, 오류 칸 A5와 활성 칸' ($mk.ok -and ($mk.data.errors | Where-Object { $_.addr -eq 'A5' }) -and $mk.data.active.Count -eq 1) ($mk | ConvertTo-Json -Compress -Depth 5)
+
     Write-Host "오류 처리"
     $u = (& $run 'CoHunsu_Query' 'no.such' '{}') | ConvertFrom-Json
     Check 'query_unknown' ($u.ok -eq $false -and $u.code -eq 'query_unknown')

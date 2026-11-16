@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-history",
+  "name": "발자취",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "이동",
+  "author": "ClockOut",
+  "description": "방금 다녀간 칸과 시트를 기억해 두었다가 한 번 눌러 되돌아갑니다. 범위를 끄는 동안의 선택은 한 줄로 합칩니다. 이 통합 문서의 기록만 보입니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.011", "reason": "선택 요약(selection.summary)으로 지금 자리를 알고, 이동(goto)으로 되돌아갑니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 320,
+  "data": [
+    {"topic": "selection.summary", "on": ["sel"], "weight": "light"},
+    {"topic": "app.history", "on": [], "weight": "light"}
+  ],
+  "commands": ["app.history.back", "app.history.forward", "app.history.jump"],
+  "scope": "book",
+  "params": []
+}

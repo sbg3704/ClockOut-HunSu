@@ -29,7 +29,10 @@
           <Button x:Name="CollapseButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE70E;" ToolTip="접기" Click="CollapseButton_Click" />
         </StackPanel>
       </Grid>
-      <ContentPresenter x:Name="BodyHost" Margin="{StaticResource Hunsu.PanelPadding}" />
+      <!-- 핀 창을 줄이면 내용이 넘칠 수 있어 휠로 내린다(스크롤 막대는 숨김: 유리 바탕을 가리지 않게). 도크에서는 높이 제한이 없어 그대로다. -->
+      <ScrollViewer x:Name="BodyScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Focusable="False" PanningMode="VerticalOnly">
+        <ContentPresenter x:Name="BodyHost" Margin="{StaticResource Hunsu.PanelPadding}" />
+      </ScrollViewer>
     </DockPanel>
   </Border>
 </UserControl>

@@ -1,0 +1,8 @@
+{
+  "tab": { "title": "발자취", "badge": "{app.history.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "button", "text": "← 뒤로", "command": "app.history.back", "showWhen": "app.history.canBack == true" },
+    { "type": "button", "text": "앞으로 →", "command": "app.history.forward", "showWhen": "app.history.canForward == true" },
+    { "type": "list", "items": "app.history.items", "text": "{item.label}", "sub": "{item.ago}", "command": "app.history.jump", "arg.index": "{item.index}", "activeWhen": "item.current == true", "max": 15, "emptyText": "아직 다녀간 칸이 없습니다. 칸을 골라 보세요." }
+  ]
+}

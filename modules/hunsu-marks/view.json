@@ -1,0 +1,15 @@
+{
+  "tab": { "title": "형광펜", "tone": "info" },
+  "marks": [
+    { "items": "mark.errors", "tone": "bad", "style": "outline" },
+    { "items": "mark.pre", "tone": "info", "style": "fill" },
+    { "items": "mark.dep", "tone": "good", "style": "underline" }
+  ],
+  "panel": [
+    { "type": "badge", "text": "오류 칸 · 빨간 테두리", "tone": "bad" },
+    { "type": "badge", "text": "쓰는 칸 · 파란 칠", "tone": "info" },
+    { "type": "badge", "text": "쓰이는 칸 · 초록 밑줄", "tone": "good" },
+    { "type": "text", "text": "화면에 보이는 칸만 그립니다. 스크롤하면 잠깐 뒤에 따라옵니다.", "tone": "muted" },
+    { "type": "text", "text": "보이는 곳에 표시가 많아 일부만 그렸습니다.", "tone": "warn", "showWhen": "mark.truncated == true" }
+  ]
+}

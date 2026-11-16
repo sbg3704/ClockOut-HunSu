@@ -20,6 +20,9 @@ public partial class DockWindow : Window
     {
         InitializeComponent();
         Side = side;
+        // 창 너비 = 패널 너비(settings.panelWidth) + 양옆 그림자 여백
+        var shadow = (Thickness)FindResource("Hunsu.ShadowMargin");
+        Width = (double)FindResource("Hunsu.PanelWidth") + shadow.Left + shadow.Right;
         bool left = side == Places.EdgeLeft;
         Column.HorizontalAlignment = left ? HorizontalAlignment.Left : HorizontalAlignment.Right;
         Pill.Visibility = left ? Visibility.Collapsed : Visibility.Visible; // 알약은 오른쪽 도크에만
