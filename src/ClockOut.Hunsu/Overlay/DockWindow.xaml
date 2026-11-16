@@ -11,7 +11,8 @@
         TextOptions.TextFormattingMode="Display">
   <Grid x:Name="Root">
     <StackPanel x:Name="Column" VerticalAlignment="Top" Margin="{StaticResource Hunsu.ShadowMargin}">
-      <StackPanel x:Name="Items" />
+      <!-- 세로로 쌓다가 높이가 모자라면 오른쪽 칸으로 넘어간다(왼쪽 도크). 오른쪽 도크는 높이 제한을 두지 않아 한 줄로 쌓인다. -->
+      <WrapPanel x:Name="Items" Orientation="Vertical" />
     </StackPanel>
     <frame:LauncherView x:Name="Launcher" />
   </Grid>

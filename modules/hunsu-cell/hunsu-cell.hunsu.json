@@ -9,7 +9,7 @@
   "description": "고른 칸의 수식, 값 종류, 서식, 병합·메모 여부를 보여 줍니다. 값 자체는 가져오지 않습니다.",
   "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
   "shapes": ["tab", "panel", "window"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 160,
   "icon": "cell",
   "data": [{"topic": "cell.info", "on": ["sel", "change"], "weight": "light"}],

@@ -9,7 +9,7 @@
   "description": "지금 시트에서 숨겨진 행과 열을 찾아 보여 주고, 누르면 그곳으로 이동합니다.",
   "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
   "shapes": ["tab", "panel", "window"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 270,
   "icon": "hidden",
   "data": [{"topic": "hidden", "on": ["sheet", "change"], "weight": "normal"}],

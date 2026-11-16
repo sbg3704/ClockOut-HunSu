@@ -19,7 +19,7 @@
     "panel",
     "window"
   ],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 410,
   "icon": "edit",
   "data": [],

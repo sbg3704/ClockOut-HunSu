@@ -47,6 +47,9 @@ public partial class DockWindow : Window
         IsVisibleChanged += (_, _) => { if (IsVisible) _pointer.Start(); else { _pointer.Stop(); Launcher.UpdatePointer(null); } };
     }
 
+    /// <summary>왼쪽 도크가 가로로 늘 수 있는 칸 수(세로가 모자랄 때 오른쪽으로 쌓음).</summary>
+    internal const int WrapColumns = 3;
+
     public string Side { get; }
     public IntPtr Handle { get; private set; }
 
@@ -109,7 +112,8 @@ public partial class DockWindow : Window
         {
             if (m.Slot.Parent is Panel p) p.Children.Remove(m.Slot);
             m.UseTab = false; // 접힌 모듈은 손잡이 대신 런처 아이콘으로만 남는다
-            m.Slot.Margin = new Thickness(0, 0, 0, (double)FindResource("Hunsu.Gap"));
+            double g = (double)FindResource("Hunsu.Gap");
+            m.Slot.Margin = new Thickness(0, 0, Side == Places.EdgeLeft ? g : 0, g);
             ((FrameworkElement)m.Slot).HorizontalAlignment = Column.HorizontalAlignment;
             m.Tab.HorizontalAlignment = Column.HorizontalAlignment;
             m.Frame.Width = (double)FindResource("Hunsu.PanelWidth");
@@ -142,7 +146,10 @@ public partial class DockWindow : Window
     {
         var shadow = (Thickness)FindResource("Hunsu.ShadowMargin");
         double reserved = LauncherShapes.ReservedWidth(_settings.DockShape, Math.Max(count, 5), LauncherShapes.Scale(_settings.DockSize), _settings.DockGroups);
-        Width = (double)FindResource("Hunsu.PanelWidth") + reserved + shadow.Left + shadow.Right;
+        // 왼쪽 도크는 높이가 모자라면 오른쪽 칸으로 넘기므로(WrapColumns칸) 창을 그만큼 넓힌다. 바탕이 투명이라 비어 있어도 화면에는 영향이 없다.
+        int cols = Side == Places.EdgeLeft ? WrapColumns : 1;
+        double gapX = Side == Places.EdgeLeft ? (double)FindResource("Hunsu.Gap") : 0;
+        Width = ((double)FindResource("Hunsu.PanelWidth") + gapX) * cols + reserved + shadow.Left + shadow.Right;
         bool left = Side == Places.EdgeLeft;
         Column.Margin = new Thickness(shadow.Left + (left ? reserved : 0), shadow.Top, shadow.Right + (left ? 0 : reserved), shadow.Bottom);
     }
@@ -160,7 +167,10 @@ public partial class DockWindow : Window
             double panel = m.Frame.Visibility == Visibility.Visible && m.Frame.DesiredSize.Height > 0 ? m.Frame.DesiredSize.Height : m.LastPanelHeight;
             return new DockEntry(m.Id, m.Placement.Order, m.Placement.Collapsed, panel, 0);
         }).ToList();
-        var plan = DockLayout.Plan(entries, available, gap);
+        // 왼쪽 도크: 한 칸이 차면 오른쪽 칸으로 넘기고, 그래도 모자랄 때만 접는다. 칸 사이 빈틈을 감안해 총 높이의 85%만 쓴다.
+        bool wrap = Side == Places.EdgeLeft;
+        Items.MaxHeight = wrap ? Math.Max(1, available) : double.PositiveInfinity;
+        var plan = DockLayout.Plan(entries, wrap ? available * (WrapColumns - 0.6) : available, gap);
         LayoutTraced?.Invoke($"available={available:0} " + string.Join(";", entries.Select(e => $"{e.Id}:{e.PanelHeight:0}")) + " forced=" + string.Join(",", plan.Where(p => p.ForcedByOverflow).Select(p => p.Id)));
         bool changed = false;
         foreach (var slot in plan)
