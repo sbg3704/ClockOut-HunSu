@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-tables",
+  "name": "표 목록",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "이동",
+  "author": "ClockOut",
+  "description": "통합 문서 안의 표(구조적 참조 표)를 시트와 범위와 함께 보여 주고, 누르면 그 표로 이동합니다.",
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 370,
+  "data": [{"topic": "tables", "on": ["book", "sheet"], "weight": "normal"}],
+  "commands": ["goto"],
+  "scope": "book",
+  "params": []
+}

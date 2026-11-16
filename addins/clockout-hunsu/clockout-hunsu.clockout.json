@@ -7,6 +7,6 @@
   "type": "library",
   "category": "라이브러리",
   "author": "ClockOut",
-  "description": "훈수꾼이 엑셀의 선택 변화를 알고 요약을 물어볼 수 있게 이어 주는 다리입니다. 셀 값과 설정을 바꾸지 않습니다. (조회: selection.summary, errors, flow.neighbors, flow.graph, mark, sheets. 명령: goto, sheet.activate. 신호: sel, change, sheet, book, calc)",
+  "description": "훈수꾼이 엑셀의 선택 변화를 알고 요약을 물어볼 수 있게 이어 주는 다리입니다. 셀 값과 설정을 바꾸지 않습니다. (조회: selection.summary, errors, flow.neighbors, flow.graph, mark, sheets, book.info, book.audit, names, cell.info, comments, links, tables, sheet.info, validation, condrules, hidden, composition. 명령: goto, sheet.activate. 신호: sel, change, sheet, book, calc)",
   "dependencies": []
 }

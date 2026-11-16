@@ -8,6 +8,13 @@
 - 계정2(PR #14)와 겹치는 곳: `CoHunsuApi.bas`의 Select Case·hello 목록 2줄, `RepoModules()` 한 줄, 다리 판(0.0.014). 나중에 머지하는 쪽이 한 줄씩 이어 붙인다.
 - 먼저 읽을 파일: `docs/08_계정1_틀_기능_2026-11-16.md`, `src/ClockOut.Hunsu/Shell/ShellController.Marks.cs`, `addins/clockout-hunsu/CoHunsuQ_FlowGraph.bas`.
 
+## 2026-11-16 계정2: 모듈 5종 + 기능 나눔 (브랜치 `claude/project-thread-8lvni7`, PR #14)
+- 사용자 지시: 기능을 최대한 만들고, 계정1도 시킬 테니 서로 나눈다. 나눔 표: `협업/기능_나눔_2026-11-16.md`(계정1은 C# 틀·화면, 계정2는 선언 모듈·다리 조회).
+- 더한 것: 모듈 9종 `hunsu-cell`, `hunsu-comments`, `hunsu-links`, `hunsu-tables`, `hunsu-sheetinfo`, `hunsu-validation`, `hunsu-condrules`, `hunsu-hidden`, `hunsu-composition`(전부 기본 꺼짐), 다리 0.0.013 조회 9개. 규격은 docs/02, 표는 docs/07.
+- 확인: 클라우드에서 `dotnet test`(Core·시험) 89개 통과(모듈 선언·view 일관성 포함). **VBA 컴파일과 엑셀 실행은 못 함**: PC에서 `co build hunsu pr14`로 빌드·다리 컴파일 후 모듈 관리자에서 켜 보고 눈으로 확인.
+- **시나리오 통합 문서(사용자 결정 2026-11-16)**: 시험 부탁할 때 확인용 엑셀을 함께 준다. `tools/scenarios/훈수꾼_시나리오.xlsx`(XlsxWriter로 `tools/make_scenarios.py`가 만든 작은 파일, 시트 17개)를 `co build hunsu`가 `run\훈수꾼_확인용.xlsx`로 복사하고, `tools\make_example_xlsx.ps1`이 엑셀로 [큰 표](2만 줄)와 [대용량](10만 줄)을 더한다(실패해도 경고만). 첫 시트 [안내]에 모듈별 "해볼 것/나와야 하는 것". 새 모듈은 SCENARIOS에 한 줄(규칙은 CLAUDE.md, 시험이 검사). **엑셀에서 열어 보지 못했다**: openpyxl과 LibreOffice로 읽힘만 확인, 외부 링크 XML과 아주 숨김 시트는 직접 더했다. 엑셀이 '복구' 창을 띄우면 알려 줄 것.
+- 클라우드 컴파일 방법: `apt-get update && apt-get install dotnet-sdk-10.0`(판이 global.json과 달라 임시로 판을 맞춤, 커밋하지 않음).
+
 ## 2026-11-13 오후 떨림 고침 끝 (PR #13, 일#306)
 - 근본 원인(다리 조회 중 SpecialCells가 선택 이벤트를 일으킨 조회→신호 고리)을 고쳤고, 사용자가 보이는 엑셀에서 끌어 보고 "잘 작동함"(16:06).
 - 남은 일: PR #13 머지 → `pack_app.ps1`로 새 묶음을 만들어 카탈로그 Release에 올리기(사용자), bench 끌기 기준(1/3 → 엑셀 점유 40%) 결정, 가끔 실패하는 bench 2항목 원인.

@@ -1,0 +1,9 @@
+{
+  "tab": { "title": "숨김", "badge": "{hidden.hiddenRows:n0}", "tone": "warn" },
+  "panel": [
+    { "type": "text", "text": "{hidden.sheet} · 숨은 행 {hidden.hiddenRows:n0}개 · 숨은 열 {hidden.hiddenCols:n0}개", "tone": "muted" },
+    { "type": "list", "items": "hidden.items", "text": "{item.label}", "tone": "warn", "command": "goto", "arg.addr": "{item.addr}", "max": 10, "emptyText": "숨은 행·열이 없습니다." },
+    { "type": "badge", "text": "큰 시트라 앞부분 행만 확인했습니다", "tone": "warn", "showWhen": "hidden.limited == true" },
+    { "type": "badge", "text": "앞의 일부만 나열했습니다", "tone": "warn", "showWhen": "hidden.truncated == true" }
+  ]
+}

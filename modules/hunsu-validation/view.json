@@ -1,0 +1,8 @@
+{
+  "tab": { "title": "유효성", "badge": "{validation.areas:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{validation.sheet} · 영역 {validation.areas:n0}곳 · {validation.cells:n0}칸", "tone": "muted" },
+    { "type": "list", "items": "validation.items", "text": "{item.addr}", "sub": "{item.kind} · {item.cells:n0}칸", "command": "goto", "arg.addr": "{item.addr}", "max": 10, "emptyText": "이 시트에는 데이터 유효성이 없습니다." },
+    { "type": "badge", "text": "앞의 일부만 조회했습니다", "tone": "warn", "showWhen": "validation.truncated == true" }
+  ]
+}
