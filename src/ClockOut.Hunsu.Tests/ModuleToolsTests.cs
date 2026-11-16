@@ -127,7 +127,7 @@ public class ModuleToolsTests
     }
 
     public static IEnumerable<object[]> RepoModules() =>
-        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow", "hunsu-book", "hunsu-audit", "hunsu-names", "hunsu-keys", "hunsu-history", "hunsu-flowgraph", "hunsu-marks" }.Select(id => new object[] { id });
+        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow", "hunsu-book", "hunsu-audit", "hunsu-names", "hunsu-keys", "hunsu-cell", "hunsu-comments", "hunsu-links", "hunsu-tables", "hunsu-sheetinfo", "hunsu-validation", "hunsu-condrules", "hunsu-hidden", "hunsu-composition", "hunsu-history", "hunsu-flowgraph", "hunsu-marks" }.Select(id => new object[] { id });
 
     [Theory]
     [MemberData(nameof(RepoModules))]
@@ -162,5 +162,22 @@ public class ModuleToolsTests
         Assert.False(Condition.Evaluate("errors.count == 0", scope));
         Assert.True(scope.TryGet("errors.items", out var arr));
         Assert.Equal(JsonValueKind.Array, arr.ValueKind);
+    }
+
+    [Fact]
+    public void ScenarioWorkbook_CoversEveryModule()
+    {
+        // 사용자가 눈으로 확인하는 시나리오 통합 문서의 [안내] 시트에 모든 모듈 id가 있어야 한다(CLAUDE.md "시험 부탁할 때").
+        string dir = ManifestViewTests.FindRepoDir("tools/scenarios");
+        string path = Path.Combine(dir, "훈수꾼_시나리오.xlsx");
+        Assert.True(File.Exists(path), "시나리오 문서가 없음: " + path);
+        using var zip = System.IO.Compression.ZipFile.OpenRead(path);
+        string strings = new StreamReader(zip.GetEntry("xl/sharedStrings.xml")!.Open()).ReadToEnd();
+        string modules = ManifestViewTests.FindRepoDir("modules");
+        foreach (string d in Directory.GetDirectories(modules))
+        {
+            string id = Path.GetFileName(d);
+            Assert.True(strings.Contains(id, StringComparison.Ordinal), $"시나리오 문서에 모듈 {id}의 시나리오가 없음(tools/make_scenarios.py의 SCENARIOS)");
+        }
     }
 }

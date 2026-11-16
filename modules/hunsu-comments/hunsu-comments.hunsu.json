@@ -1,0 +1,18 @@
+{
+  "spec": 0,
+  "id": "hunsu-comments",
+  "name": "메모와 댓글",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "이동",
+  "author": "ClockOut",
+  "description": "지금 시트의 메모와 댓글 목록을 보여 주고, 누르면 그 칸으로 이동합니다.",
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 360,
+  "data": [{"topic": "comments", "on": ["sheet", "change"], "weight": "normal"}],
+  "commands": ["goto"],
+  "scope": "sheet",
+  "params": []
+}

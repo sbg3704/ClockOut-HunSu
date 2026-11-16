@@ -1,0 +1,14 @@
+{
+  "tab": { "title": "시트", "badge": "{sheet.info.rows:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{sheet.info.name}" },
+    { "type": "stat", "value": "{sheet.info.rows:n0} × {sheet.info.cols:n0}", "label": "사용 범위 {sheet.info.used}", "tone": "info" },
+    { "type": "text", "text": "칸 수 {sheet.info.cells:n0}", "tone": "muted" },
+    { "type": "divider" },
+    { "type": "badge", "text": "시트 보호됨", "tone": "warn", "showWhen": "sheet.info.protected == true" },
+    { "type": "badge", "text": "필터 적용 중(일부 줄이 숨겨짐)", "tone": "warn", "showWhen": "sheet.info.filtered == true" },
+    { "type": "badge", "text": "자동 필터 있음", "tone": "info", "showWhen": "sheet.info.autoFilter == true" },
+    { "type": "badge", "text": "틀 고정", "tone": "muted", "showWhen": "sheet.info.frozen == true" },
+    { "type": "text", "text": "조건부 서식 {sheet.info.condFormats:n0}개", "tone": "muted", "showWhen": "sheet.info.condFormats > 0" }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "tab": { "title": "조건부", "badge": "{condrules.count:n0}", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "{condrules.sheet} · 규칙 {condrules.count:n0}개", "tone": "muted" },
+    { "type": "list", "items": "condrules.items", "text": "{item.addr}", "sub": "{item.kind}", "command": "goto", "arg.addr": "{item.addr}", "max": 10, "emptyText": "이 시트에는 조건부 서식이 없습니다." },
+    { "type": "badge", "text": "앞의 일부만 조회했습니다", "tone": "warn", "showWhen": "condrules.truncated == true" }
+  ]
+}
