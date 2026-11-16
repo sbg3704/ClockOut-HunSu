@@ -109,6 +109,7 @@ internal sealed class QuickBar : Window
         {
             var dot = ActivityDot.Create(this, 6);
             dot.HorizontalAlignment = HorizontalAlignment.Right; dot.VerticalAlignment = VerticalAlignment.Bottom; dot.Margin = new Thickness(0, 0, 2, 2);
+            host.Child = null; // 이미 host의 자식이라 먼저 떼어야 Grid에 넣을 수 있다(안 떼면 예외로 프로그램이 꺼진다)
             host.Child = new Grid { Children = { icon, dot } };
         }
         if (icon is FrameworkElement fe) { fe.HorizontalAlignment = HorizontalAlignment.Center; fe.VerticalAlignment = VerticalAlignment.Center; }
