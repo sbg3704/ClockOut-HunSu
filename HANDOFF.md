@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-16 갱신)
 
+## 2026-11-16 프로그램 아이콘: 고양이 훈수 (브랜치 `claude/project-thread-3bwnli`)
+- 사용자 결정(2026-11-16): 아이콘은 "뒤에서 소근소근 잔소리하는 느낌"으로, 시안 중 **고양이 훈수**(엑셀 표 뒤에서 오류 칸을 짚으며 한쪽 입꼬리 올린 고양이) 깔끔판 확정. 무게 +1.
+- 한 것: 원본 `assets/icon/hunsu.svg`(전체판)·`hunsu-small.svg`(16~48px 단순판, 말풍선·발 뺌), 만드는 스크립트 `tools/icons/make_app_icon.mjs`(png 8종 + `hunsu.ico`), 실행 파일 아이콘(`ApplicationIcon`)과 알림 영역 아이콘(`TrayIcon`이 내장 ico를 읽고, 실패하면 예전 "훈" 원으로 대신).
+- 확인: 클라우드에서 앱 프로젝트 빌드 0경고·0오류. **트레이에서 실제로 어떻게 보이는지는 PC에서 눈으로 확인 필요**(`co build hunsu pr<N>`).
+- 남은 것: 도크 중앙 "훈" 원(`LauncherParts.Hub`)과 칼퇴 카탈로그의 `icon = 'hunsu'` 그림은 손대지 않았다. 카탈로그/칼퇴 레일 아이콘은 `assets/icon/png/hunsu-256.png`를 쓰면 된다(칼퇴 쪽 파일 위치 확인 필요).
+
 ## 2026-11-16 계정1 몫 6가지 (브랜치 `claude/project-thread-697fy8`, 클라우드 작업)
 - 사용자 지시: PR #13 머지(완료) → PR #14 나눔 표의 계정1 몫을 Claude 추천대로 만들기. 설계·결정·스위치는 `docs/08_계정1_틀_기능_2026-11-16.md`.
 - 된 것: 부품 bar·spark·progress, 밝은/어두운 테마(`theme`), 도크 패널 너비(`panelWidth`)·핀 창 모서리 크기 조절, 발자취(`hunsu-history`, 앱 주제 `app.*`), 시트를 넘는 수식 흐름(`flow.graph`, `hunsu-flowgraph`), 셀 위 표시층(`mark`, `marks[]` 문법, `hunsu-marks`), bench 조회 부하(`QueryLoadChecks`). 다리 0.0.014.
