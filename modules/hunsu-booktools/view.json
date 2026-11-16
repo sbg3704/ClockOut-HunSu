@@ -1,0 +1,43 @@
+{
+  "tab": {
+    "title": "책도구",
+    "tone": "warn"
+  },
+  "panel": [
+    {
+      "type": "text",
+      "text": "파일을 먼저 저장해 두세요. 파일은 이 책 옆에 새로 만들어집니다.",
+      "tone": "warn"
+    },
+    {
+      "type": "button",
+      "text": "고른 목록으로 시트 만들기 (실험)",
+      "command": "write.book.sheets_from_list"
+    },
+    {
+      "type": "button",
+      "text": "표를 값별 시트로 나누기 (실험)",
+      "command": "write.book.split_by_group"
+    },
+    {
+      "type": "button",
+      "text": "목차 시트 만들기 (실험)",
+      "command": "write.book.index"
+    },
+    {
+      "type": "button",
+      "text": "시트마다 파일로 내보내기 (실험)",
+      "command": "write.book.export_each"
+    },
+    {
+      "type": "button",
+      "text": "고른 시트 PDF로 저장 (실험)",
+      "command": "write.book.pdf"
+    },
+    {
+      "type": "button",
+      "text": "지금 책 백업 사본 저장 (실험)",
+      "command": "write.book.backup"
+    }
+  ]
+}

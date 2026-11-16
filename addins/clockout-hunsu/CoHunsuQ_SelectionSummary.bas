@@ -6,6 +6,7 @@ Attribute VB_Name = "CoHunsuQ_SelectionSummary"
 '       사용 범위(UsedRange)와 겹치는 곳만 본다. 영역이 1만 칸 이하면 배열로 한 번에 읽어 VBA로 세고,
 '       그보다 크면 워크시트 함수(Count, CountBlank, AGGREGATE)와 SpecialCells로 센다(VBA 칸 돌기는 큰 범위에서 수 초 걸림, docs/06).
 '       겹치는 곳이 100만 칸을 넘으면 수식 수 세기를 건너뛰고 truncated:true.
+'       숨은 줄·열(필터로 가려진 것 포함)의 칸은 세지 않는다(칼퇴 추가기능 selection-stats와 같은 규칙, 2026-11-16). 뺀 칸 수는 hiddenCells.
 '==============================================================
 Option Explicit
 
@@ -14,11 +15,12 @@ Private Const LOOP_LIMIT As Double = 10000#     ' 영역이 이보다 크면 VBA로 돌지 
 
 Private mNum As Double, mText As Double, mErr As Double, mNonEmpty As Double
 Private mSum As Double, mMin As Double, mMax As Double
+Private mHidden As Double, mFormulas As Double
 
 Public Function Query_SelectionSummary(ByVal argsJson As String) As String
     On Error GoTo Fail
     Dim sel As Range, ws As Worksheet, used As Range, area As Range
-    Dim totalCells As Double, formulas As Double, truncated As Boolean
+    Dim totalCells As Double, truncated As Boolean
     If TypeName(Selection) <> "Range" Then
         Query_SelectionSummary = CoHunsuJson_Fail("range_bad", "선택이 셀 범위가 아님")
         Exit Function
@@ -26,24 +28,58 @@ Public Function Query_SelectionSummary(ByVal argsJson As String) As String
     Set sel = Selection
     Set ws = sel.Worksheet
     totalCells = sel.CountLarge
-    mNum = 0: mText = 0: mErr = 0: mNonEmpty = 0: mSum = 0: mMin = 0: mMax = 0
+    mNum = 0: mText = 0: mErr = 0: mNonEmpty = 0: mSum = 0: mMin = 0: mMax = 0: mHidden = 0: mFormulas = 0
     Set used = Application.Intersect(sel, ws.UsedRange)
     If Not used Is Nothing Then
         truncated = used.CountLarge > CELL_LIMIT
         For Each area In used.Areas
-            If area.CountLarge > LOOP_LIMIT Then
-                CountByFunctions area
-            Else
-                CountValues area.Value2
-            End If
-            If Not truncated Then formulas = formulas + CountFormulas(area)
+            CountArea area, truncated
         Next area
     End If
-    Query_SelectionSummary = CoHunsuJson_Ok(BuildData(sel, ws, totalCells, formulas, truncated))
+    Query_SelectionSummary = CoHunsuJson_Ok(BuildData(sel, ws, totalCells, mFormulas, truncated))
     Exit Function
 Fail:
     Query_SelectionSummary = CoHunsuJson_Fail("query_failed", "selection.summary 오류: " & Err.Description)
 End Function
+
+' 영역 하나를 센다. 숨은 줄·열이 있으면 보이는 조각만 센다. EntireRow.Hidden은 False(없음)·True(전부)·Null(섞임)을 돌려줘 큰 영역에서도 빠르다.
+Private Sub CountArea(ByVal area As Range, ByVal truncated As Boolean)
+    Dim rowsHidden As Variant, colsHidden As Variant, vis As Range, part As Range, mixed As Boolean
+    rowsHidden = area.EntireRow.Hidden
+    colsHidden = area.EntireColumn.Hidden
+    If IsNull(rowsHidden) Or IsNull(colsHidden) Then
+        mixed = True
+    ElseIf rowsHidden Or colsHidden Then
+        mHidden = mHidden + area.CountLarge
+        Exit Sub
+    End If
+    If mixed Then
+        On Error Resume Next
+        Set vis = area.SpecialCells(xlCellTypeVisible)
+        If Err.Number <> 0 Then Set vis = Nothing
+        Err.Clear
+        On Error GoTo 0
+        If vis Is Nothing Then
+            mHidden = mHidden + area.CountLarge
+            Exit Sub
+        End If
+        mHidden = mHidden + area.CountLarge - vis.CountLarge
+        For Each part In vis.Areas
+            CountPart part, truncated
+        Next part
+    Else
+        CountPart area, truncated
+    End If
+End Sub
+
+Private Sub CountPart(ByVal area As Range, ByVal truncated As Boolean)
+    If area.CountLarge > LOOP_LIMIT Then
+        CountByFunctions area
+    Else
+        CountValues area.Value2
+    End If
+    If Not truncated Then mFormulas = mFormulas + CountFormulas(area)
+End Sub
 
 Private Sub CountValues(ByVal v As Variant)
     Dim item As Variant
@@ -153,5 +189,6 @@ Private Function BuildData(ByVal sel As Range, ByVal ws As Worksheet, ByVal tota
         CoHunsuJson_Pair("errors", CoHunsuJson_Num(mErr)) & "," & _
         CoHunsuJson_Pair("types", "{" & CoHunsuJson_Pair("num", CoHunsuJson_Num(mNum)) & "," & _
             CoHunsuJson_Pair("text", CoHunsuJson_Num(mText)) & "," & CoHunsuJson_Pair("formula", CoHunsuJson_Num(formulas)) & "}") & _
+        "," & CoHunsuJson_Pair("hiddenCells", CoHunsuJson_Num(mHidden)) & _
         IIf(truncated, ",""truncated"":true", "") & "}"
 End Function

@@ -127,7 +127,7 @@ public class ModuleToolsTests
     }
 
     public static IEnumerable<object[]> RepoModules() =>
-        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow", "hunsu-book", "hunsu-audit", "hunsu-names", "hunsu-keys", "hunsu-cell", "hunsu-comments", "hunsu-links", "hunsu-tables", "hunsu-sheetinfo", "hunsu-validation", "hunsu-condrules", "hunsu-hidden", "hunsu-composition", "hunsu-history", "hunsu-flowgraph", "hunsu-marks" }.Select(id => new object[] { id });
+        new[] { "hunsu-selection", "hunsu-errors", "hunsu-sheets", "hunsu-flow", "hunsu-book", "hunsu-audit", "hunsu-names", "hunsu-keys", "hunsu-cell", "hunsu-comments", "hunsu-links", "hunsu-tables", "hunsu-sheetinfo", "hunsu-validation", "hunsu-condrules", "hunsu-hidden", "hunsu-composition", "hunsu-history", "hunsu-flowgraph", "hunsu-marks", "hunsu-crosshair", "hunsu-colorsum", "hunsu-coldiff", "hunsu-folder", "hunsu-valuetools", "hunsu-booktools" }.Select(id => new object[] { id });
 
     [Theory]
     [MemberData(nameof(RepoModules))]
@@ -179,5 +179,76 @@ public class ModuleToolsTests
             string id = Path.GetFileName(d);
             Assert.True(strings.Contains(id, StringComparison.Ordinal), $"시나리오 문서에 모듈 {id}의 시나리오가 없음(tools/make_scenarios.py의 SCENARIOS)");
         }
+    }
+
+    [Fact]
+    public void CrosshairModule_DeclaresBandMarks()
+    {
+        // 십자 음영은 mark 조회의 rowband·colband를 옅은 칠로 그린다(코드 없이 선언만).
+        string dir = ManifestViewTests.FindRepoDir("modules/hunsu-crosshair");
+        var (v, errors) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
+        Assert.Empty(errors);
+        Assert.Contains(v!.Marks, m => m.Items == "mark.rowband" && m.Style == "fill");
+        Assert.Contains(v.Marks, m => m.Items == "mark.colband" && m.Style == "fill");
+    }
+
+    [Fact]
+    public void ColorSumModule_RendersFromSampleData()
+    {
+        string dir = ManifestViewTests.FindRepoDir("modules/hunsu-colorsum");
+        var (v, _) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
+        var scope = new DataScope();
+        using var doc = JsonDocument.Parse("""{"sheet":"색깔","scanned":9,"truncated":false,"fillKinds":3,"fontKinds":1,"otherCount":0,"fill":[{"label":"#FFC000","count":4,"nums":4,"sum":100}],"font":[]}""");
+        scope.Set("color.sum", doc.RootElement);
+        Assert.Equal("3", Template.Render(v!.Tab!.Get("badge"), scope));
+        Assert.False(Condition.Evaluate("color.sum.truncated == true", scope));
+        Assert.True(scope.TryGet("color.sum.fill", out var fill));
+        Assert.Equal(1, fill.GetArrayLength());
+    }
+
+    [Fact]
+    public void ColDiffModule_RendersReadyAndNotReady()
+    {
+        string dir = ManifestViewTests.FindRepoDir("modules/hunsu-coldiff");
+        var (v, _) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
+        var ready = new DataScope();
+        using var d1 = JsonDocument.Parse("""{"ready":true,"sheet":"비교","rows":10,"diffCount":5,"truncated":false,"items":[{"addr":"A3","label":"3행","a":"banana","b":"Banana"}]}""");
+        ready.Set("coldiff", d1.RootElement);
+        Assert.Equal("5", Template.Render(v!.Tab!.Get("badge"), ready));
+        Assert.True(Condition.Evaluate("coldiff.ready == true", ready));
+        Assert.False(Condition.Evaluate("coldiff.ready == false", ready));
+        var notReady = new DataScope();
+        using var d2 = JsonDocument.Parse("""{"ready":false,"hint":"나란한 두 열을 고르세요"}""");
+        notReady.Set("coldiff", d2.RootElement);
+        Assert.True(Condition.Evaluate("coldiff.ready == false", notReady));
+        Assert.Equal("나란한 두 열을 고르세요", Template.Render("{coldiff.hint}", notReady));
+    }
+
+    [Fact]
+    public void FolderModule_RendersBooksAndOthers()
+    {
+        string dir = ManifestViewTests.FindRepoDir("modules/hunsu-folder");
+        var (v, _) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
+        var scope = new DataScope();
+        using var doc = JsonDocument.Parse("""{"ready":true,"folder":"보고서","count":2,"bookCount":1,"truncated":false,"books":[{"name":"a.xlsx","ext":"xlsx","sizeKb":35,"modified":"2026-11-16 09:30"}],"others":[{"name":"메모.txt","ext":"txt","sizeKb":1,"modified":"2026-11-16 09:31"}]}""");
+        scope.Set("folder.files", doc.RootElement);
+        Assert.Equal("1", Template.Render(v!.Tab!.Get("badge"), scope));
+        Assert.True(scope.TryGet("folder.files.books", out var books));
+        Assert.Equal(1, books.GetArrayLength());
+        Assert.True(scope.TryGet("folder.files.others", out var others));
+        Assert.Equal(1, others.GetArrayLength());
+    }
+
+    [Fact]
+    public void SelectionModule_ShowsHiddenCellsNote()
+    {
+        string dir = ManifestViewTests.FindRepoDir("modules/hunsu-selection");
+        var (v, _) = ViewSpec.Parse(File.ReadAllText(Path.Combine(dir, "view.json")));
+        var scope = new DataScope();
+        using var doc = JsonDocument.Parse("""{"addr":"$A$2:$G$14","count":91,"nonEmpty":50,"sum":3780,"avg":75.6,"min":10,"max":136,"errors":0,"hiddenCells":41,"types":{"num":50,"text":0,"formula":0}}""");
+        scope.Set("selection.summary", doc.RootElement);
+        Assert.Contains(v!.Panel, i => i.Get("showWhen") == "selection.summary.hiddenCells > 0");
+        Assert.True(Condition.Evaluate("selection.summary.hiddenCells > 0", scope));
+        Assert.Equal("숨은 줄·열의 41칸은 뺐습니다", Template.Render(v.Panel.First(i => i.Get("showWhen") == "selection.summary.hiddenCells > 0").Get("text"), scope));
     }
 }

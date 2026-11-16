@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-colorsum",
+  "name": "색깔별 합계",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "요약",
+  "author": "ClockOut",
+  "description": "고른 칸을 채우기 색별, 글자 색별로 묶어 칸 수와 숫자 합계를 패널에 보여 줍니다. 새 시트를 만들지 않습니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.015", "reason": "색깔별 합계 조회(color.sum)에 훈수꾼 다리를 씁니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-right",
+  "order": 185,
+  "icon": "format",
+  "data": [
+    {"topic": "color.sum", "on": ["sel"], "weight": "heavy"}
+  ],
+  "commands": [],
+  "scope": "selection",
+  "params": []
+}

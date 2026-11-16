@@ -1,0 +1,37 @@
+{
+  "spec": 0,
+  "id": "hunsu-booktools",
+  "name": "책·시트 도구 (실험)",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "고치기",
+  "author": "ClockOut",
+  "description": "시트를 만들고 나누고, 목차·시트별 파일·PDF·백업 사본을 만드는 실험 도구입니다. 파일은 저장한 책 옆에만 새로 만들고 기존 파일은 덮어쓰지 않습니다.",
+  "dependencies": [
+    {
+      "id": "clockout-hunsu",
+      "min_version": "0.0.018",
+      "reason": "쓰기에 훈수꾼 다리를 씁니다"
+    }
+  ],
+  "shapes": [
+    "tab",
+    "panel",
+    "window"
+  ],
+  "place": "edge-right",
+  "order": 420,
+  "icon": "book",
+  "data": [],
+  "commands": [
+    "write.book.sheets_from_list",
+    "write.book.split_by_group",
+    "write.book.index",
+    "write.book.export_each",
+    "write.book.pdf",
+    "write.book.backup",
+    "write.book.delete_sheets"
+  ],
+  "scope": "book",
+  "params": []
+}

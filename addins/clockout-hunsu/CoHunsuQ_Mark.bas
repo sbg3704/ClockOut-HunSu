@@ -1,7 +1,8 @@
 Attribute VB_Name = "CoHunsuQ_Mark"
 '==============================================================
 ' 기능: 조회 mark. 셀 위 표시층(앱이 엑셀 칸 위에 테두리를 그림)에 쓸 칸 자리를 화면 픽셀로 돌려준다. 지금 보이는 곳(창의 VisibleRange)만 본다.
-'       종류: errors(오류 칸), pre(활성 셀이 바로 쓰는 칸, 같은 시트), dep(활성 셀을 바로 쓰는 칸, 같은 시트), active(활성 셀).
+'       종류: errors(오류 칸), pre(활성 셀이 바로 쓰는 칸, 같은 시트), dep(활성 셀을 바로 쓰는 칸, 같은 시트), active(활성 셀),
+'             rowband(고른 칸의 행 띠: 격자(pane)마다 가로로 한 장), colband(고른 칸의 열 띠, 세로로 한 장). 십자 음영 모듈(hunsu-crosshair)이 쓴다(2026-11-16).
 ' 사용법: CoHunsu_Query "mark", "{}"
 '         -> {"sheet":"매출","zoom":100,"panes":[{"x":10,"y":200,"w":900,"h":600}],
 '             "errors":[{"addr":"C5","x":110,"y":260,"w":64,"h":20}],"pre":[...],"dep":[...],"active":[...],"truncated":false}
@@ -21,7 +22,7 @@ Public Function Query_Mark(ByVal argsJson As String) As String
     Dim panes As String, i As Long, cut As Boolean
     Set w = ActiveWindow
     If w Is Nothing Or TypeName(ActiveSheet) <> "Worksheet" Then
-        Query_Mark = CoHunsuJson_Ok("{""panes"":[],""errors"":[],""pre"":[],""dep"":[],""active"":[],""truncated"":false}")
+        Query_Mark = CoHunsuJson_Ok("{""panes"":[],""errors"":[],""pre"":[],""dep"":[],""active"":[],""rowband"":[],""colband"":[],""truncated"":false}")
         Exit Function
     End If
     Set ws = ActiveSheet
@@ -68,6 +69,7 @@ Public Function Query_Mark(ByVal argsJson As String) As String
     End If
     Query_Mark = Query_Mark & "," & CoHunsuJson_Pair("dep", CellsJson(w, d, vis, cut))
     Query_Mark = Query_Mark & "," & CoHunsuJson_Pair("active", CellsJson(w, c, vis, cut))
+    Query_Mark = Query_Mark & "," & CoHunsuJson_Pair("rowband", BandJson(w, c, True)) & "," & CoHunsuJson_Pair("colband", BandJson(w, c, False))
     Query_Mark = CoHunsuJson_Ok(Query_Mark & "," & CoHunsuJson_Pair("truncated", IIf(cut, "true", "false")) & "}")
     Exit Function
 Fail:
@@ -102,6 +104,40 @@ Private Function CellsJson(ByVal w As Window, ByVal r As Range, ByVal vis As Ran
         End If
     Next area
     CellsJson = "[" & buf & "]"
+End Function
+
+' 고른 칸(영역이 하나면 그 영역, 여럿이면 활성 칸)의 행 띠 또는 열 띠. 격자마다 보이는 부분만 한 장씩.
+' 통째로 고른 행(열)이면 그 방향 띠는 만들지 않는다(시트 전체가 칠해지는 것을 막음).
+Private Function BandJson(ByVal w As Window, ByVal active As Range, ByVal byRow As Boolean) As String
+    Dim base As Range, part As Range, i As Long, buf As String, n As Long
+    On Error GoTo Fail
+    If active Is Nothing Then GoTo Done
+    Set base = active
+    If TypeName(Selection) = "Range" Then
+        If Selection.Areas.Count = 1 Then Set base = Selection
+    End If
+    If byRow Then
+        If base.Rows.Count >= base.Worksheet.Rows.Count Then GoTo Done
+    Else
+        If base.Columns.Count >= base.Worksheet.Columns.Count Then GoTo Done
+    End If
+    For i = 1 To w.Panes.Count
+        If byRow Then
+            Set part = Application.Intersect(base.EntireRow, w.Panes(i).VisibleRange)
+        Else
+            Set part = Application.Intersect(base.EntireColumn, w.Panes(i).VisibleRange)
+        End If
+        If Not part Is Nothing Then
+            If n > 0 Then buf = buf & ","
+            buf = buf & RectJson(w.Panes(i), part, "")
+            n = n + 1
+        End If
+    Next i
+Done:
+    BandJson = "[" & buf & "]"
+    Exit Function
+Fail:
+    BandJson = "[]"
 End Function
 
 ' 틀 고정·창 나누기에서 그 영역의 왼쪽 위 칸이 보이는 칸(Pane).

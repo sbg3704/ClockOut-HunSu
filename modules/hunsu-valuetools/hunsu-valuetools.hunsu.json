@@ -1,0 +1,42 @@
+{
+  "spec": 0,
+  "id": "hunsu-valuetools",
+  "name": "값 정리 (실험)",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "고치기",
+  "author": "ClockOut",
+  "description": "고른 칸의 값을 정리하는 쓰기 도구 모음입니다. 실험 기능이라 누를 때마다 바뀌는 칸 수를 먼저 보여 주고 확인을 받으며, 값 정리는 바로 되돌릴 수 있습니다.",
+  "dependencies": [
+    {
+      "id": "clockout-hunsu",
+      "min_version": "0.0.017",
+      "reason": "쓰기에 훈수꾼 다리를 씁니다"
+    }
+  ],
+  "shapes": [
+    "tab",
+    "panel",
+    "window"
+  ],
+  "place": "edge-right",
+  "order": 410,
+  "icon": "edit",
+  "data": [],
+  "commands": [
+    "write.values.clean",
+    "write.values.tonum",
+    "write.values.round",
+    "write.values.flip",
+    "write.values.affix",
+    "write.values.tovalue",
+    "write.values.iferror",
+    "write.values.filldown",
+    "write.values.todate",
+    "write.values.unmerge",
+    "write.values.mergecenter",
+    "write.values.undo"
+  ],
+  "scope": "selection",
+  "params": []
+}

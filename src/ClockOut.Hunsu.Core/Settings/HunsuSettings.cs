@@ -62,6 +62,17 @@ public sealed class HunsuSettings
     /// <summary>마우스가 멀 때 아이콘 진하기. 범위 0.15~1.</summary>
     public double IdleOpacity { get; init; } = 0.45;
 
+    /// <summary>쓰기 명령(실험 기능) 공지를 확인한 공지 판. 현재 공지 판(WritePolicy.NoticeVersion)과 다르면 쓰기 전에 공지를 다시 보인다(docs/11 2장).</summary>
+    public string WriteAck { get; init; } = "";
+
+    /// <summary>공지 확인만 바꾼 새 설정(다른 칸은 그대로).</summary>
+    public HunsuSettings WithWriteAck(string version)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(ToJson())!;
+        node["writeAck"] = version;
+        return FromJson(node.ToJsonString());
+    }
+
     /// <summary>배치 잠금: "locked"(기본, 떼어 낸 패널은 Shift를 누른 채 끌어야 옮겨짐) 또는 "free"(그냥 끌어서 옮김). 부르기(Ctrl+Alt+H) 중에는 늘 옮길 수 있다(편집 모드).</summary>
     public string LayoutLock { get; init; } = "locked";
 
@@ -122,6 +133,8 @@ public sealed class HunsuSettings
             DockSize = (DockSize ?? "").Trim().ToLowerInvariant() is "s" or "m" or "l" ? DockSize!.Trim().ToLowerInvariant() : d.DockSize,
             IconProfile = IconProfiles.Contains((IconProfile ?? "").Trim().ToLowerInvariant()) ? IconProfile!.Trim().ToLowerInvariant() : d.IconProfile,
             IdleOpacity = IdleOpacity is >= 0.15 and <= 1 ? IdleOpacity : d.IdleOpacity,
+            WriteAck = WriteAck ?? "",
+
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
     }

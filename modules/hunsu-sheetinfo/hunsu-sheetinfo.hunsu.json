@@ -7,13 +7,13 @@
   "category": "요약",
   "author": "ClockOut",
   "description": "지금 시트의 사용 범위 크기, 보호, 필터, 틀 고정, 조건부 서식 수를 보여 줍니다. 칸 값은 가져오지 않습니다.",
-  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.013", "reason": "조회에 훈수꾼 다리를 씁니다"}],
+  "dependencies": [{"id": "clockout-hunsu", "min_version": "0.0.016", "reason": "조회에 훈수꾼 다리를 씁니다"}],
   "shapes": ["tab", "panel", "window"],
   "place": "edge-right",
   "order": 170,
   "icon": "info",
   "data": [{"topic": "sheet.info", "on": ["sheet", "change"], "weight": "light"}],
-  "commands": [],
+  "commands": ["write.lastcell.fix"],
   "scope": "sheet",
   "params": []
 }
