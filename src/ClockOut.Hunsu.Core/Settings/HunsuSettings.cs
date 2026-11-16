@@ -65,6 +65,12 @@ public sealed class HunsuSettings
     /// <summary>마우스가 멀 때 아이콘 진하기. 범위 0.15~1.</summary>
     public double IdleOpacity { get; init; } = 0.3;
 
+    /// <summary>빠른 띠(프로필의 주요 모듈 아이콘 한 줄)를 엑셀 위에 띄운다(true, 기본). 편집 모드에서 끌어 옮긴다.</summary>
+    public bool QuickBar { get; init; } = true;
+
+    /// <summary>범위를 끄는 동안 합계를 커서 옆에 작게 보인다(true, 기본).</summary>
+    public bool CursorHud { get; init; } = true;
+
     /// <summary>마지막으로 적용한 작업 프로필 id(Core/Layout/Profiles). 비어 있으면 직접 고른 상태.</summary>
     public string Profile { get; init; } = "";
 
@@ -146,6 +152,8 @@ public sealed class HunsuSettings
             WriteAck = WriteAck ?? "",
             HoverSharpen = HoverSharpen,
             Profile = Profile ?? "",
+            QuickBar = QuickBar,
+            CursorHud = CursorHud,
 
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
