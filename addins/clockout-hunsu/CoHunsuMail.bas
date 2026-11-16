@@ -5,6 +5,8 @@ Attribute VB_Name = "CoHunsuMail"
 ' 사용법: CoHunsuMail_Send 1   ' 1 = sel
 '         wParam = 이 엑셀 주 창 핸들, lParam = 신호 번호 + 순번(8비트) * 256
 ' 의존: user32, kernel32(시간 재기). 처리 시간을 재어 bridge.stats 조회로 알려 준다(docs/04 1장 "다리 시간 5ms").
+' 주의: 조회(CoHunsu_Query)가 도는 동안은 신호를 보내지 않는다(CoHunsuMail_Mute). SpecialCells가 선택 바뀜 이벤트를
+'       일으켜 "조회 → sel 신호 → 또 조회"가 끝없이 돌았다(일#305, 2026-11-13 측정에서 발견).
 '==============================================================
 Option Explicit
 
@@ -33,9 +35,21 @@ Private mSent As Long
 Private mEvents As Long
 Private mSamples(0 To SAMPLE_MAX - 1) As Double
 Private mFreq As Currency
+Private mMute As Long
+Private mMuted As Long
+
+' 조회 동안 신호 끄기. on=True로 한 번, False로 한 번 짝을 맞춰 부른다(겹쳐 불러도 됨).
+Public Sub CoHunsuMail_Mute(ByVal on_ As Boolean)
+    If on_ Then
+        mMute = mMute + 1
+    ElseIf mMute > 0 Then
+        mMute = mMute - 1
+    End If
+End Sub
 
 Public Sub CoHunsuMail_Send(ByVal code As Long)
     Dim t0 As Currency, t1 As Currency
+    If mMute > 0 Then mMuted = mMuted + 1: Exit Sub
     On Error GoTo Done
     QueryPerformanceCounter t0
     If mMsg = 0 Then mMsg = RegisterWindowMessageW(StrPtr("ClockOut.Hunsu.Signal"))
@@ -68,6 +82,7 @@ Public Function CoHunsuMail_StatsJson() As String
     Next i
     CoHunsuMail_StatsJson = "{" & CoHunsuJson_Pair("events", CStr(mEvents)) & "," & _
         CoHunsuJson_Pair("sent", CStr(mSent)) & "," & _
+        CoHunsuJson_Pair("muted", CStr(mMuted)) & "," & _
         CoHunsuJson_Pair("target", IIf(mTarget <> 0, "true", "false")) & "," & _
         CoHunsuJson_Pair("samplesUs", "[" & buf & "]") & "}"
 End Function
@@ -75,4 +90,5 @@ End Function
 Public Sub CoHunsuMail_ResetStats()
     mEvents = 0
     mSent = 0
+    mMuted = 0
 End Sub

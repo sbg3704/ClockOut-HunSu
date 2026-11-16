@@ -59,8 +59,10 @@ try {
     Write-Host "오류 처리"
     $u = (& $run 'CoHunsu_Query' 'no.such' '{}') | ConvertFrom-Json
     Check 'query_unknown' ($u.ok -eq $false -and $u.code -eq 'query_unknown')
-    $d = (& $run 'CoHunsu_Do' 'goto' '{}') | ConvertFrom-Json
+    $d = (& $run 'CoHunsu_Do' 'no.such' '{}') | ConvertFrom-Json
     Check '명령 없음 → query_unknown' ($d.ok -eq $false -and $d.code -eq 'query_unknown')
+    $g = (& $run 'CoHunsu_Do' 'goto' '{}') | ConvertFrom-Json
+    Check 'goto 주소 없음 → command_failed' ($g.ok -eq $false -and $g.code -eq 'command_failed')
 
     Write-Host "bridge.stats (틀 창이 없으면 신호를 보내지 않고 시간만 잰다)"
     $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
@@ -69,6 +71,12 @@ try {
     Check 'events 20' ($b.ok -and $b.data.events -eq 20) "events=$($b.data.events)"
     $mx = ($b.data.samplesUs | Measure-Object -Maximum).Maximum
     Check "이벤트 처리 최대 ${mx}µs < 5000µs" ($mx -lt 5000)
+    # SpecialCells가 선택 바뀜 이벤트를 일으켜 조회가 자기 신호로 끝없이 다시 돌던 문제(일#305)
+    $null = $ws.Range('A1:A6').Select()
+    $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
+    $null = (& $run 'CoHunsu_Query' 'selection.summary' '{}')
+    $z = (& $run 'CoHunsu_Query' 'bridge.stats' '{}') | ConvertFrom-Json
+    Check '조회 중 생긴 이벤트는 신호로 안 보냄(조회 → 신호 → 조회 고리 없음)' ($z.ok -and $z.data.events -eq 0) "events=$($z.data.events) muted=$($z.data.muted)"
     Check '설정 그대로(ScreenUpdating, EnableEvents, Calculation)' ($xl.ScreenUpdating -and $xl.EnableEvents -and $xl.Calculation -eq -4105)
 }
 catch {

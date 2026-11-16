@@ -21,33 +21,40 @@ Fail:
     CoHunsu_Hello = CoHunsuJson_Fail("query_failed", "hello 처리 중 오류: " & Err.Description)
 End Function
 
+' 조회는 읽기 전용이라 도는 동안 생긴 엑셀 이벤트는 모두 조회 자신이 일으킨 것이다(SpecialCells 등). 신호를 끄고 부른다.
 Public Function CoHunsu_Query(ByVal qName As String, ByVal argsJson As String) As String
+    CoHunsuMail_Mute True
+    CoHunsu_Query = QueryInner(qName, argsJson)
+    CoHunsuMail_Mute False
+End Function
+
+Private Function QueryInner(ByVal qName As String, ByVal argsJson As String) As String
     On Error GoTo Fail
     Select Case qName
         Case "hello"
-            CoHunsu_Query = CoHunsu_Hello()
+            QueryInner = CoHunsu_Hello()
         Case "selection.summary"
-            CoHunsu_Query = Query_SelectionSummary(argsJson)
+            QueryInner = Query_SelectionSummary(argsJson)
         Case "bridge.stats"
-            CoHunsu_Query = Query_BridgeStats(argsJson)
+            QueryInner = Query_BridgeStats(argsJson)
         Case "errors"
-            CoHunsu_Query = Query_Errors(argsJson)
+            QueryInner = Query_Errors(argsJson)
         Case "flow.neighbors"
-            CoHunsu_Query = Query_FlowNeighbors(argsJson)
+            QueryInner = Query_FlowNeighbors(argsJson)
         Case "sheets"
-            CoHunsu_Query = Query_Sheets(argsJson)
+            QueryInner = Query_Sheets(argsJson)
         Case "book.info"
-            CoHunsu_Query = Query_BookInfo(argsJson)
+            QueryInner = Query_BookInfo(argsJson)
         Case "book.audit"
-            CoHunsu_Query = Query_BookAudit(argsJson)
+            QueryInner = Query_BookAudit(argsJson)
         Case "names"
-            CoHunsu_Query = Query_Names(argsJson)
+            QueryInner = Query_Names(argsJson)
         Case Else
-            CoHunsu_Query = CoHunsuJson_Fail("query_unknown", "다리에 없는 조회: " & qName)
+            QueryInner = CoHunsuJson_Fail("query_unknown", "다리에 없는 조회: " & qName)
     End Select
     Exit Function
 Fail:
-    CoHunsu_Query = CoHunsuJson_Fail("query_failed", "조회 중 오류: " & Err.Description)
+    QueryInner = CoHunsuJson_Fail("query_failed", "조회 중 오류: " & Err.Description)
 End Function
 
 Public Function CoHunsu_Do(ByVal cmdName As String, ByVal argsJson As String) As String
