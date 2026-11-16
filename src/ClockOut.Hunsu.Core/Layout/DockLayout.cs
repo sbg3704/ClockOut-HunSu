@@ -42,6 +42,7 @@ public static class OpacityLevels
 {
     public static readonly double[] Rest = [1.0, 0.8, 0.55, 0.4, 0.25];
     public static readonly string[] Names = ["선명 100%", "80%", "55%", "40%", "25%"];
+    public static readonly string[] Short = ["100", "80", "55", "40", "25"];
 
     public static int Next(int level) => (Math.Clamp(level, 0, Rest.Length - 1) + 1) % Rest.Length;
 

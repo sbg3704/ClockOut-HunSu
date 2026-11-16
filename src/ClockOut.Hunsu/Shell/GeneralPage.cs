@@ -49,6 +49,9 @@ internal sealed class GeneralPage : ScrollViewer
         Section("셀 위 표시 다시 맞추는 간격", "껐다 켜면 바뀝니다. 0은 엑셀 신호 때만");
         Choices("markPollMs", s.MarkPollMs, [(0, "신호 때만"), (200, "200ms"), (400, "400ms 기본"), (1000, "1초")]);
 
+        Section("패널 투명도", "패널마다 투명도는 [모듈] 쪽 줄의 ◐ 단추나 패널 제목줄의 투명도 단추로 바꿉니다");
+        _root.Children.Add(Row(ManagerParts.Switch(this, s.HoverSharpen, () => _shell.ApplySetting("hoverSharpen", !s.HoverSharpen)), "마우스를 올리면 선명하게 (끄면 정한 투명도 그대로)"));
+
         Section("시작할 때", "다음 실행부터");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.ManagerOnStart, () => _shell.ApplySetting("managerOnStart", !s.ManagerOnStart)), "설정 창을 바로 연다"));
         bool all = s.EnabledByDefault.Contains("*");
