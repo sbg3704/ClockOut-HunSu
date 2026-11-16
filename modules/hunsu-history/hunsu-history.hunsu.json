@@ -18,6 +18,7 @@
     {"topic": "selection.summary", "on": ["sel"], "weight": "light"},
     {"topic": "app.history", "on": [], "weight": "light"}
   ],
+  "quick": [{"kind":"choice","key":"listMaxRows","label":"목록에 한 번에 보일 줄 수","group":"목록","options":[{"value":"20","label":"20"},{"value":"50","label":"50 (기본)"},{"value":"100","label":"100"},{"value":"200","label":"200"}]}],
   "commands": ["app.history.back", "app.history.forward", "app.history.jump"],
   "scope": "book",
   "params": []

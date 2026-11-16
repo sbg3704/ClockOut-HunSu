@@ -26,7 +26,7 @@ internal sealed partial class ShellController
         mv.Frame.OpacityClicked += () => CycleOpacity(mv);
         mv.Frame.LockClicked += () => ToggleLock(mv);
         mv.Frame.SetLocked(mv.Placement.Locked);
-        mv.Frame.ContextMenu = SideMenu(mv);
+        mv.Frame.ContextMenu = ModuleIconMenu(mv.Id);
         mv.BadgeChanged += () => DockOf(mv)?.RefreshLauncher();
         return mv;
     }
@@ -55,7 +55,7 @@ internal sealed partial class ShellController
         pin.Click += (_, _) => { if (mv.InDock) Pin(mv, null); };
         var other = new MenuItem();
         other.Click += (_, _) => MoveToDock(mv, mv.Placement.Place == Places.EdgeLeft ? Places.EdgeRight : Places.EdgeLeft);
-        var manager = new MenuItem { Header = "모듈 관리…" };
+        var manager = new MenuItem { Header = "자세히 설정…" };
         manager.Click += (_, _) => OpenManager();
         menu.Items.Add(open);
         menu.Items.Add(pin);
@@ -64,22 +64,10 @@ internal sealed partial class ShellController
         menu.Items.Add(manager);
         menu.Opened += (_, _) =>
         {
+            FillQuick(menu, mv);
             open.Header = mv.ShowsPanel ? "패널 닫기" : "패널 열기";
             other.Header = mv.Placement.Place == Places.EdgeLeft ? "오른쪽 도크로" : "왼쪽 도크로";
         };
-        return menu;
-    }
-
-    private ContextMenu SideMenu(ModuleView mv)
-    {
-        var menu = new ContextMenu();
-        var left = new MenuItem { Header = "왼쪽 도크로" };
-        var right = new MenuItem { Header = "오른쪽 도크로" };
-        left.Click += (_, _) => MoveToDock(mv, Places.EdgeLeft);
-        right.Click += (_, _) => MoveToDock(mv, Places.EdgeRight);
-        menu.Items.Add(left);
-        menu.Items.Add(right);
-        menu.Opened += (_, _) => { left.IsEnabled = mv.Placement.Place != Places.EdgeLeft; right.IsEnabled = mv.Placement.Place != Places.EdgeRight; };
         return menu;
     }
 

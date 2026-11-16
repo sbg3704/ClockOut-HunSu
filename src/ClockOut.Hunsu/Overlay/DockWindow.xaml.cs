@@ -58,6 +58,7 @@ public partial class DockWindow : Window
     public event Action? ToggleAllRequested;
     public event Action? SummonRequested;
     public event Action? HideAllRequested;
+    public event Action? DrawToggleRequested;
     public event Action? QuitRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
@@ -230,6 +231,7 @@ public partial class DockWindow : Window
         _toggleAll.Click += (_, _) => ToggleAllRequested?.Invoke();
         menu.Items.Add(_toggleAll);
         menu.Items.Add(Item("부르기 · 닫기", "Ctrl+Alt+H", () => SummonRequested?.Invoke()));
+        menu.Items.Add(Item("수식 흐름 그리기 켜기·끄기", "Ctrl+Alt+D", () => DrawToggleRequested?.Invoke()));
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));

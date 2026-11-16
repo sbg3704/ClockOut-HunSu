@@ -61,6 +61,7 @@ internal sealed partial class ShellController
         }
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);
+        OnMarkSettingChanged(key);
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));
         SettingsChanged?.Invoke();
         ModulesChanged?.Invoke();

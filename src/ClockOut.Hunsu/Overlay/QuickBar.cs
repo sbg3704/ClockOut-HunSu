@@ -67,6 +67,9 @@ internal sealed class QuickBar : Window
 
     public event Action<string>? ItemClicked;
 
+    /// <summary>칸 우클릭 메뉴를 만드는 곳(셸이 넣는다: 빠른 설정 · 열기 · 자세히).</summary>
+    public Func<string, ContextMenu?>? ItemMenu { get; set; }
+
     /// <summary>편집 모드에서 끌어 놓은 뒤 (엑셀 창 안 가로 비율, 세로 비율).</summary>
     public event Action<double, double>? Moved;
 
@@ -104,6 +107,7 @@ internal sealed class QuickBar : Window
             ToolTip = it.Name,
             Cursor = Cursors.Hand,
             Margin = new Thickness(1),
+            ContextMenu = ItemMenu?.Invoke(it.Id),
         };
         if (it.Working && !it.Open)
         {

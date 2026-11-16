@@ -23,7 +23,7 @@ internal sealed partial class ShellController
 
     /// <summary>켜진 모듈의 marks 선언과 그 모듈.</summary>
     private IEnumerable<(ModuleView Module, MarkSpec Spec)> ActiveMarks() =>
-        _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.View.Marks.Select(s => (m, s)));
+        _modules.Where(m => !m.Placement.Hidden).SelectMany(m => m.Module.View.Marks.Where(s => _settings.PencilDraw || s.Style != "pencil").Select(s => (m, s)));
 
     private IReadOnlyList<string> MarkTopics() =>
         [.. ActiveMarks().SelectMany(x => x.Module.Module.Manifest.Data.Select(d => d.Topic).Where(t => x.Spec.Items.StartsWith(t + ".", StringComparison.Ordinal)))

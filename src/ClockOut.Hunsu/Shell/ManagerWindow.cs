@@ -25,6 +25,7 @@ internal sealed class ManagerWindow : Window
     private LookPage? _look;
     private GeneralPage? _general;
     private ProfilesPage? _profiles;
+    private OptionsPage? _options;
     private string _page = "modules";
 
     public ManagerWindow(ShellController shell, string page = "modules")
@@ -64,6 +65,12 @@ internal sealed class ManagerWindow : Window
             _body.Child = _profiles;
             _profiles.Rebuild();
         }
+        else if (_page == "options")
+        {
+            _options ??= new OptionsPage(_shell);
+            _body.Child = _options;
+            _options.Rebuild();
+        }
         else if (_page == "general")
         {
             _general ??= new GeneralPage(_shell);
@@ -74,6 +81,7 @@ internal sealed class ManagerWindow : Window
         _tabs.Children.Clear();
         _tabs.Children.Add(ManagerParts.Chip(this, "모듈", _page == "modules", () => ShowPage("modules")));
         _tabs.Children.Add(ManagerParts.Chip(this, "프로필", _page == "profiles", () => ShowPage("profiles")));
+        _tabs.Children.Add(ManagerParts.Chip(this, "옵션", _page == "options", () => ShowPage("options")));
         _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
         _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
     }
