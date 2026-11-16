@@ -23,6 +23,7 @@ internal sealed class ManagerWindow : Window
     private readonly StackPanel _tabs = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
     private ScrollViewer? _modulesView;
     private LookPage? _look;
+    private GeneralPage? _general;
     private string _page = "modules";
 
     public ManagerWindow(ShellController shell, string page = "modules")
@@ -49,17 +50,24 @@ internal sealed class ManagerWindow : Window
     /// <summary>[모듈] 또는 [모양] 쪽을 보인다("modules" | "look").</summary>
     internal void ShowPage(string page)
     {
-        _page = page == "look" ? "look" : "modules";
+        _page = page is "look" or "general" ? page : "modules";
         if (_page == "look")
         {
             _look ??= new LookPage(_shell);
             _body.Child = _look;
             _look.Rebuild();
         }
+        else if (_page == "general")
+        {
+            _general ??= new GeneralPage(_shell);
+            _body.Child = _general;
+            _general.Rebuild();
+        }
         else _body.Child = _modulesView;
         _tabs.Children.Clear();
         _tabs.Children.Add(ManagerParts.Chip(this, "모듈", _page == "modules", () => ShowPage("modules")));
         _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
+        _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
     }
 
     private UIElement BuildLayout()
@@ -109,12 +117,11 @@ internal sealed class ManagerWindow : Window
         var footer = new StackPanel { Margin = new Thickness(22, 10, 22, 14) };
         var buttons = new WrapPanel();
         buttons.Children.Add(ManagerParts.Chip(this, "배치 처음으로", false, ConfirmReset));
-        buttons.Children.Add(ManagerParts.Chip(this, "설정 파일 열기", false, () => Open(_shell.SettingsPath)));
         buttons.Children.Add(ManagerParts.Chip(this, "모듈 폴더 열기", false, () => Open(Path.Combine(AppContext.BaseDirectory, "modules"))));
         footer.Children.Add(buttons);
         footer.Children.Add(new TextBlock
         {
-            Text = "새 모듈은 칼퇴 왼쪽 레일에서 받습니다. 받은 모듈은 훈수꾼을 껐다 켜면 이 목록에 나타납니다. 처음 켜짐 여부, 조회 간격 같은 값은 설정 파일에서 바꿉니다.",
+            Text = "새 모듈은 칼퇴 왼쪽 레일에서 받습니다. 받은 모듈은 훈수꾼을 껐다 켜면 이 목록에 나타납니다. 처음 켜짐 여부, 조회 간격 같은 값은 [일반]에서 바꿉니다.",
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 10, 0, 0),
             FontSize = (double)FindResource("Hunsu.FontCaption"),
@@ -202,11 +209,13 @@ internal sealed class ManagerWindow : Window
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
             MaxWidth = 230,
-            ToolTip = $"{man.Description}\n{man.Id} · v{man.Version} · {PlaceName(place)}",
         });
         dock.Children.Add(text);
-        return new Border
+        // 줄 어디에 올려도 전체 설명이 팝업으로 뜬다(설명이 잘려 있어도 읽을 수 있게).
+        var tip = new TextBlock { Text = $"{man.Name}\n{man.Description}\n\n{man.Id} · v{man.Version} · {PlaceName(place)}", TextWrapping = TextWrapping.Wrap, MaxWidth = 340 };
+        var rowBox = new Border
         {
+            ToolTip = tip,
             Child = dock,
             Padding = new Thickness(10, 5, 8, 5),
             Margin = new Thickness(0, 0, 0, 3),
@@ -216,6 +225,9 @@ internal sealed class ManagerWindow : Window
             BorderThickness = new Thickness(1),
             Opacity = enabled ? 1.0 : 0.55,
         };
+        ToolTipService.SetInitialShowDelay(rowBox, 250);
+        ToolTipService.SetShowDuration(rowBox, 20000);
+        return rowBox;
     }
 
     private static string PlaceName(string place) => place switch
