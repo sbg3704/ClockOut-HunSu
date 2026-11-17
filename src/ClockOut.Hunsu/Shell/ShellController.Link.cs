@@ -51,6 +51,7 @@ internal sealed partial class ShellController
         _finder?.Stop();
         _noExcelTicks = 0;
         if (w.Hwnd != _target) Follow(w.Hwnd);
+        else StartProbe();
         if (!_hiddenAll) foreach (var p in ActivePins()) p.Reappear();
         _tray.Balloon($"엑셀 {w.Pid}번에 연결했습니다. 다른 엑셀 창이 앞에 나와도 이 엑셀만 따라갑니다. 풀려면 「엑셀 연결」에서 자동으로 되돌리세요.");
     }
@@ -111,8 +112,13 @@ internal sealed partial class ShellController
         var r = await _registry.InspectAsync(_target);
         _log.Write("excel_inspect", ("hwnd", _target.ToInt64()), ("attached", r.Attached), ("attach", r.Attach), ("bridge", r.BridgeLoaded), ("books", r.Workbooks), ("pv", r.ProtectedViews), ("ready", r.Ready), ("err", r.Error));
         if (!r.Attached) return ("이 엑셀에 붙지 못했습니다(" + r.Error + "). 다른 권한(관리자)으로 켠 엑셀이면 훈수꾼도 같은 권한으로 켜야 해요.", false);
+        User32.GetWindowThreadProcessId(_target, out uint pidU);
+        var same = ExcelWindows.List().Where(w => w.Pid == (int)pidU).ToList();
         var lines = new List<string>
         {
+            "훈수꾼 판 " + BuildInfo.Text,
+            $"따라가는 창 {_target.ToInt64()} · 프로세스 {pidU}번 · 같은 프로세스의 엑셀 주 창 {same.Count}개(보이는 것 {same.Count(w => w.Visible)}개) · 붙는 방법 {r.Attach}",
+            "다리 파일: " + (BridgeFilePath() ?? "못 찾음"),
             r.BridgeLoaded ? "다리: 열려 있음" : "다리: 이 엑셀에 안 열려 있음 (그래서 패널이 비어요)",
             $"열린 통합 문서 {r.Workbooks}개 · 앞의 문서: {(r.ActiveBook.Length > 0 ? r.ActiveBook : "없음")}{(r.ActiveReadOnly ? " (읽기 전용)" : "")}",
             r.ProtectedViews > 0 ? $"보호된 보기 창 {r.ProtectedViews}개: 거기서 「편집 사용」을 눌러야 읽을 수 있어요" : "보호된 보기: 없음",
