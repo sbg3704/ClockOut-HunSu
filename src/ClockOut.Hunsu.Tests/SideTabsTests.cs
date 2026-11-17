@@ -107,8 +107,8 @@ public class SideTabsTests
         var (s3, _) = HunsuSettings.FromJson("""{"sidebar":"left"}""").WithSidebarDefault();
         Assert.Equal("left", s3.Sidebar);
         Assert.False(s3.SidebarCollapsed);
-        Assert.False(s3.SidebarStay);
-        Assert.True(HunsuSettings.FromJson("""{"sidebarStay":true}""").SidebarStay);
+        Assert.True(s3.SidebarStay); // 기본 자리 고정
+        Assert.False(HunsuSettings.FromJson("""{"sidebarStay":false}""").SidebarStay);
         Assert.True(HunsuSettings.FromJson(HunsuSettings.FromJson("""{"sidebarCollapsed":true}""").ToJson()).SidebarCollapsed);
     }
 }

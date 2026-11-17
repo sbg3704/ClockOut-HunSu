@@ -111,8 +111,8 @@ public sealed class HunsuSettings
     /// <summary>사이드바를 접어 활동 막대(아이콘 줄)만 남긴다. 활동 막대 맨 아래 «/» 단추로 바꾸고 기억한다.</summary>
     public bool SidebarCollapsed { get; init; }
 
-    /// <summary>사이드바 자리 고정: 엑셀 창을 바꿔도 처음 붙은 창 옆에 그대로 있고 내용만 앞에 나온 창을 따른다(두 창을 나란히 비교할 때). false(기본)면 앞에 나온 창 옆으로 따라간다.</summary>
-    public bool SidebarStay { get; init; }
+    /// <summary>사이드바 자리 고정: 엑셀 창을 바꿔도 처음 붙은 창 옆에 그대로 있고 내용만 앞에 나온 창을 따른다(두 창을 나란히 비교할 때). 기본 켜짐(2026-11-17 사용자: "클릭할 때마다 창이 커졌다 작아졌다 피곤"). false면 앞에 나온 창 옆으로 따라간다.</summary>
+    public bool SidebarStay { get; init; } = true;
 
     /// <summary>쓰기 명령(실험 기능) 공지를 확인한 공지 판. 현재 공지 판(WritePolicy.NoticeVersion)과 다르면 쓰기 전에 공지를 다시 보인다(docs/11 2장).</summary>
     public string WriteAck { get; init; } = "";
