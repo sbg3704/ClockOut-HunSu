@@ -5,18 +5,21 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Native;
+using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Shell;
 
 namespace ClockOut.Hunsu.Overlay;
 
 public partial class DockWindow : Window
 {
-    private readonly List<ModuleView> _modules = [];
+    private readonly List<ModuleView> _modules = [];          // 이 창이 패널을 두는 모듈(오른쪽 창)
+    private readonly List<ModuleView> _launcherModules = [];  // 이 창 런처에 아이콘이 나오는 모듈
     private HunsuSettings _settings;
     private readonly DispatcherTimer _pointer;
     private readonly MenuItem _toggleAll = new() { Header = "패널 모두 접기" };
@@ -33,7 +36,9 @@ public partial class DockWindow : Window
         Launcher.HubDragMoved += OnHubDragMoved;
         Launcher.HubDragEnded += OnHubDragEnded;
         Configure();
-        Resize(0);
+        Resize();
+        Launcher.AwakeChanged += awake => Slide(awake, animate: true);
+        Launcher.SizeChanged += (_, _) => Slide(Launcher.Awake, animate: false);
         SourceInitialized += (_, _) =>
         {
             Handle = new WindowInteropHelper(this).Handle;
@@ -47,8 +52,26 @@ public partial class DockWindow : Window
         IsVisibleChanged += (_, _) => { if (IsVisible) _pointer.Start(); else { _pointer.Stop(); Launcher.UpdatePointer(null); } };
     }
 
-    /// <summary>왼쪽 도크가 가로로 늘 수 있는 칸 수(세로가 모자랄 때 오른쪽으로 쌓음).</summary>
-    internal const int WrapColumns = 3;
+    /// <summary>패널을 두는 창인가(기본: 오른쪽 창). 왼쪽 창은 런처만 둔다.</summary>
+    private bool HostsPanels => Side == Places.EdgeRight;
+
+    /// <summary>런처를 그리는 창인가: 왼쪽은 늘, 오른쪽은 그쪽에 아이콘을 둔 모듈이 있을 때만.</summary>
+    private bool HostsLauncher => Side == Places.EdgeLeft || _launcherModules.Count > 0;
+
+    /// <summary>패널 쪽 일이 바뀌어(넘쳐서 접힘) 다른 창의 런처도 다시 그려야 한다.</summary>
+    internal event Action? LauncherRefreshNeeded;
+
+    /// <summary>왼쪽 창 런처의 반쯤 숨김: 잠들면 훈 원 중심이 창 왼쪽 가장자리에 오게 밀고(잘려서 반만 보임), 깨어나면 튀어나온다.</summary>
+    private void Slide(bool awake, bool animate)
+    {
+        if (Side != Places.EdgeLeft) return;
+        var r = Launcher.HubBounds;
+        double hidden = r.IsEmpty ? 0 : r.X + r.Width / 2;
+        double to = awake ? 0 : -hidden;
+        if (LauncherHost.RenderTransform is not TranslateTransform tr || tr.IsFrozen) LauncherHost.RenderTransform = tr = new TranslateTransform();
+        if (!animate) { tr.BeginAnimation(TranslateTransform.XProperty, null); tr.X = to; return; }
+        tr.BeginAnimation(TranslateTransform.XProperty, new System.Windows.Media.Animation.DoubleAnimation(to, TimeSpan.FromMilliseconds(awake ? 160 : 220)) { EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = awake ? System.Windows.Media.Animation.EasingMode.EaseOut : System.Windows.Media.Animation.EasingMode.EaseIn } });
+    }
 
     public string Side { get; }
     public IntPtr Handle { get; private set; }
@@ -61,6 +84,7 @@ public partial class DockWindow : Window
     /// <summary>모듈이 선언한 켜고 끄기 항목(이름, 단축키 글, 동작). 허브 우클릭 메뉴가 열릴 때마다 새로 묻는다(ShellController가 넣는다).</summary>
     internal Func<IReadOnlyList<(string Label, string Gesture, Action Act)>>? HubExtras { get; set; }
     public event Action? QuitRequested;
+    public event Action? JoinToggleRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
     public event Action? ExcelCleanupRequested;
@@ -106,26 +130,49 @@ public partial class DockWindow : Window
 
     internal IReadOnlyList<ModuleView> Modules => _modules;
 
-    internal void SetModules(IEnumerable<ModuleView> modules)
+    /// <summary>panels = 이 창에 패널을 놓을 모듈(왼쪽 창은 없음), launcher = 이 창 런처에 아이콘을 둘 모듈.</summary>
+    internal void SetModules(IEnumerable<ModuleView> panels, IEnumerable<ModuleView> launcher)
     {
         _modules.Clear();
-        _modules.AddRange(modules.OrderBy(m => m.Placement.Order));
+        _modules.AddRange(HostsPanels ? panels.OrderBy(m => m.Placement.Order) : []);
+        _launcherModules.Clear();
+        _launcherModules.AddRange(launcher.OrderBy(m => m.Placement.Order));
         Items.Children.Clear();
         foreach (var m in _modules)
         {
             if (m.Slot.Parent is Panel p) p.Children.Remove(m.Slot);
             m.UseTab = false; // 접힌 모듈은 손잡이 대신 런처 아이콘으로만 남는다
             double g = (double)FindResource("Hunsu.Gap");
-            m.Slot.Margin = new Thickness(0, 0, Side == Places.EdgeLeft ? g : 0, g);
+            m.Slot.Margin = new Thickness(0, 0, 0, g);
             ((FrameworkElement)m.Slot).HorizontalAlignment = Column.HorizontalAlignment;
             m.Tab.HorizontalAlignment = Column.HorizontalAlignment;
             m.Frame.Width = (double)FindResource("Hunsu.PanelWidth");
             m.Tab.Visibility = Visibility.Collapsed;
             Items.Children.Add(m.Slot);
         }
-        Resize(_modules.Count);
+        Resize();
         RefreshLauncher();
         Relayout();
+        ApplyJoin();
+    }
+
+    /// <summary>합쳐 보기(panelJoin): 보이는 패널들을 틈 없이 이어 붙이고 이웃과 닿는 선은 하나로 겹친다(얇은 칸막이 선). 끄면 따로 뜬 카드.</summary>
+    private void ApplyJoin()
+    {
+        double gap = (double)FindResource("Hunsu.Gap");
+        var shown = _modules.Where(m => m.ShowsPanel).ToList();
+        foreach (var m in _modules)
+        {
+            int i = shown.IndexOf(m);
+            if (!_settings.PanelJoin || i < 0)
+            {
+                m.Slot.Margin = new Thickness(0, 0, 0, gap);
+                m.Frame.SetJoin(JoinPos.None);
+                continue;
+            }
+            m.Slot.Margin = new Thickness(0, i == 0 ? 0 : -1, 0, 0); // 선 한 줄만 겹쳐 칸막이로
+            m.Frame.SetJoin(shown.Count == 1 ? JoinPos.Only : i == 0 ? JoinPos.First : i == shown.Count - 1 ? JoinPos.Last : JoinPos.Middle);
+        }
     }
 
     /// <summary>설정 창 [모양]에서 바꾼 모양을 바로 쓴다(창 너비와 패널 자리도 다시 잰다).</summary>
@@ -133,8 +180,9 @@ public partial class DockWindow : Window
     {
         _settings = settings;
         Configure();
-        Resize(_modules.Count);
+        Resize();
         Relayout();
+        ApplyJoin();
     }
 
     private void Configure() =>
@@ -145,17 +193,17 @@ public partial class DockWindow : Window
     internal Func<ModuleView, bool>? IsWorking { get; set; }
 
     internal void RefreshLauncher() =>
-        Launcher.SetModules(_modules.Select(m => new LauncherModule(m.Id, m.Module.Manifest.Name, m.Placement.Order, m.Module.Manifest.Icon, m.Badge, m.Tone, m.ShowsPanel, IsWorking?.Invoke(m) ?? false)).ToList());
+        Launcher.SetModules(_launcherModules.Select(m => new LauncherModule(m.Id, m.Module.Manifest.Name, m.Placement.Order, m.Module.Manifest.Icon, m.Badge, m.Tone, m.ShowsPanel, IsWorking?.Invoke(m) ?? false)).ToList());
 
     /// <summary>창 너비 = 패널 너비 + 런처 폭 + 그림자 여백. 패널 칸은 런처 폭만큼 가장자리에서 떨어진다.</summary>
-    private void Resize(int count)
+    private void Resize()
     {
         var shadow = (Thickness)FindResource("Hunsu.ShadowMargin");
-        double reserved = LauncherShapes.ReservedWidth(_settings.DockShape, Math.Max(count, 5), LauncherShapes.Scale(_settings.DockSize), _settings.DockGroups);
-        // 왼쪽 도크는 높이가 모자라면 오른쪽 칸으로 넘기므로(WrapColumns칸) 창을 그만큼 넓힌다. 바탕이 투명이라 비어 있어도 화면에는 영향이 없다.
-        int cols = Side == Places.EdgeLeft ? WrapColumns : 1;
-        double gapX = Side == Places.EdgeLeft ? (double)FindResource("Hunsu.Gap") : 0;
-        Width = ((double)FindResource("Hunsu.PanelWidth") + gapX) * cols + reserved + shadow.Left + shadow.Right;
+        bool launcher = HostsLauncher;
+        Launcher.Visibility = launcher ? Visibility.Visible : Visibility.Collapsed;
+        double reserved = launcher ? LauncherShapes.ReservedWidth(_settings.DockShape, Math.Max(_launcherModules.Count, 5), LauncherShapes.Scale(_settings.DockSize), _settings.DockGroups) : 0;
+        // 왼쪽 창 = 런처 폭만, 오른쪽 창 = 패널 폭(+ 그쪽에 아이콘을 둔 모듈이 있을 때만 런처 폭). 바탕이 투명이라 비어 있어도 화면에는 영향이 없다.
+        Width = (HostsPanels ? (double)FindResource("Hunsu.PanelWidth") : 0) + reserved + shadow.Left + shadow.Right;
         bool left = Side == Places.EdgeLeft;
         Column.Margin = new Thickness(shadow.Left + (left ? reserved : 0), shadow.Top, shadow.Right + (left ? 0 : reserved), shadow.Bottom);
     }
@@ -173,10 +221,8 @@ public partial class DockWindow : Window
             double panel = m.Frame.Visibility == Visibility.Visible && m.Frame.DesiredSize.Height > 0 ? m.Frame.DesiredSize.Height : m.LastPanelHeight;
             return new DockEntry(m.Id, m.Placement.Order, m.Placement.Collapsed, panel, 0);
         }).ToList();
-        // 왼쪽 도크: 한 칸이 차면 오른쪽 칸으로 넘기고, 그래도 모자랄 때만 접는다. 칸 사이 빈틈을 감안해 총 높이의 85%만 쓴다.
-        bool wrap = Side == Places.EdgeLeft;
-        Items.MaxHeight = wrap ? Math.Max(1, available) : double.PositiveInfinity;
-        var plan = DockLayout.Plan(entries, wrap ? available * (WrapColumns - 0.6) : available, gap);
+        // 패널은 한 줄로 쌓고, 높이가 모자라면 앞쪽부터 접는다.
+        var plan = DockLayout.Plan(entries, available, gap);
         LayoutTraced?.Invoke($"available={available:0} " + string.Join(";", entries.Select(e => $"{e.Id}:{e.PanelHeight:0}")) + " forced=" + string.Join(",", plan.Where(p => p.ForcedByOverflow).Select(p => p.Id)));
         bool changed = false;
         foreach (var slot in plan)
@@ -185,7 +231,8 @@ public partial class DockWindow : Window
             changed |= m.ForcedCollapsed != slot.ForcedByOverflow;
             m.SetForcedCollapsed(slot.ForcedByOverflow);
         }
-        if (changed) RefreshLauncher();
+        if (changed) LauncherRefreshNeeded?.Invoke();
+        ApplyJoin(); // 접힘이 바뀌면 이어 붙이는 순서도 바뀐다
     }
 
     public void SetAllCollapsedLabel(bool allCollapsed) => _toggleAll.Header = allCollapsed ? "패널 모두 펼치기" : "패널 모두 접기";
@@ -246,6 +293,9 @@ public partial class DockWindow : Window
                 menu.Items.Insert(Math.Min(at++, menu.Items.Count), mi);
             }
         };
+        var join = Item("패널 한 창처럼 붙여 보기", "", () => JoinToggleRequested?.Invoke());
+        menu.Opened += (_, _) => join.IsChecked = _settings.PanelJoin;
+        menu.Items.Add(join);
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));

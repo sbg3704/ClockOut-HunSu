@@ -11,6 +11,9 @@ using ClockOut.Hunsu.Ui.Theme;
 
 namespace ClockOut.Hunsu.Ui.Frame;
 
+/// <summary>합쳐 보기(setting panelJoin)에서 패널이 묶음의 어디인지.</summary>
+public enum JoinPos { None, First, Middle, Last, Only }
+
 public partial class PanelFrame : UserControl
 {
     /// <summary>마우스를 올리면 선명해지는지(설정 hoverSharpen). 모든 패널에 같이 적용된다.</summary>
@@ -52,8 +55,29 @@ public partial class PanelFrame : UserControl
         }
     }
 
-    private void OnSkinChanged() =>
+    private void OnSkinChanged()
+    {
+        ApplyJoin(); // 룩이 모서리를 바꾸면 합친 모양도 다시 맞춘다
         Dispatcher.BeginInvoke(() => Hand.TitleTextWidth = MeasureTitle(TitleText.Text), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private JoinPos _join = JoinPos.None;
+
+    /// <summary>도크 합쳐 보기에서 이 패널의 자리: 맨 위/가운데/맨 아래만 모서리를 둥글게(이웃과 닿는 쪽은 각지게). None이면 따로 뜬 카드.</summary>
+    public void SetJoin(JoinPos pos)
+    {
+        if (_join == pos) return;
+        _join = pos;
+        ApplyJoin();
+    }
+
+    private void ApplyJoin()
+    {
+        if (_join == JoinPos.None) { Card.SetResourceReference(System.Windows.Controls.Border.CornerRadiusProperty, "Hunsu.PanelRadius"); return; }
+        var r = FindResource("Hunsu.PanelRadius") is CornerRadius c ? c : new CornerRadius(8);
+        bool top = _join is JoinPos.First or JoinPos.Only, bottom = _join is JoinPos.Last or JoinPos.Only;
+        Card.CornerRadius = new CornerRadius(top ? r.TopLeft : 0, top ? r.TopRight : 0, bottom ? r.BottomRight : 0, bottom ? r.BottomLeft : 0);
+    }
 
     /// <summary>제목 글자 폭(손그림 형광펜 칠이 글자 밑까지만 가도록). 빈 글이면 0.</summary>
     private double MeasureTitle(string text)

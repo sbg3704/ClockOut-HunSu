@@ -65,6 +65,16 @@ internal sealed class PinWindow : Window
     /// <summary>끌어 놓을 때 붙일 대상 사각형들(작업 영역, 엑셀 창, 다른 핀 창). null이면 붙이지 않는다. Alt를 누른 채 놓으면 붙이지 않는다.</summary>
     public Func<IReadOnlyList<PixelRect>>? SnapTargets { get; set; }
 
+    /// <summary>끌기를 시작할 때 이 창과 자석으로 이어진 다른 핀 창들(같이 움직일 것). null이면 혼자. Alt를 누른 채 끌면 쓰지 않는다.</summary>
+    public Func<IReadOnlyList<PinWindow>>? GroupPeers { get; set; }
+
+    /// <summary>묶음에 딸려 가서 옮겨진다(끈 창의 이동량). 자리를 저장하게 Moved도 알린다.</summary>
+    public void MoveBy(int dx, int dy)
+    {
+        MoveTo(_rect with { X = _rect.X + dx, Y = _rect.Y + dy });
+        Moved?.Invoke(_rect);
+    }
+
     /// <summary>이 패널의 자리를 잠갔다(모듈별 잠금): 편집 모드에서도 끌거나 크기를 바꾸지 못한다.</summary>
     public bool Locked
     {
@@ -215,6 +225,8 @@ internal sealed class PinWindow : Window
         if (_locked || !(_interactive || _hover) || e.ButtonState != MouseButtonState.Pressed) return;
         // 잠금(기본)이면 Shift를 누른 채만 옮긴다. 부르기(편집 모드) 중이거나 잠금이 free면 그냥 옮긴다.
         if (!_interactive && !(FreeDrag?.Invoke() ?? false) && !User32.ShiftDown()) return;
+        var peers = User32.AltDown() ? [] : GroupPeers?.Invoke() ?? [];
+        var before = User32.WindowBounds(Handle);
         DragMove(); // 놓을 때까지 돌아오지 않는다
         var now = User32.WindowBounds(Handle);
         if (SnapTargets != null && !User32.AltDown())
@@ -227,6 +239,9 @@ internal sealed class PinWindow : Window
             _rect = now;
             Moved?.Invoke(now);
         }
+        // 자석으로 붙어 있던 창들은 같은 만큼 따라 움직인다(2026-11-17: 붙은 패널끼리 같이 다니기).
+        int dx = now.X - before.X, dy = now.Y - before.Y;
+        if (dx != 0 || dy != 0) foreach (var p in peers) p.MoveBy(dx, dy);
     }
 
     /// <summary>패널 틀을 놓아주고 창은 숨겨 둔다(다음에 다시 씀).</summary>
