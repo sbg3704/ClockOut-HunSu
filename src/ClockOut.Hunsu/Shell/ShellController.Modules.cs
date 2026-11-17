@@ -25,6 +25,14 @@ internal sealed partial class ShellController
         mv.Tab.Clicked += () => SetCollapsed(mv, false, null);
         mv.Frame.AlphaCommitted += a => { Save(mv, p => p with { Alpha = a }); ModulesChanged?.Invoke(); }; // ◐ 막대로 정한 투명도 저장
         mv.Frame.LockClicked += () => ToggleLock(mv);
+        mv.Frame.SetFolded(_store.State.Get(man.Id).Folded);
+        mv.Frame.FoldClicked += () =>
+        {
+            bool folded = !mv.Frame.Folded;
+            mv.Frame.SetFolded(folded);
+            Save(mv, p => p with { Folded = folded });
+            _right.Relayout(); // 높이가 바뀌어 도크 쌓기를 다시 잰다
+        };
         mv.Frame.PowerClicked += () => { if (MainToggle(mv) is { } q) ToggleQuick(q.Key); };
         mv.Frame.SetLocked(mv.Placement.Locked);
         mv.Frame.ContextMenu = ModuleIconMenu(mv.Id);
@@ -207,6 +215,7 @@ internal sealed partial class ShellController
         w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free", Locked = mv.Placement.Locked };
         w.SnapTargets = () => SnapTargetsFor(mv.Id);
         w.GroupPeers = () => ConnectedPins(mv.Id);
+        w.DropHandler = rect => TryDockDrop(mv, rect);
         w.Moved += r => Save(mv, p => p with { PinRect = r });
         w.Prepare();
         _pinWindows[mv.Id] = w;

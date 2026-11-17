@@ -44,6 +44,22 @@ public partial class PanelFrame : UserControl
     public event Action? LockClicked;
     /// <summary>제목줄의 켜고 끄기 단추(모듈의 대표 켜기 설정, 예: 그리기)를 눌렀다.</summary>
     public event Action? PowerClicked;
+    /// <summary>제목줄 ▾(본문 접기·펴기)를 눌렀다.</summary>
+    public event Action? FoldClicked;
+
+    private bool _folded;
+    public bool Folded => _folded;
+
+    /// <summary>본문을 접으면 제목줄만 남는다(사이드 패널의 섹션 머리글처럼).</summary>
+    public void SetFolded(bool folded)
+    {
+        _folded = folded;
+        BodyScroll.Visibility = folded ? Visibility.Collapsed : Visibility.Visible;
+        FoldButton.Content = folded ? "\uE70E" : "\uE70D"; // ▴ / ▾
+        FoldButton.ToolTip = folded ? "본문 펴기" : "본문 접기";
+    }
+
+    private void FoldButton_Click(object sender, RoutedEventArgs e) => FoldClicked?.Invoke();
 
     /// <summary>켜고 끄기 단추를 보이거나 감춘다. on이면 강조색, 꺼지면 흐린 색. 모듈이 대표 켜기 설정(quick toggle)을 선언했을 때만 보인다.</summary>
     public void SetPower(bool available, bool on, string label)

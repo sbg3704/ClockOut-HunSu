@@ -29,6 +29,7 @@
         </DockPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,2,0">
           <Button x:Name="LockButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE785;" ToolTip="이 패널 자리 잠그기" Visibility="Collapsed" Click="LockButton_Click" />
+          <Button x:Name="FoldButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE70D;" ToolTip="본문 접기" Click="FoldButton_Click" />
           <Button x:Name="PowerButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE7E8;" Visibility="Collapsed" ToolTip="켜고 끄기" Click="PowerButton_Click" />
           <Button x:Name="OpacityButton" Style="{StaticResource Hunsu.IconButton}" FontFamily="Segoe UI Symbol" Content="◐"
                   ToolTip="투명도: 누르면 막대" Click="OpacityButton_Click" />
