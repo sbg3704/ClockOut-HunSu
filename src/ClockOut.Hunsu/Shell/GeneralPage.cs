@@ -85,7 +85,7 @@ internal sealed class GeneralPage : ScrollViewer
 
     private void Section(string title, string note)
     {
-        var head = new StackPanel { Orientation = Orientation.Horizontal };
+        var head = new WrapPanel(); // 좁으면 설명이 다음 줄로 넘어간다
         head.Children.Add(ManagerParts.Caption(this, title));
         head.Children.Add(new TextBlock
         {
@@ -113,10 +113,13 @@ internal sealed class GeneralPage : ScrollViewer
 
     private FrameworkElement Row(FrameworkElement control, string text)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+        // 설명 글은 남은 폭에서 줄바꿈한다(좁은 창에서 오른쪽 끝이 잘리지 않게).
+        var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2), LastChildFill = true };
         control.Margin = new Thickness(0, 0, 12, 0);
+        control.VerticalAlignment = VerticalAlignment.Center;
+        DockPanel.SetDock(control, Dock.Left);
         row.Children.Add(control);
-        row.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, Foreground = (Brush)FindResource(ThemeKeys.Muted), FontSize = (double)FindResource("Hunsu.FontSmall") });
+        row.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Foreground = (Brush)FindResource(ThemeKeys.Muted), FontSize = (double)FindResource("Hunsu.FontSmall") });
         return row;
     }
 }
