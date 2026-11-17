@@ -104,8 +104,20 @@ internal sealed partial class ShellController
         // 기본 모양: 왼쪽 창에는 런처(훈 원, 반쯤 숨음)만, 패널은 모두 오른쪽 창에 쌓는다. 오른쪽에 아이콘을 둔 모듈(edge-right)은 오른쪽 런처도 쓴다.
         var docked = _modules.Where(m => m.InDock && !m.Placement.Hidden).ToList();
         var minimizedPins = _modules.Where(m => !m.Placement.Hidden && IsPinMinimized(m)).ToList(); // 떼어 낸 채 줄인 것은 왼쪽 런처에 아이콘으로
-        _right.SetModules(docked, docked.Where(m => m.Placement.Place == Places.EdgeRight));
-        _left.SetModules([], docked.Where(m => m.Placement.Place == Places.EdgeLeft).Concat(minimizedPins));
+        if (SidebarOn)
+        {
+            // 사이드바 모드: 패널은 모두 사이드바 구역으로, 도크 창에는 아무것도 두지 않는다.
+            _right.SetModules([], []);
+            _left.SetModules([], []);
+            _sidebar!.SetModules(docked, _settings.IconProfile);
+        }
+        else
+        {
+            _sidebar?.SetModules([], _settings.IconProfile);
+            foreach (var m in docked) m.Frame.ApplyBodyLimit(false);
+            _right.SetModules(docked, docked.Where(m => m.Placement.Place == Places.EdgeRight));
+            _left.SetModules([], docked.Where(m => m.Placement.Place == Places.EdgeLeft).Concat(minimizedPins));
+        }
         RefreshPower();
         UpdateDockVisibility();
         UpdateModuleHotkeys();

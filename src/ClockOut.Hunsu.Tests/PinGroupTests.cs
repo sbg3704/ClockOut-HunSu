@@ -37,4 +37,15 @@ public class PinGroupTests
         Assert.True(s.PanelJoin);
         Assert.True(HunsuSettings.FromJson(s.ToJson()).PanelJoin);
     }
+
+    [Fact]
+    public void Sidebar_SettingsAreNormalized()
+    {
+        var d = new HunsuSettings();
+        Assert.Equal(("off", 300), (d.Sidebar, d.SidebarWidth));
+        var s = HunsuSettings.FromJson("""{"sidebar":" RIGHT ","sidebarWidth":420}""");
+        Assert.Equal(("right", 420), (s.Sidebar, s.SidebarWidth));
+        var bad = HunsuSettings.FromJson("""{"sidebar":"top","sidebarWidth":5000}""");
+        Assert.Equal(("off", 300), (bad.Sidebar, bad.SidebarWidth));
+    }
 }
