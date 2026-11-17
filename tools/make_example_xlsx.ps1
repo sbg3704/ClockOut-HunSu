@@ -20,6 +20,11 @@ Write-Host "시나리오 문서를 복사했습니다: $Out"
 $linkSrc = Join-Path $repo 'tools\scenarios\훈수꾼_링크시험.xlsx'   # 외부 링크 시나리오만 따로(끊긴 링크의 업데이트 경고가 메인 시험을 막지 않게)
 if (Test-Path $linkSrc) { Copy-Item $linkSrc (Join-Path (Split-Path -Parent $Out) '훈수꾼_링크시험.xlsx') -Force; Write-Host "링크 시험 문서도 복사했습니다." }
 if ($NoBig) { exit 0 }
+# 관리자 권한 pwsh에서 엑셀을 띄우면 관리자 엑셀이 되어, 일반 권한 훈수꾼이 그 엑셀과 말을 못 한다(2026-11-17). 큰 시트는 건너뛴다(시나리오 문서는 그대로 쓸 수 있다).
+if ([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "[건너뜀] 관리자 권한 PowerShell입니다. 큰 시트를 더하려고 엑셀을 띄우면 관리자 엑셀이 되어 훈수꾼이 읽지 못하므로 건너뜁니다. 일반 PowerShell에서 다시 하면 큰 시트가 더해집니다." -ForegroundColor Yellow
+    exit 0
+}
 
 Add-Type -Namespace HunsuEx -Name Win -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint pid);' -ErrorAction SilentlyContinue
 

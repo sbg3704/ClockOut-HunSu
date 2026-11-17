@@ -15,6 +15,7 @@ internal sealed partial class ShellController
     private bool _probing;
     private readonly HashSet<IntPtr> _toldNoAttach = [];
     private readonly HashSet<IntPtr> _toldNoBooks = [];
+    private readonly HashSet<IntPtr> _toldElevated = [];
 
     /// <summary>따라가는 엑셀에 hello를 불러 본다. 곧바로 한 번(엑셀이 막 켜졌을 수 있어 0.6초 뒤), 안 되면 5초마다.</summary>
     private void StartProbe()
@@ -49,6 +50,7 @@ internal sealed partial class ShellController
         var hwnd = _target;
         try
         {
+            NoteElevation(hwnd);
             var call = await _registry.ProbeAsync(hwnd);
             if (hwnd != _target) return; // 그 사이 다른 엑셀로 옮겨 갔다
             if (call.Ok)
@@ -71,6 +73,23 @@ internal sealed partial class ShellController
         {
             _probing = false;
         }
+    }
+
+    /// <summary>엑셀이 관리자 권한인데 훈수꾼은 일반 권한이면 윈도가 막아 말을 못 건다(0x80020003·붙지 못함 등으로 보인다). 이유를 풍선으로 한 번 알린다.</summary>
+    private void NoteElevation(IntPtr hwnd)
+    {
+        if (ExcelElevationText(hwnd) is not { } text || !_toldElevated.Add(hwnd)) return;
+        _log.Write("excel_elevated", ("excel", hwnd.ToInt64()));
+        _tray.Balloon(text);
+    }
+
+    internal const string ElevatedAdvice = "엑셀이 관리자 권한으로 떠 있어요. 훈수꾼도 관리자로 켜거나, 엑셀을 일반 권한으로 다시 여세요.";
+
+    /// <summary>그 창의 엑셀이 우리보다 높은 권한이면 안내문, 아니면 null.</summary>
+    private static string? ExcelElevationText(IntPtr hwnd)
+    {
+        Native.User32.GetWindowThreadProcessId(hwnd, out uint pid);
+        return Native.ProcessElevation.Compare((int)pid) == Native.ElevationRelation.TargetHigher ? ElevatedAdvice : null;
     }
 
     /// <summary>다리는 되는데 패널이 비는 흔한 이유: 열린 통합 문서가 없거나, 파일이 「보호된 보기」로 열려 있다(그때 ActiveWorkbook이 비어 다리가 "열린 통합 문서가 없음"을 돌려준다, 2026-11-17 VM 재현). 이유를 기록하고 풍선으로 한 번 알린다.</summary>
