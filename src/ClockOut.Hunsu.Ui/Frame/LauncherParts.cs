@@ -19,13 +19,14 @@ internal static class LauncherParts
         var b = new Border
         {
             Width = size, Height = size, CornerRadius = new CornerRadius(size / 2),
-            Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, "Hunsu.Line"), BorderThickness = new Thickness(1),
+            // 흰 시트 위에서도 눈에 띄게: 강조색으로 꽉 채우고 진한 테두리·큰 그림자(2026-11-17 "너무 흰색이라 눈에 안 띔").
+            Background = B(scope, ThemeKeys.Accent), BorderBrush = B(scope, ThemeKeys.Text), BorderThickness = new Thickness(2),
             Cursor = System.Windows.Input.Cursors.Hand,
-            Effect = scope.TryFindResource("Hunsu.Shadow1") as System.Windows.Media.Effects.Effect,
+            Effect = scope.TryFindResource("Hunsu.Shadow2") as System.Windows.Media.Effects.Effect,
         };
         var glyph = new TextBlock
         {
-            Text = "훈", FontSize = size * 0.42, FontWeight = FontWeights.SemiBold, Foreground = B(scope, ThemeKeys.Text),
+            Text = "훈", FontSize = size * 0.42, FontWeight = FontWeights.Bold, Foreground = B(scope, "Hunsu.AccentInk"),
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
         };
         glyph.SetResourceReference(TextBlock.FontFamilyProperty, "Hunsu.FontTitle"); // 룩을 바꾸면 따라간다
@@ -46,7 +47,8 @@ internal static class LauncherParts
         var circle = new Border
         {
             Width = size, Height = size, CornerRadius = new CornerRadius(size / 2),
-            Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, "Hunsu.Line"), BorderThickness = new Thickness(group ? 1.5 : 1),
+            Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, ThemeKeys.Text), BorderThickness = new Thickness(group ? 2 : 1.5),
+            Effect = scope.TryFindResource("Hunsu.Shadow1") as System.Windows.Media.Effects.Effect,
         };
         double g = Math.Round(size * 0.52);
         var glyph = IconFactory.Create(profile, icon, g, B(scope, ThemeKeys.Text), name);
@@ -85,7 +87,8 @@ internal static class LauncherParts
         return new Border
         {
             Height = height, CornerRadius = new CornerRadius(height / 2), Padding = new Thickness(height * 0.28, 0, 12, 0),
-            Background = B(scope, "Hunsu.Glass"), BorderBrush = open ? B(scope, ThemeKeys.Accent) : B(scope, "Hunsu.Line"), BorderThickness = new Thickness(open ? 2 : 1),
+            Background = B(scope, "Hunsu.Glass"), BorderBrush = open ? B(scope, ThemeKeys.Accent) : B(scope, ThemeKeys.Text), BorderThickness = new Thickness(open ? 2.5 : 1.5),
+            Effect = scope.TryFindResource("Hunsu.Shadow1") as System.Windows.Media.Effects.Effect,
             Cursor = System.Windows.Input.Cursors.Hand, Child = new Grid { Children = { row, new HandFrame { Mode = HandMode.Box, Seed = name } } },
         };
     }
@@ -94,14 +97,15 @@ internal static class LauncherParts
     public static Border Tag(FrameworkElement scope, string text, string badge, string tone, double height, bool mirror)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        row.Children.Add(Text(scope, text, ThemeKeys.Text));
+        row.Children.Add(Text(scope, text, ThemeKeys.Text, bold: true));
         if (Shown(badge)) row.Children.Add(new TextBlock { Text = "  " + badge, FontWeight = FontWeights.SemiBold, Foreground = ThemeKeys.Tone(scope, tone), FontSize = Small(scope), VerticalAlignment = VerticalAlignment.Center });
         double inner = height / 2 + 10;
         return new Border
         {
             Height = height + 2, CornerRadius = new CornerRadius((height + 2) / 2), IsHitTestVisible = false,
             Padding = mirror ? new Thickness(inner, 0, 12, 0) : new Thickness(12, 0, inner, 0),
-            Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, "Hunsu.Line"), BorderThickness = new Thickness(1), Child = row,
+            Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, ThemeKeys.Text), BorderThickness = new Thickness(1.5), Child = row,
+            Effect = scope.TryFindResource("Hunsu.Shadow1") as System.Windows.Media.Effects.Effect,
         };
     }
 
@@ -130,9 +134,9 @@ internal static class LauncherParts
         Child = new TextBlock { Text = text, FontSize = h * 0.62, FontWeight = FontWeights.SemiBold, Foreground = B(scope, "Hunsu.AccentInk"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
     };
 
-    private static TextBlock Text(FrameworkElement scope, string text, string brushKey) => new()
+    private static TextBlock Text(FrameworkElement scope, string text, string brushKey, bool bold = false) => new()
     {
-        Text = text, Foreground = B(scope, brushKey), FontSize = Small(scope), VerticalAlignment = VerticalAlignment.Center,
+        Text = text, Foreground = B(scope, brushKey), FontSize = Small(scope) + (bold ? 1 : 0), FontWeight = bold ? FontWeights.Bold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center,
     };
 
     private static double Small(FrameworkElement scope) => scope.TryFindResource("Hunsu.FontSmall") is double d ? d : 12;
