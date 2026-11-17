@@ -15,7 +15,8 @@ internal sealed class ExcelLinkWindow : Window
     private readonly ShellController _shell;
     private readonly StackPanel _list = new();
     private readonly TextBlock _now = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
-    private readonly TextBlock _status = new() { Margin = new Thickness(0, 10, 0, 0), TextWrapping = TextWrapping.Wrap };
+    // 드래그해서 복사할 수 있게 읽기 전용 글상자로 둔다(점검 결과를 그대로 알려 줄 수 있게).
+    private readonly TextBox _status = new() { Margin = new Thickness(0, 10, 0, 0), TextWrapping = TextWrapping.Wrap, IsReadOnly = true, BorderThickness = new Thickness(0), Background = Brushes.Transparent, IsReadOnlyCaretVisible = false };
 
     public ExcelLinkWindow(ShellController shell)
     {
@@ -48,6 +49,7 @@ internal sealed class ExcelLinkWindow : Window
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         buttons.Children.Add(ManagerParts.Chip(this, "이 엑셀 점검", false, Inspect));
         buttons.Children.Add(ManagerParts.Chip(this, "브리지 열기…", false, OpenBridge));
+        buttons.Children.Add(ManagerParts.Chip(this, "결과 복사", false, CopyStatus));
         buttons.Children.Add(ManagerParts.Chip(this, "새로고침", false, Rebuild));
         buttons.Children.Add(ManagerParts.Chip(this, "창 눌러 고르기", false, PickWindow));
         buttons.Children.Add(ManagerParts.Chip(this, "자동으로 되돌리기", false, () => { _shell.UnlinkExcel(); _status.Text = "자동 찾기로 되돌렸습니다."; Rebuild(); }));
@@ -66,6 +68,12 @@ internal sealed class ExcelLinkWindow : Window
         _status.Text = "점검 중…";
         var (text, _) = await _shell.InspectTargetAsync();
         _status.Text = text;
+    }
+
+    private void CopyStatus()
+    {
+        try { Clipboard.SetText(_status.Text); _status.Text += "\n(복사했습니다)"; }
+        catch (System.Runtime.InteropServices.ExternalException) { _status.Text += "\n(복사하지 못했습니다. 글을 끌어 선택해 Ctrl+C로 복사하세요)"; }
     }
 
     private async void OpenBridge() => _status.Text = await _shell.OpenBridgeInTargetAsync();
@@ -88,7 +96,9 @@ internal sealed class ExcelLinkWindow : Window
         _now.Text = _shell.IsLinked ? "지금 연결: " + _shell.LinkedLabel : "지금 연결: 없음 (자동으로 찾는 중)";
         _now.Foreground = ThemeKeys.Tone(this, _shell.IsLinked ? "info" : "muted");
         _list.Children.Clear();
-        var wins = ExcelWindows.List().OrderByDescending(w => w.Visible).ThenBy(w => w.StartTicks).ToList();
+        // 엑셀은 같은 프로세스에 숨은 주 창을 여러 개 만들기도 한다(2026-11-17 스크린샷). 보이는 창이 있는 프로세스는 숨은 창을 목록에서 뺀다.
+        var all = ExcelWindows.List();
+        var wins = all.Where(w => w.Visible || !all.Any(x => x.Pid == w.Pid && x.Visible)).OrderByDescending(w => w.Visible).ThenBy(w => w.StartTicks).ToList();
         if (wins.Count == 0)
         {
             _list.Children.Add(new TextBlock { Text = "엑셀 창이 없습니다. 엑셀을 열고 새로고침하세요. (창 없이 남은 엑셀은 「남은 엑셀 정리」에서 볼 수 있어요)", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 6) });

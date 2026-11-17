@@ -295,6 +295,7 @@ internal sealed partial class ShellController
     /// <summary>조회 결과를 그 주제를 구독한(켜진) 모듈에 넣는다. 실패하면 마지막 내용을 흐리게 둔다(docs/04 6장).</summary>
     private void OnTopic(TopicResult r)
     {
+        if (r.Response.Ok) NoteHealthy(r.Excel);
         if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); NoteActivity(m); });
         else { ForTopic(r.Topic, m => m.SetStale(true)); NoteBridgeProblem(r); }
         if (r.Response.Ok && r.Topic == TopicRouting.SelectionSummary) ObserveHistory(r);

@@ -17,6 +17,8 @@ if (-not (Test-Path $src)) { Write-Host "[중단] 시나리오 원본이 없습�
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Out) | Out-Null
 Copy-Item $src $Out -Force
 Write-Host "시나리오 문서를 복사했습니다: $Out"
+$linkSrc = Join-Path $repo 'tools\scenarios\훈수꾼_링크시험.xlsx'   # 외부 링크 시나리오만 따로(끊긴 링크의 업데이트 경고가 메인 시험을 막지 않게)
+if (Test-Path $linkSrc) { Copy-Item $linkSrc (Join-Path (Split-Path -Parent $Out) '훈수꾼_링크시험.xlsx') -Force; Write-Host "링크 시험 문서도 복사했습니다." }
 if ($NoBig) { exit 0 }
 
 Add-Type -Namespace HunsuEx -Name Win -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint pid);' -ErrorAction SilentlyContinue

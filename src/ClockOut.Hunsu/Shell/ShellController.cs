@@ -176,6 +176,7 @@ internal sealed partial class ShellController : IDisposable
         UpdateQuickBar();
         ApplyDefaultForms();
         UpdateSidebar(refresh: false); // 엑셀 창만 바뀌었다: 사이드바 자리만 옮기고 다시 그리지 않는다
+        StartProbe(); // 엑셀에 먼저 말을 걸어 본다(다리가 없으면 신호도 없어 패널이 말없이 비던 문제, ShellController.Probe)
     }
 
     private void OnTargetGone()

@@ -17,6 +17,7 @@ import xlsxwriter
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "scenarios" / "훈수꾼_시나리오.xlsx"
+LINK_OUT = ROOT / "scenarios" / "훈수꾼_링크시험.xlsx"  # 외부 링크 시나리오만 따로(2026-11-17: 끊긴 링크의 업데이트 경고가 메인 확인용 엑셀을 막는 것처럼 보여서 나눔)
 
 # 모듈 id, 이름, 시트, 해볼 것, 나와야 하는 것  (모든 modules/ 폴더가 여기 있어야 한다: ModuleToolsTests가 검사)
 SCENARIOS = [
@@ -27,7 +28,7 @@ SCENARIOS = [
     ("hunsu-errors", "오류 셀", "오류", "시트를 연다(아무 칸이나)", "오류 셀 7개(종류별 1개씩). 목록 줄을 누르면 그 칸으로 이동한다."),
     ("hunsu-sheets", "시트 이동", "아무 시트", "패널의 시트 이름을 누른다", "보이는 시트만 나열되고(숨김_시트, 아주숨김_시트는 없음) 누르면 그 시트로 이동, 지금 시트가 강조된다."),
     ("hunsu-book", "책 정보", "아무 시트", "아무 칸에 값을 쓴다. 수식 탭 > 계산 옵션 > 수동으로 바꿔 본다(끝나면 자동으로 되돌린다)", "저장 안 된 변경 배지, 수동 계산 경고(빨강)가 나온다. 시트 수는 20개(큰 시트를 더하면 22)."),
-    ("hunsu-audit", "책 점검", "아무 시트", "패널을 본다", "숨은 시트 1(숨김_시트), 아주 숨김 1, 보호된 시트 1(보호됨), 외부 링크 1개."),
+    ("hunsu-audit", "책 점검", "아무 시트", "패널을 본다", "숨은 시트 1(숨김_시트), 아주 숨김 1, 보호된 시트 1(보호됨), 외부 링크 0개(링크 시험은 별도 파일 훈수꾼_링크시험.xlsx)."),
     ("hunsu-names", "이름 목록", "이름", "패널의 이름을 누른다", "보이는 이름 5개(엑셀 이름 관리자 기준. Names.Count는 숨은 이름 2개가 더해 7). 세율·합계범위는 눌러 이동, 버전표시·오늘·깨진이름은 '수식·상수'라 이동하지 않는다."),
     ("hunsu-keys", "단축키 표", "아무 시트", "패널을 본다", "다리 없이 단축키 표가 나온다."),
     ("hunsu-flowgraph", "수식 흐름", "흐름", "B1, D1, E1을 차례로 고른다", "맨 위 줄에 '시트 ! 칸 = 값'과 수식, 아래에 파랑 '이 칸이 쓰는 칸 N개'·초록 '이 칸을 쓰는 칸 N개'와 나무. B1: 쓰는 칸 A1, 쓰이는 칸 C1·D1. D1: A1·B1·C1과 그 아래 2단계 들여쓰기, 쓰이는 칸 E1. E1: 쓰는 칸에 다른 시트 칸 매출!G15가 굵게 나오고 누르면 그 시트로 간다."),
@@ -50,7 +51,7 @@ SCENARIOS = [
     ("hunsu-sheetinfo", "시트 정보", "필터 / 보호됨 / 매출", "필터 시트: 필터 적용 중. 보호됨: 시트 보호됨. 매출: 틀 고정", "사용 범위 크기, 보호, 필터, 틀 고정, 조건부 서식 수가 맞게 나온다."),
     ("hunsu-composition", "시트 구성", "매출", "시트를 연다", "수식 24 · 숫자 60 · 글자 22 · 그 밖 6(사용 범위 112칸)."),
     ("hunsu-comments", "메모와 댓글", "메모", "시트를 연다", "메모 4개 목록. 줄을 누르면 그 칸으로 이동. 스레드 댓글은 직접 하나 달아 보면 '댓글'로 늘어난다."),
-    ("hunsu-links", "외부 링크", "링크", "파일을 열 때 링크 보안 경고가 뜨면 '업데이트 안 함'", "원본_연결용.xlsx 1개(파일 이름만, 경로 없음)."),
+    ("hunsu-links", "외부 링크", "별도 파일 훈수꾼_링크시험.xlsx의 링크 시트", "그 파일을 열고 링크 보안 경고가 뜨면 '업데이트 안 함'", "원본_연결용.xlsx 1개(파일 이름만, 경로 없음). 메인 확인용 엑셀에는 외부 링크가 없다."),
     ("hunsu-tables", "표 목록", "표", "시트를 연다", "표 3개(매출표, 직원표, 재고표)와 줄 수. 누르면 그 표로 이동."),
     ("hunsu-validation", "유효성 영역", "유효성", "시트를 연다", "영역 4곳 · 40칸(목록, 정수, 날짜, 사용자 수식). 누르면 이동."),
     ("hunsu-condrules", "조건부 서식", "조건부", "시트를 연다", "규칙 10개(셀 값, 수식, 색조, 데이터 막대, 아이콘, 상위, 중복, 텍스트, 빈 칸, 오류). 누르면 이동."),
@@ -96,7 +97,7 @@ def build(path: Path) -> None:
         ("0. 모든 모듈 켜기: 훈수꾼 알림 영역 아이콘 → '모듈 관리…' → [모두 켜기]. (또는 settings.json의 enabledByDefault에 [\"*\"])", None),
         ("1. 엑셀 창 오른쪽(또는 왼쪽)에 모듈 알약이 붙습니다. 아래 표의 '해볼 것'을 하고 '나와야 하는 것'과 같은지 보세요.", None),
         ("2. 다르거나 화면이 떨리거나 엑셀이 버벅이면, 어느 모듈·어느 칸인지 적어서 알려 주세요(빌드 기록은 co copy).", None),
-        ("3. 파일을 열 때 '링크 업데이트' 보안 경고가 뜨는 것은 정상입니다(링크 시나리오). [업데이트 안 함]을 누르세요.", None),
+        ("3. 이 파일에는 외부 링크가 없어 보안 경고가 뜨지 않습니다. 외부 링크 시험은 따로 훈수꾼_링크시험.xlsx를 여세요(거기서는 경고가 뜨는 것이 정상, [업데이트 안 함]).", None),
         ("4. 큰 시트(큰 표 2만 줄, 대용량 10만 줄)는 co build 중에 엑셀로 더합니다. 없으면 빌드 기록의 경고를 알려 주세요.", None),
         ("", None),
     ]
@@ -355,12 +356,10 @@ def build(path: Path) -> None:
     s.write("A2", "수정 불가"); s.write("B3", "수정 가능", unl)
     s.protect()
 
-    # --- 링크: 외부 링크 1개(뒤에서 XML로 더함) ---
+    # --- 링크: 메인 파일에는 외부 링크 없음(링크는 build_link가 별도 파일로) ---
     s = ws["링크"]
-    s.write("A1", "외부 링크 1개(원본_연결용.xlsx)", bold)
-    s.write_formula("B2", "=[1]원본!$B$2", None, 7)
-    s.write_formula("B3", "=[1]원본!$B$3*2", None, 14)
-    s.write("C2", "← 다른 파일을 가리키는 수식(원본 파일은 없어도 됩니다)", muted)
+    s.write("A1", "외부 링크 시나리오는 별도 파일(훈수꾼_링크시험.xlsx)입니다", bold)
+    s.write("C2", "← 이 파일에는 외부 링크가 없습니다(끊긴 링크의 업데이트 경고가 다른 시험을 막지 않게 나눔)", muted)
 
     # --- 숨김/아주숨김 ---
     ws["숨김_시트"].write("A1", "숨겨진 시트(사용자가 다시 표시 가능)")
@@ -384,41 +383,63 @@ EXT_RELS = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
             'Target="원본_연결용.xlsx" TargetMode="External"/></Relationships>')
 
 
-def patch(src: Path, dst: Path) -> None:
-    """외부 링크 부품을 더하고 '아주숨김_시트'를 veryHidden으로 바꾼다."""
+def patch(src: Path, dst: Path, with_link: bool, very_hidden: bool) -> None:
+    """with_link면 외부 링크 부품을 더하고, very_hidden이면 '아주숨김_시트'를 veryHidden으로 바꾼다."""
     with zipfile.ZipFile(src) as zin, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:
         for item in zin.infolist():
             data = zin.read(item.filename)
-            if item.filename == "[Content_Types].xml":
+            if item.filename == "[Content_Types].xml" and with_link:
                 t = data.decode("utf-8")
                 t = t.replace("</Types>", '<Override PartName="/xl/externalLinks/externalLink1.xml" '
                               'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml"/></Types>')
                 data = t.encode("utf-8")
             elif item.filename == "xl/workbook.xml":
                 t = data.decode("utf-8")
-                t, n = re.subn(r'(<sheet name="아주숨김_시트"[^>]*?)state="hidden"', r'\1state="veryHidden"', t)
-                assert n == 1, "veryHidden 치환 실패"
-                assert "</sheets>" in t
-                t = t.replace("</sheets>", '</sheets><externalReferences><externalReference r:id="rIdExt1"/></externalReferences>', 1)
+                if very_hidden:
+                    t, n = re.subn(r'(<sheet name="아주숨김_시트"[^>]*?)state="hidden"', r'\1state="veryHidden"', t)
+                    assert n == 1, "veryHidden 치환 실패"
+                if with_link:
+                    assert "</sheets>" in t
+                    t = t.replace("</sheets>", '</sheets><externalReferences><externalReference r:id="rIdExt1"/></externalReferences>', 1)
                 data = t.encode("utf-8")
-            elif item.filename == "xl/_rels/workbook.xml.rels":
+            elif item.filename == "xl/_rels/workbook.xml.rels" and with_link:
                 t = data.decode("utf-8")
                 t = t.replace("</Relationships>", '<Relationship Id="rIdExt1" '
                               'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink" '
                               'Target="externalLinks/externalLink1.xml"/></Relationships>')
                 data = t.encode("utf-8")
             zout.writestr(item, data)
-        zout.writestr("xl/externalLinks/externalLink1.xml", EXT_XML.encode("utf-8"))
-        zout.writestr("xl/externalLinks/_rels/externalLink1.xml.rels", EXT_RELS.encode("utf-8"))
+        if with_link:
+            zout.writestr("xl/externalLinks/externalLink1.xml", EXT_XML.encode("utf-8"))
+            zout.writestr("xl/externalLinks/_rels/externalLink1.xml.rels", EXT_RELS.encode("utf-8"))
+
+
+def build_link(path: Path) -> None:
+    """외부 링크 시나리오 전용 작은 통합 문서(링크 1개). 열 때 링크 업데이트 보안 경고가 뜨는 것이 정상이다."""
+    wb = xlsxwriter.Workbook(str(path))
+    wb.set_properties({"title": "훈수꾼 링크 시험", "comments": "시험용 가짜 자료입니다. 외부 링크 1개(원본_연결용.xlsx, 파일은 없어도 됨)."})
+    bold = wb.add_format({"bold": True})
+    muted = wb.add_format({"font_color": "#808080"})
+    s = wb.add_worksheet("링크")
+    s.set_column("A:A", 34)
+    s.write("A1", "외부 링크 1개(원본_연결용.xlsx)", bold)
+    s.write_formula("B2", "=[1]원본!$B$2", None, 7)
+    s.write_formula("B3", "=[1]원본!$B$3*2", None, 14)
+    s.write("C2", "← 다른 파일을 가리키는 수식(원본 파일은 없어도 됩니다). 경고가 뜨면 [업데이트 안 함]", muted)
+    wb.close()
 
 
 def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     tmp = OUT.with_suffix(".tmp.xlsx")
     build(tmp)
-    patch(tmp, OUT)
+    patch(tmp, OUT, with_link=False, very_hidden=True)
     tmp.unlink()
     print("만들었습니다:", OUT, OUT.stat().st_size, "bytes")
+    build_link(tmp)
+    patch(tmp, LINK_OUT, with_link=True, very_hidden=False)
+    tmp.unlink()
+    print("만들었습니다:", LINK_OUT, LINK_OUT.stat().st_size, "bytes")
     return 0
 
 
