@@ -43,6 +43,7 @@ internal sealed partial class SidebarWindow
         _profile = profile;
         _tabList = tabs;
         _heightOf = heightOf;
+        if (_dragging) { _renderPending = true; return; } // 끄는 중이면 놓은 뒤에
         Render();
     }
 
@@ -177,7 +178,7 @@ internal sealed partial class SidebarWindow
         {
             Width = 32, Height = 32, Margin = new Thickness(4, 2, 4, 2), CornerRadius = new CornerRadius(6), Cursor = System.Windows.Input.Cursors.Hand, Tag = tab.Key,
             BorderThickness = new Thickness(2), BorderBrush = Brushes.Transparent,
-            ToolTip = (names.Count > 1 ? $"{tab.Name}: {string.Join(", ", names)}" : names[0]) + "\nShift+끌기: 순서 바꾸기 · 다른 묶음 위에 놓으면 합치기",
+            ToolTip = (names.Count > 1 ? $"{tab.Name}: {string.Join(", ", names)}" : names[0]) + "\n끌어서 순서 바꾸기 · Shift+끌어 다른 묶음 가운데에 놓으면 합치기",
             Child = grid,
         };
         b.SetResourceReference(Border.BackgroundProperty, active ? "Hunsu.Accent" : "Hunsu.GlassAlt");
