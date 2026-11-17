@@ -1,5 +1,5 @@
 // 기능: 셀 위 표시층(ShellController의 일부). 켜진 모듈의 view.json marks[] 선언을 모아, 해당 주제 조회 결과(칸 자리)를 MarkWindow에 그린다.
-//       스크롤은 엑셀 이벤트가 없어서 엑셀이 앞에 있을 때만 settings.markPollMs 간격으로 그 주제를 다시 묻는다(끄는 중이면 QueryThrottle이 미룬다).
+//       스크롤은 엑셀 이벤트가 없어서 엑셀이 앞에 있을 때만 settings.markPollMs 간격으로 화면 자리(속성만, 매크로 없음)를 보고, 움직였을 때만 그 주제를 다시 묻는다(끄는 중이면 QueryThrottle이 미룬다).
 // 사용법: OnTopic이 결과마다 OnTopicForMarks(r)를 부르고, RefreshDocks·전부 숨김·엑셀 바뀜 때 UpdateMarkLayer()를 부른다.
 // 의존: Overlay/MarkWindow(색연필은 PencilPainter), Core/Marks/MarkGeometry·FlowSketch, Core/View(MarkSpec, DataScope), Ui/Theme(ThemeKeys.Tone). 칸 값은 받지 않는다(자리만).
 using System.Text.Json;
@@ -70,6 +70,7 @@ internal sealed partial class ShellController
         if (!any)
         {
             _markPoll?.Stop();
+            if (_target != IntPtr.Zero) _registry.ForgetView(_target);
             _markData.Clear();
             _markWindow?.Clear();
             return;
@@ -86,6 +87,8 @@ internal sealed partial class ShellController
     {
         if (_hiddenAll || _target == IntPtr.Zero) return;
         if (User32.GetForegroundWindow() != _target) return; // 다른 창을 쓰는 동안 엑셀을 바쁘게 하지 않는다
-        _registry.Refresh(_target, [.. MarkTopics().Where(t => t == "mark")]); // 스크롤을 따라가려면 칸 자리만 다시 묻는다(무거운 흐름 조회는 선택이 바뀔 때만)
+        // 스크롤을 따라가려면 칸 자리만 다시 묻는다(무거운 흐름 조회는 선택이 바뀔 때만). 화면 자리를 속성으로 먼저 보고 움직였을 때만 다리를 부른다:
+        // 매번 다리 매크로를 돌리면 엑셀 커서가 '계산 중'과 기본 사이를 계속 오갔다(2026-11-17 신고).
+        _registry.RefreshIfViewMoved(_target, [.. MarkTopics().Where(t => t == "mark")]);
     }
 }
