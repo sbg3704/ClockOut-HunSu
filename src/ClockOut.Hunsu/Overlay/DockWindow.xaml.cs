@@ -252,7 +252,7 @@ public partial class DockWindow : Window
 
     /// <summary>모듈 패널의 자리(창 기준 실제 픽셀). 보이지 않으면 빈 사각형.</summary>
     internal PixelRect PanelRect(ModuleView m) =>
-        m.ShowsPanel && m.Frame.IsVisible ? ToDevice(m.Frame.TransformToAncestor(this).TransformBounds(new Rect(0, 0, m.Frame.ActualWidth, m.Frame.ActualHeight))) : default;
+        m.ShowsPanel && m.Frame.IsVisible && m.Frame.IsDescendantOf(this) ? ToDevice(m.Frame.TransformToAncestor(this).TransformBounds(new Rect(0, 0, m.Frame.ActualWidth, m.Frame.ActualHeight))) : default;
 
     private PixelRect ToDevice(Rect r)
     {

@@ -18,14 +18,30 @@ internal sealed partial class ShellController
     /// <summary>따라가는 엑셀에 hello를 불러 본다. 곧바로 한 번(엑셀이 막 켜졌을 수 있어 0.6초 뒤), 안 되면 5초마다.</summary>
     private void StartProbe()
     {
-        _probeTimer ??= new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.Background, async (_, _) => await ProbeOnce(), Application.Current.Dispatcher);
+        // 주의(0.0.211 강제 종료의 원인): DispatcherTimer 생성자에 콜백으로 null을 넘기면 ArgumentNullException이라 시작하자마자 꺼졌다. 콜백은 Tick에 따로 붙인다.
+        if (_probeTimer == null)
+        {
+            _probeTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher) { Interval = TimeSpan.FromSeconds(5) };
+            _probeTimer.Tick += async (_, _) => await ProbeOnce();
+        }
         _probeTimer.Stop();
-        var first = new DispatcherTimer(TimeSpan.FromMilliseconds(600), DispatcherPriority.Background, null!, Application.Current.Dispatcher);
+        var first = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher) { Interval = TimeSpan.FromMilliseconds(600) };
         first.Tick += async (_, _) => { first.Stop(); await ProbeOnce(); };
         first.Start();
     }
 
     private async Task ProbeOnce()
+    {
+        try { await ProbeOnceCore(); }
+        catch (Exception ex)
+        {
+            // 먼저 말 걸기는 덤이다: 무슨 일이 있어도 훈수꾼을 꺼뜨리지 않는다(기록만 남기고 다음 5초에 다시).
+            _log.Write("probe_exception", ("type", ex.GetType().Name), ("msg", ex.Message));
+            _probing = false;
+        }
+    }
+
+    private async Task ProbeOnceCore()
     {
         if (_probing || _target == IntPtr.Zero) return;
         _probing = true;

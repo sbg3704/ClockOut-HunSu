@@ -355,6 +355,13 @@
 ## 2026-11-17 새 기능 후보 목록 시작
 - 사용자 아이디어 "참조 전용 팝업 창"(다른 시트를 팝업에 띄워 클릭으로 수식 참조)을 검토만 하고 사용자 지시로 보류. `docs/20_새_기능_후보.md`에 방식 A(엑셀 새 창 자동 배치, 추천)·B(직접 그리기)와 제약을 적음. 코드 변경 없음.
 
+## 0.0.212 0.0.211 강제 종료 고침 (2026-11-17)
+- 사용자: 0.0.211이 엑셀이 있으면 켜자마자 오류로 꺼짐. **원인(코드로 확정, 내가 낸 버그):** ShellController.Probe의 StartProbe가 `new DispatcherTimer(간격, 우선순위, null!, dispatcher)`로 콜백에 null을 넘겨 ArgumentNullException. Follow()가 StartProbe를 부르므로 엑셀을 따라가는 순간(시작 때 엑셀이 있으면 OnReady) 그대로 터졌다. 데모만의 문제가 아니었다(엑셀이 있으면 모두). 데모에서만 터지는 것처럼 보인 건 사용자가 데모를 열어 시험했기 때문.
+- 고침: 타이머를 콜백 없이 만들고 Tick에 따로 붙임. 방어: ExcelStaWorker의 모든 작업 스레드 일을 Run()으로 감싸 예상 밖 예외가 스레드·프로세스를 죽이지 못하게 하고(실패 값 반환, COM 참조 놓기), InstanceRegistry의 async void(Request, RefreshIfViewMoved), ProbeOnce, 연결 창 async void에 try/catch와 기록(query_exception, probe_exception 등).
+- 같은 사용자 로그의 나머지 둘: ① `DockWindow.PanelRect`가 사이드바·탭 모드에서 패널이 도크 창 밖에 있어 "Visual is not an ancestor"로 터짐 → `IsDescendantOf(this)` 검사. ② 종료 때 `System.Diagnostics.Tracing` FileNotFoundException(ShellController.OnBench→Quit→Shutdown): 같은 어셈블리를 못 찾는 원인은 클라우드에서 재현·확인 못 함(csproj는 SelfContained=false인데 co가 self-contained win-x64로 publish함, 빠진 파일이 배포 문제일 수 있음 → PC 확인 필요). 대응으로 `Quit()`을 try/catch + 멱등 `Dispose()` + `Environment.Exit(0)`로 바꿔 오류 종료를 막음.
+- 전역 방어: WinEvent 콜백(HotkeyService, WindowFollower, SidebarWindow)은 Dispatcher 밖이라 처리 안 된 예외가 앱을 죽이므로 모두 try/catch + ErrorLog.Caught.
+- VM에서의 재현은 하지 않았다(원인이 문서화된 API 규칙이라 코드로 확정). 화면 확인은 사용자 몫. 교훈: 새 기능이 시작 경로(Follow/OnReady)를 건드리면 호출이 예외 없이 지나가는지 먼저 본다.
+
 ## 0.0.211 확인용 엑셀 "그래도 안 붙음" (2026-11-17)
 - 사용자 스크린샷(0.0.210): 연결 창은 프로세스 13800 · 훈수꾼_확인용.xlsx에 연결됐다고 나오는데 패널은 "열린 통합 문서가 없습니다."(= 시트 이동 모듈의 emptyText, 값이 한 번도 안 온 첫 상태). 같은 프로세스에 숨은 XLMAIN 7개. 엑셀엔 외부 링크 노란 막대.
 - **찾은 구조 문제(코드로 확인):** 조회는 다리가 보내는 신호(PostMessage)가 와야 시작한다(InstanceRegistry.OnSignal). 다리가 안 열린 엑셀은 신호도 못 보내 → 조회가 한 번도 안 일어남 → 다리 없음 풍선(0.0.203)도 영영 안 뜸 → 패널이 말없이 빔. 또 시험 빌드의 다리는 run\clockout-hunsu.xlam(엑셀에 열려 있어야 값이 나옴, co hint)이라 확인용 엑셀을 더블클릭하면 다리 없는 엑셀에 열리기 쉽다. 이 PC의 엑셀에 다리가 열려 있는지는 클라우드에서 확정 못 함.

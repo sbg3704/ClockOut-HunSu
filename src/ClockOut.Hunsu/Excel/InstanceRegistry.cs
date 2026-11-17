@@ -121,6 +121,10 @@ internal sealed class InstanceRegistry : IDisposable
             _log.Write("view_moved", ("excel", hwnd.ToInt64()), ("key", key));
             foreach (var topic in topics) Request(inst, hwnd, topic, 0, Stopwatch.GetTimestamp());
         }
+        catch (Exception ex)
+        {
+            _log.Write("view_check_exception", ("excel", hwnd.ToInt64()), ("type", ex.GetType().Name), ("msg", ex.Message));
+        }
         finally
         {
             inst.ViewChecking = false;
@@ -181,6 +185,12 @@ internal sealed class InstanceRegistry : IDisposable
                     SummaryReady?.Invoke(new SummaryResult(hwnd, n.Seq, n.At, qs, qd, call, resp, summary));
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            // async void라 여기서 잡지 않으면 훈수꾼이 꺼진다: 기록만 남기고 이 주제는 다음 신호에 다시 묻는다.
+            _log.Write("query_exception", ("excel", hwnd.ToInt64()), ("topic", topic), ("type", ex.GetType().Name), ("msg", ex.Message));
+            st.Pending = null;
         }
         finally
         {

@@ -24,7 +24,7 @@ internal sealed class HotkeyService : IDisposable
     {
         _hwnd = messageWindow;
         _log = log;
-        _proc = (_, _, hwnd, obj, _, _, _) => { if (obj == User32.OBJID_WINDOW) Evaluate(hwnd); };
+        _proc = (_, _, hwnd, obj, _, _, _) => { try { if (obj == User32.OBJID_WINDOW) Evaluate(hwnd); } catch (Exception ex) { Diagnostics.ErrorLog.Caught("Hotkey.WinEvent", ex); } };
         _hook = User32.SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _proc, 0, 0, User32.WINEVENT_OUTOFCONTEXT);
         Evaluate(User32.GetForegroundWindow());
     }
