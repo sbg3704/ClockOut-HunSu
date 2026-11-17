@@ -168,6 +168,7 @@ internal sealed partial class ShellController : IDisposable
         }
         foreach (var p in _pinWindows.Values) p.SetOwner(target);
         _markData.Clear();
+        _registry.ForgetView(target); // 다시 돌아온 엑셀도 표시 자리를 새로 묻는다
         _markWindow?.Clear();
         UpdateDockVisibility();
         UpdateQuickBar();

@@ -1,7 +1,7 @@
 // 기능: 엑셀 창 핸들마다 전용 작업 스레드(ExcelStaWorker)와 순번 추적기를 하나씩 둔다. 신호를 받아 켜진 모듈이 구독한 주제만 조회하고 결과를 화면에 넘긴다.
 //       주제마다 진행 중인 조회는 하나만, 그동안 온 신호는 마지막 것 하나로 묶고, 조회 사이에는 간격을 둔다(Core/QueryThrottle: 범위를 끌 때 엑셀이 버벅이던 문제, docs/06).
 // 사용법: var reg = new InstanceRegistry(log, settings) { TopicsFor = code => ... }; reg.TopicReady += r => ...; reg.OnSignal(hwnd, code, seq, at);
-//         reg.Refresh(hwnd, topics)  처음 한 번 채우기;  await reg.DoAsync(hwnd, "goto", argsJson)  명령 보내기;  await reg.ProbeAsync(hwnd)
+//         reg.Refresh(hwnd, topics)  처음 한 번 채우기;  reg.RefreshIfViewMoved(hwnd, topics)  화면이 움직였을 때만(표시층 스크롤 따라가기);  await reg.DoAsync(hwnd, "goto", argsJson)  명령 보내기;  await reg.ProbeAsync(hwnd)
 // 의존: Excel/ExcelStaWorker, Core(SeqTracker, BridgeResponse, SelectionSummary, QueryThrottle, Settings). 화면 스레드에서 부른다.
 using System.Diagnostics;
 using ClockOut.Hunsu.Core;
@@ -33,6 +33,8 @@ internal sealed class InstanceRegistry : IDisposable
         public SeqTracker Seq { get; } = new();
         public bool Greeted { get; set; }
         public Dictionary<string, TopicState> Topics { get; } = new(StringComparer.Ordinal);
+        public ViewWatch View { get; } = new();
+        public bool ViewChecking { get; set; }
     }
 
     private readonly Dictionary<IntPtr, Instance> _items = [];
@@ -103,6 +105,32 @@ internal sealed class InstanceRegistry : IDisposable
     {
         var inst = Get(hwnd);
         foreach (var topic in topics) Request(inst, hwnd, topic, 0, Stopwatch.GetTimestamp());
+    }
+
+    /// <summary>화면(스크롤·확대·시트)이 지난번과 달라졌을 때만 주제를 다시 묻는다. 자리는 속성으로만 읽어 엑셀 커서가 '바쁨'으로 깜빡이지 않는다(2026-11-17). 점검 중이면 건너뛴다.</summary>
+    public async void RefreshIfViewMoved(IntPtr hwnd, IReadOnlyList<string> topics)
+    {
+        if (topics.Count == 0) return;
+        var inst = Get(hwnd);
+        if (inst.ViewChecking) return;
+        inst.ViewChecking = true;
+        try
+        {
+            string? key = await inst.Worker.ViewKeyAsync();
+            if (!inst.View.Moved(key)) return;
+            _log.Write("view_moved", ("excel", hwnd.ToInt64()), ("key", key));
+            foreach (var topic in topics) Request(inst, hwnd, topic, 0, Stopwatch.GetTimestamp());
+        }
+        finally
+        {
+            inst.ViewChecking = false;
+        }
+    }
+
+    /// <summary>다음 RefreshIfViewMoved가 화면이 그대로여도 다시 묻게 한다(표시를 지웠을 때).</summary>
+    public void ForgetView(IntPtr hwnd)
+    {
+        if (_items.TryGetValue(hwnd, out var inst)) inst.View.Forget();
     }
 
     private async void Request(Instance inst, IntPtr hwnd, string topic, int seq, long at)

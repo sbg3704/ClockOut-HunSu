@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-17 갱신)
 
+## 2026-11-17 커서 '계산 중' 깜빡임 (판 0.0.191)
+- 사용자 신고: 훈수꾼을 켜 두면 마우스 커서가 약 1초 주기로 '계산 중'과 기본 사이를 오감.
+- 원인: 표시층(marks·crosshair 등 marks 선언 모듈)이 켜져 있고 엑셀이 앞에 있으면 `PollMarks`가 markPollMs(기본 400ms)마다 다리 `CoHunsu_Query "mark"`를 `Application.Run`으로 불렀다. 엑셀은 매크로를 도는 동안 커서를 바쁨으로 바꾼다.
+- 고침: `ExcelStaWorker.ViewKeyAsync`가 ActiveWindow 속성(ScrollRow·ScrollColumn·Zoom·Split·FreezePanes·시트 이름)만 읽고(매크로 없음), `InstanceRegistry.RefreshIfViewMoved`가 Core `ViewWatch`로 비교해 바뀌었을 때만 다리를 부른다. 엑셀을 다시 따라갈 때·표시층을 끌 때 `ForgetView`.
+- 못 본 것: PC에서 커서가 멈췄는지, 속성 읽기만으로도 커서가 바뀌는지(바뀌면 markPollMs=0 '신호 때만'으로 피하고 다른 길을 찾는다), 열 너비만 바꿨을 때 표시가 늦게 따라오는지(다음 선택 신호 때 맞춰짐).
+
 ## 2026-11-17 사이드바 접기·펴기 (판 0.0.190)
 - 사용자 요청: 하단 ✕(끄기) 대신 접기·펴기. `sidebarCollapsed`, 접으면 활동 막대 폭만 예약. docs/19. 못 본 것: 실제 화면(접을 때 엑셀이 넓어지는지).
 

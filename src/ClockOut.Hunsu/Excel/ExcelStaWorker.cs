@@ -1,6 +1,6 @@
 // 기능: 엑셀 인스턴스 하나를 맡는 전용 STA 스레드. 그 엑셀로 가는 모든 COM 호출을 차례로 처리한다(docs/01 3.7장 1번).
 //       화면 스레드는 엑셀을 기다리지 않는다: 호출은 Task로 돌려받는다.
-// 사용법: var w = new ExcelStaWorker(xlMainHwnd); BridgeCall r = await w.CallAsync("CoHunsu_Query", "selection.summary", "{}");
+// 사용법: var w = new ExcelStaWorker(xlMainHwnd); BridgeCall r = await w.CallAsync("CoHunsu_Query", "selection.summary", "{}");  string? key = await w.ViewKeyAsync() (매크로 없이 화면 자리만)
 // 의존: Excel/ExcelLocator, Excel/OleMessageFilter, Core/RetryPolicy, Core/HResultNames.
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -62,6 +62,52 @@ internal sealed class ExcelStaWorker : IDisposable
             tcs.SetResult(new BridgeCall(false, null, 0, 0, 0, 0, "closed"));
         }
         return tcs.Task;
+    }
+
+    /// <summary>엑셀 화면 자리 글(스크롤 줄·칸, 확대, 창 나눔, 시트)을 속성으로만 읽는다. 다리 매크로(Application.Run)를 돌리지 않으므로 엑셀 커서가 '바쁨'으로 바뀌지 않는다. 못 읽으면 null.</summary>
+    public Task<string?> ViewKeyAsync()
+    {
+        var tcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            _queue.Add(() => tcs.SetResult(ViewKeyOnThread()));
+        }
+        catch (InvalidOperationException)
+        {
+            tcs.SetResult(null);
+        }
+        return tcs.Task;
+    }
+
+    private string? ViewKeyOnThread()
+    {
+        _app ??= ExcelLocator.Find(ExcelHwnd, out _attach);
+        if (_app == null) return null;
+        object? win = null, sheet = null;
+        try
+        {
+            win = Com.Get(_app, "ActiveWindow");
+            if (win == null) return null;
+            sheet = Com.Get(win, "ActiveSheet");
+            string name = sheet == null ? "" : Com.Get(sheet, "Name") as string ?? "";
+            return string.Join("|", Com.Get(win, "ScrollRow"), Com.Get(win, "ScrollColumn"), Com.Get(win, "Zoom"),
+                Com.Get(win, "SplitRow"), Com.Get(win, "SplitColumn"), Com.Get(win, "FreezePanes"), name);
+        }
+        catch (COMException ex)
+        {
+            if (HResultNames.IsGone(ex.HResult)) Release();
+            return null; // 셀 편집 중이거나 바쁨: 이번에는 묻지 않는다
+        }
+        catch (InvalidComObjectException)
+        {
+            Release();
+            return null;
+        }
+        finally
+        {
+            if (sheet != null && Marshal.IsComObject(sheet)) Marshal.ReleaseComObject(sheet);
+            if (win != null && Marshal.IsComObject(win)) Marshal.ReleaseComObject(win);
+        }
     }
 
     private BridgeCall CallOnThread(string proc, object[] args)
