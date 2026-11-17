@@ -71,6 +71,15 @@ internal sealed partial class ShellController
 
     private const int DockSnapPx = 40;
 
+    /// <summary>끄는 창이 엑셀 오른쪽 가장자리 가까이면 놓았을 때 어떻게 되는지 알려 주는 한 줄(사이드바 사용법 포함). 사이드바를 켠 동안은 안내하지 않는다.</summary>
+    private string? DockDragHint(PixelRect rect)
+    {
+        if (_target == IntPtr.Zero || SidebarOn) return null;
+        var ex = User32.VisibleBounds(_target);
+        bool near = Math.Abs(rect.Right - ex.Right) <= DockSnapPx * 2 && rect.Bottom > ex.Y && rect.Y < ex.Bottom;
+        return near ? "놓으면 오른쪽 패널 열에 붙어요 · 엑셀 밖에 붙이려면 훈 원 우클릭 → 사이드바" : null;
+    }
+
     /// <summary>떼어 낸 창을 엑셀 창 오른쪽 가장자리 가까이에 놓았으면 사이드 패널(오른쪽 도크)로 붙인다(자석). 묶음이면 담긴 패널 모두. true면 이 창은 곧 닫힌다.</summary>
     private bool TryDockDrop(ModuleView mv, PixelRect rect)
     {

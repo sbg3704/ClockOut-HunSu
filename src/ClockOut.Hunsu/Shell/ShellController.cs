@@ -94,6 +94,7 @@ internal sealed partial class ShellController : IDisposable
             d.HideAllRequested += ToggleHideAll;
             d.HubExtras = HubToggles;
             d.JoinToggleRequested += () => ApplySetting("panelJoin", !_settings.PanelJoin);
+            d.SidebarRequested += v => ApplySetting("sidebar", v);
             d.QuitRequested += Quit;
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");

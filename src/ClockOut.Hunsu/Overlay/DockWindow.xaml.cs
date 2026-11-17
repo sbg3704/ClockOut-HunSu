@@ -85,6 +85,9 @@ public partial class DockWindow : Window
     internal Func<IReadOnlyList<(string Label, string Gesture, Action Act)>>? HubExtras { get; set; }
     public event Action? QuitRequested;
     public event Action? JoinToggleRequested;
+
+    /// <summary>허브 메뉴에서 창 밖 사이드바를 골랐다("off", "left", "right").</summary>
+    public event Action<string>? SidebarRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
     public event Action? ExcelCleanupRequested;
@@ -296,6 +299,15 @@ public partial class DockWindow : Window
         var join = Item("패널 한 창처럼 붙여 보기", "", () => JoinToggleRequested?.Invoke());
         menu.Opened += (_, _) => join.IsChecked = _settings.PanelJoin;
         menu.Items.Add(join);
+        var side = new MenuItem { Header = "사이드바 (엑셀 창 밖)" };
+        foreach (var (key, label) in new[] { ("off", "끄기"), ("left", "왼쪽"), ("right", "오른쪽") })
+        {
+            var mi = new MenuItem { Header = label, Tag = key, IsCheckable = false };
+            mi.Click += (_, _) => SidebarRequested?.Invoke(key);
+            side.Items.Add(mi);
+        }
+        menu.Opened += (_, _) => { foreach (MenuItem mi in side.Items) mi.IsChecked = (string?)mi.Tag == _settings.Sidebar; };
+        menu.Items.Add(side);
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));
