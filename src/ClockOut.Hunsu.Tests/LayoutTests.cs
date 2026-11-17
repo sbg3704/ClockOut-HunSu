@@ -95,6 +95,19 @@ public class LayoutTests
     }
 
     [Fact]
+    public void Opacity_AnalogAlpha_OverridesLevelAndIsClamped()
+    {
+        Assert.Equal(0.8, OpacityLevels.Resolve(1, 0));        // 슬라이더 값 없음 → 단계 값
+        Assert.Equal(0.63, OpacityLevels.Resolve(1, 0.63));    // 있으면 그 값
+        Assert.Equal(OpacityLevels.MinAlpha, OpacityLevels.NormalizeAlpha(0.01));
+        Assert.Equal(1.0, OpacityLevels.NormalizeAlpha(7));
+        Assert.Equal(0, OpacityLevels.NormalizeAlpha(double.NaN));
+        var s = new LayoutState();
+        s.Update("hunsu-a", p => p with { Alpha = 0.5 });
+        Assert.Equal(0.5, s.Effective("hunsu-a", Places.EdgeLeft, 1, ["panel"], true).Alpha);
+    }
+
+    [Fact]
     public void Hotkey_OnlyWhenExcelOrSelfInFront()
     {
         Assert.True(HotkeyPolicy.ShouldRegister("XLMAIN", 10, 99));

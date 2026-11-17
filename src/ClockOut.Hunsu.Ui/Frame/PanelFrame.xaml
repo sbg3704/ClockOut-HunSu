@@ -19,7 +19,10 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <DockPanel Margin="8,0,4,0" VerticalAlignment="Center" LastChildFill="True">
+        <!-- 투명도 막대: ◐ 단추를 누르면 제목 대신 나타나 아날로그로 조절한다(높이가 변하지 않게 제목 자리에 겹침). -->
+        <Slider x:Name="AlphaSlider" Visibility="Collapsed" Margin="8,0,4,0" VerticalAlignment="Center" Focusable="False" IsMoveToPointEnabled="True"
+                Minimum="0.2" Maximum="1" SmallChange="0.02" LargeChange="0.1" ToolTip="투명도(밀어서 조절)" ValueChanged="AlphaSlider_ValueChanged" />
+        <DockPanel x:Name="TitleRow" Margin="8,0,4,0" VerticalAlignment="Center" LastChildFill="True">
           <Border x:Name="Dot" DockPanel.Dock="Left" Width="5" Height="5" CornerRadius="3" Background="{StaticResource Hunsu.Accent}" Margin="0,0,6,0" />
           <TextBlock x:Name="TitleText" FontFamily="{DynamicResource Hunsu.FontTitle}" FontSize="{DynamicResource Hunsu.FontPanelTitle}"
                      FontWeight="SemiBold" Foreground="{StaticResource Hunsu.Text}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
@@ -27,7 +30,7 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,2,0">
           <Button x:Name="LockButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE785;" ToolTip="이 패널 자리 잠그기" Visibility="Collapsed" Click="LockButton_Click" />
           <Button x:Name="OpacityButton" Style="{StaticResource Hunsu.IconButton}" FontFamily="Segoe UI Symbol" Content="◐"
-                  ToolTip="투명도" Click="OpacityButton_Click" />
+                  ToolTip="투명도: 누르면 막대" Click="OpacityButton_Click" />
           <Button x:Name="PinButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE718;" ToolTip="떼어 내기(핀 창)" Click="PinButton_Click" />
           <Button x:Name="CollapseButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE70E;" ToolTip="작게(아이콘으로)" Click="CollapseButton_Click" />
         </StackPanel>

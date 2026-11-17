@@ -146,8 +146,9 @@ internal sealed partial class ShellController
     internal void CycleOpacity(ModuleView mv)
     {
         int next = OpacityLevels.Next(mv.Frame.OpacityLevel);
+        mv.Frame.SetAlpha(0); // 단계로 돌리면 슬라이더 값은 지운다
         mv.Frame.SetOpacityLevel(next);
-        Save(mv, p => p with { Opacity = next });
+        Save(mv, p => p with { Opacity = next, Alpha = 0 });
         ModulesChanged?.Invoke();
     }
 
@@ -169,6 +170,7 @@ internal sealed partial class ShellController
             var man = mv.Module.Manifest;
             mv.Placement = _store.State.Effective(mv.Id, man.Place, man.Order, man.Shapes, _settings.IsEnabledByDefault(man.Id));
             mv.Frame.SetOpacityLevel(mv.Placement.Opacity);
+            mv.Frame.SetAlpha(mv.Placement.Alpha);
             mv.ApplyCollapsed(mv.Placement.Collapsed, animate: false, done: null);
         }
         _store.SaveSoon();

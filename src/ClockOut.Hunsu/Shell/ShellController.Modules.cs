@@ -23,7 +23,7 @@ internal sealed partial class ShellController
         mv.Frame.PinClicked += () => { if (mv.InDock) Pin(mv, null); else Unpin(mv, null); };
         mv.Frame.CollapseClicked += () => SetCollapsed(mv, true, null);
         mv.Tab.Clicked += () => SetCollapsed(mv, false, null);
-        mv.Frame.OpacityClicked += () => CycleOpacity(mv);
+        mv.Frame.AlphaCommitted += a => { Save(mv, p => p with { Alpha = a }); ModulesChanged?.Invoke(); }; // ◐ 막대로 정한 투명도 저장
         mv.Frame.LockClicked += () => ToggleLock(mv);
         mv.Frame.SetLocked(mv.Placement.Locked);
         mv.Frame.ContextMenu = ModuleIconMenu(mv.Id);

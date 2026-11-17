@@ -47,4 +47,13 @@ public static class OpacityLevels
     public static int Next(int level) => (Math.Clamp(level, 0, Rest.Length - 1) + 1) % Rest.Length;
 
     public static double RestOpacity(int level) => Rest[Math.Clamp(level, 0, Rest.Length - 1)];
+
+    /// <summary>아날로그 슬라이더로 정한 평소 불투명도의 허용 범위(너무 투명하면 패널을 못 찾는다).</summary>
+    public const double MinAlpha = 0.2, MaxAlpha = 1.0;
+
+    /// <summary>저장된 값 정리: 0(정하지 않음 = 단계 값을 씀)은 그대로, 나머지는 범위 안으로. 숫자가 아닌 값도 0.</summary>
+    public static double NormalizeAlpha(double alpha) => double.IsNaN(alpha) || alpha <= 0 ? 0 : Math.Clamp(alpha, MinAlpha, MaxAlpha);
+
+    /// <summary>평소 불투명도: 슬라이더 값(alpha)이 있으면 그것, 없으면 단계(level) 값.</summary>
+    public static double Resolve(int level, double alpha) => NormalizeAlpha(alpha) is var a && a > 0 ? a : RestOpacity(level);
 }

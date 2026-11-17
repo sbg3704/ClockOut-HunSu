@@ -13,6 +13,9 @@ public sealed record ModulePlacement
     public int? Order { get; init; }
     public bool Collapsed { get; init; }
     public int Opacity { get; init; }
+
+    /// <summary>슬라이더로 정한 평소 불투명도(0.2~1.0). 0이면 정하지 않음 = 위 단계(Opacity)를 따름.</summary>
+    public double Alpha { get; init; }
     public PixelRect? PinRect { get; init; }
     public bool Hidden { get; init; }
 
@@ -24,7 +27,7 @@ public sealed record ModulePlacement
 }
 
 /// <summary>선언과 사용자 값을 합친 결과.</summary>
-public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden, bool Locked = false);
+public sealed record EffectivePlacement(string Place, int Order, bool Collapsed, int Opacity, PixelRect? PinRect, bool Hidden, bool Locked = false, double Alpha = 0);
 
 public sealed class LayoutState
 {
@@ -74,6 +77,6 @@ public sealed class LayoutState
     {
         var p = Get(id);
         string place = p.Place != null && Places.CanPlace(p.Place, shapes) ? p.Place : declaredPlace;
-        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault), p.Locked);
+        return new EffectivePlacement(place, p.Order ?? declaredOrder, p.Collapsed, Math.Clamp(p.Opacity, 0, OpacityLevels.Rest.Length - 1), p.PinRect, !(p.Enabled ?? enabledByDefault), p.Locked, OpacityLevels.NormalizeAlpha(p.Alpha));
     }
 }
