@@ -85,6 +85,7 @@ internal sealed partial class ShellController
             }
             mv.Placement = eff;
             mv.Frame.SetOpacityLevel(eff.Opacity);
+            mv.Frame.SetAlpha(eff.Alpha);
             mv.Frame.SetLocked(eff.Locked);
             if (_pinWindows.TryGetValue(mv.Id, out var pw)) pw.Locked = eff.Locked;
             if (eff.Place == Places.Pin && !eff.Hidden)

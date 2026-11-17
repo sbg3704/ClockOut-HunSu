@@ -1,6 +1,6 @@
-// 기능: 패널 틀의 동작. 제목, 내용, 핀 상태(도크/핀 창), 투명도 단계(평소 불투명도, 마우스를 올리면 선명), 강조 테두리(부르기 중).
+// 기능: 패널 틀의 동작. 제목, 내용, 핀 상태(도크/핀 창), 투명도(◐ 단추를 누르면 막대가 나와 아날로그로 조절, 마우스를 올리면 선명), 강조 테두리(부르기 중).
 // 사용법: var f = new PanelFrame { Title = "선택 요약", Body = renderer.Root }; f.PinClicked += ...; f.SetOpacityLevel(1);
-//   이벤트: PinClicked, CollapseClicked, OpacityClicked, TitleDragStarted(핀 창에서 끌어 옮기기).
+//   이벤트: PinClicked, CollapseClicked, AlphaCommitted(◐ 막대로 정한 투명도), TitleDragStarted(핀 창에서 끌어 옮기기).
 // 의존: Theme(Hunsu.Fast 등), Core/Layout/OpacityLevels. 데이터나 엑셀을 모른다.
 using System.Windows;
 using System.Windows.Controls;
@@ -20,6 +20,8 @@ public partial class PanelFrame : UserControl
     public static double MaxBodyHeight { get; set; } = 120;
 
     private int _opacityLevel;
+    private double _alpha; // 슬라이더 값(0이면 단계 값)
+    private bool _sliding;
     private bool _summoned;
     private bool _locked;
 
@@ -30,13 +32,12 @@ public partial class PanelFrame : UserControl
         // 룩을 바꾸면 제목 글꼴·크기가 바뀌므로 형광펜 칠 길이를 다시 잰다(자원 갱신이 끝난 뒤).
         Loaded += (_, _) => ThemePicker.SkinChanged += OnSkinChanged;
         Unloaded += (_, _) => ThemePicker.SkinChanged -= OnSkinChanged;
-        MouseEnter += (_, _) => FadeTo(SharpenOnHover ? 1.0 : OpacityLevels.RestOpacity(_opacityLevel));
-        MouseLeave += (_, _) => FadeTo(OpacityLevels.RestOpacity(_opacityLevel));
+        MouseEnter += (_, _) => FadeTo(SharpenOnHover && !_sliding ? 1.0 : RestAlpha);
+        MouseLeave += (_, _) => { CloseAlphaBar(); FadeTo(RestAlpha); };
     }
 
     public event Action? PinClicked;
     public event Action? CollapseClicked;
-    public event Action? OpacityClicked;
     public event Action? LockClicked;
     public event Action<MouseButtonEventArgs>? TitleDragStarted;
 
@@ -89,11 +90,54 @@ public partial class PanelFrame : UserControl
 
     public int OpacityLevel => _opacityLevel;
 
+    /// <summary>평소(마우스가 없을 때) 불투명도: 슬라이더 값이 있으면 그것, 없으면 단계 값.</summary>
+    public double RestAlpha => OpacityLevels.Resolve(_opacityLevel, _alpha);
+
+    /// <summary>슬라이더를 놓았다(막대를 닫을 때): 저장할 값. 앱이 배치에 저장한다.</summary>
+    public event Action<double>? AlphaCommitted;
+
+    /// <summary>저장된 슬라이더 값을 넣는다(0이면 단계 값을 씀).</summary>
+    public void SetAlpha(double alpha)
+    {
+        _alpha = OpacityLevels.NormalizeAlpha(alpha);
+        if (!IsMouseOver) FadeTo(RestAlpha);
+    }
+
+    private void AlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (AlphaSlider.Visibility != Visibility.Visible) return;
+        _alpha = OpacityLevels.NormalizeAlpha(e.NewValue);
+        BeginAnimation(OpacityProperty, null); // 끄는 동안 바로 따라오게(애니메이션 없이)
+        Opacity = RestAlpha;
+        OpacityButton.ToolTip = $"투명도: {Math.Round(RestAlpha * 100)}%";
+    }
+
+    /// <summary>◐ 단추: 막대를 보이거나 감춘다(감출 때 값을 저장).</summary>
+    private void ToggleAlphaBar()
+    {
+        if (_sliding) { CloseAlphaBar(); return; }
+        _sliding = true;
+        AlphaSlider.Value = Math.Clamp(RestAlpha, OpacityLevels.MinAlpha, OpacityLevels.MaxAlpha);
+        AlphaSlider.Visibility = Visibility.Visible;
+        TitleRow.Visibility = Visibility.Hidden;
+        BeginAnimation(OpacityProperty, null);
+        Opacity = RestAlpha;
+    }
+
+    private void CloseAlphaBar()
+    {
+        if (!_sliding) return;
+        _sliding = false;
+        AlphaSlider.Visibility = Visibility.Collapsed;
+        TitleRow.Visibility = Visibility.Visible;
+        AlphaCommitted?.Invoke(_alpha);
+    }
+
     public void SetOpacityLevel(int level)
     {
         _opacityLevel = Math.Clamp(level, 0, OpacityLevels.Rest.Length - 1);
         OpacityButton.ToolTip = "투명도: " + OpacityLevels.Names[_opacityLevel];
-        if (!IsMouseOver) FadeTo(OpacityLevels.RestOpacity(_opacityLevel));
+        if (!IsMouseOver) FadeTo(RestAlpha);
     }
 
     /// <summary>부르기(Ctrl+Alt+H) 중: 강조색 테두리로 "지금 누를 수 있음"을 알린다.</summary>
@@ -130,10 +174,21 @@ public partial class PanelFrame : UserControl
 
     private void LockButton_Click(object sender, RoutedEventArgs e) => LockClicked?.Invoke();
 
-    private void OpacityButton_Click(object sender, RoutedEventArgs e) => OpacityClicked?.Invoke();
+    private void OpacityButton_Click(object sender, RoutedEventArgs e) => ToggleAlphaBar();
 
     /// <summary>제목줄에 설명(툴팁)을 붙인다(null이면 없앰). 핀 창에서 "Shift를 누른 채 끌어 옮기기" 안내에 쓴다.</summary>
     public void SetTitleTip(string? tip) => TitleBar.ToolTip = tip;
 
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => TitleDragStarted?.Invoke(e);
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_sliding && e.OriginalSource is DependencyObject src && IsInside(src, AlphaSlider)) return; // 막대를 밀 때는 창을 끌지 않는다
+        TitleDragStarted?.Invoke(e);
+    }
+
+    private static bool IsInside(DependencyObject node, DependencyObject ancestor)
+    {
+        for (var n = node; n != null; n = System.Windows.Media.VisualTreeHelper.GetParent(n) ?? LogicalTreeHelper.GetParent(n))
+            if (ReferenceEquals(n, ancestor)) return true;
+        return false;
+    }
 }

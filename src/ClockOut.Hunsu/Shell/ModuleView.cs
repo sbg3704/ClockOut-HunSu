@@ -29,6 +29,7 @@ internal sealed class ModuleView
         _renderer.CommandRequested += (command, args) => CommandRequested?.Invoke(command, args);
         Frame = new PanelFrame { Title = module.Manifest.Name, Body = _renderer.Root };
         Frame.SetOpacityLevel(placement.Opacity);
+        Frame.SetAlpha(placement.Alpha);
         Tab = new DockTab { HorizontalAlignment = HorizontalAlignment.Right };
         Frame.SizeChanged += (_, e) => { if (e.NewSize.Height > 0) LastPanelHeight = e.NewSize.Height; };
         _slot.Children.Add(Tab);
@@ -129,7 +130,7 @@ internal sealed class ModuleView
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         var shift = new TranslateTransform(0, 6);
         Frame.RenderTransform = shift;
-        var fade = new DoubleAnimation(0, Core.Layout.OpacityLevels.RestOpacity(Frame.OpacityLevel), dur) { EasingFunction = ease };
+        var fade = new DoubleAnimation(0, Frame.RestAlpha, dur) { EasingFunction = ease };
         fade.Completed += (_, _) => { if (done != null) Diagnostics.Frames.Next(done); };
         Frame.BeginAnimation(UIElement.OpacityProperty, fade);
         shift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, dur) { EasingFunction = ease });
