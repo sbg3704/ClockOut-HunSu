@@ -111,10 +111,12 @@ internal sealed partial class ShellController
         if (_target == IntPtr.Zero) return ("따라가는 엑셀 창이 없습니다.", false);
         var r = await _registry.InspectAsync(_target);
         _log.Write("excel_inspect", ("hwnd", _target.ToInt64()), ("attached", r.Attached), ("attach", r.Attach), ("bridge", r.BridgeLoaded), ("books", r.Workbooks), ("pv", r.ProtectedViews), ("ready", r.Ready), ("err", r.Error));
-        if (!r.Attached) return ("이 엑셀에 붙지 못했습니다(" + r.Error + "). 다른 권한(관리자)으로 켠 엑셀이면 훈수꾼도 같은 권한으로 켜야 해요.", false);
+        if (!r.Attached) return ((ExcelElevationText(_target) is { } ev ? "⚠ " + ev + "\n" : "") + "이 엑셀에 붙지 못했습니다(" + r.Error + "). 다른 권한(관리자)으로 켠 엑셀이면 훈수꾼도 같은 권한으로 켜야 해요.", false);
         User32.GetWindowThreadProcessId(_target, out uint pidU);
         var same = ExcelWindows.List().Where(w => w.Pid == (int)pidU).ToList();
-        var lines = new List<string>
+        var lines = new List<string>();
+        if (ExcelElevationText(_target) is { } elevated) lines.Add("⚠ " + elevated);
+        lines.AddRange(new[]
         {
             "훈수꾼 판 " + BuildInfo.Text,
             $"따라가는 창 {_target.ToInt64()} · 프로세스 {pidU}번 · 같은 프로세스의 엑셀 주 창 {same.Count}개(보이는 것 {same.Count(w => w.Visible)}개) · 붙는 방법 {r.Attach}",
@@ -123,7 +125,7 @@ internal sealed partial class ShellController
             $"열린 통합 문서 {r.Workbooks}개 · 앞의 문서: {(r.ActiveBook.Length > 0 ? r.ActiveBook : "없음")}{(r.ActiveReadOnly ? " (읽기 전용)" : "")}",
             r.ProtectedViews > 0 ? $"보호된 보기 창 {r.ProtectedViews}개: 거기서 「편집 사용」을 눌러야 읽을 수 있어요" : "보호된 보기: 없음",
             r.Ready ? "엑셀 상태: 입력 받는 중" : "엑셀 상태: 바쁨 또는 대화 상자가 떠 있음 (링크 업데이트 확인 창 등을 닫아 보세요)",
-        };
+        });
         if (r.Error.Length > 0) lines.Add("읽다가 막힘: " + r.Error);
         return (string.Join("\n", lines), !r.BridgeLoaded);
     }
