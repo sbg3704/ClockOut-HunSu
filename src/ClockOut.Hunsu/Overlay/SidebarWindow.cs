@@ -19,6 +19,12 @@ internal sealed class SidebarWindow : Window
     private const double BarWidth = 40, GripWidth = 6;
     private readonly Grid _root = new();
     private readonly StackPanel _bar = new();
+    private readonly StackPanel _footer = new();
+    private readonly DockPanel _barHost = new();
+    private bool _tabs = true;
+    private string? _activeId;
+    private List<ModuleView> _panels = [];
+    private string _profile = "";
     private readonly StackPanel _items = new();
     private readonly ScrollViewer _scroll = new();
     private readonly Thumb _grip = new();
@@ -48,6 +54,11 @@ internal sealed class SidebarWindow : Window
         _scroll.Content = _items;
         _items.Margin = new Thickness(4);
         _bar.Margin = new Thickness(0, 6, 0, 6);
+        _footer.Margin = new Thickness(0, 4, 0, 6);
+        DockPanel.SetDock(_footer, Dock.Bottom);
+        _barHost.LastChildFill = true;
+        _barHost.Children.Add(_footer);
+        _barHost.Children.Add(_bar);
         _grip.Width = GripWidth;
         _grip.Cursor = System.Windows.Input.Cursors.SizeWE;
         _grip.Opacity = 0.01; // 보이지 않지만 잡힌다
@@ -81,6 +92,9 @@ internal sealed class SidebarWindow : Window
     /// <summary>폭을 끌어 바꾼 뒤(DIP).</summary>
     public event Action<int>? WidthChanged;
 
+    /// <summary>활동 막대 맨 아래 일반 단추를 눌렀다("settings", "modules", "look", "profiles", "view", "cleanup", "off").</summary>
+    public event Action<string>? FooterClicked;
+
     /// <summary>활동 막대의 아이콘을 눌렀다(모듈 id).</summary>
     public event Action<string>? ModuleClicked;
 
@@ -94,8 +108,9 @@ internal sealed class SidebarWindow : Window
     private double Scale() => PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
 
     /// <summary>왼쪽/오른쪽과 폭(DIP). 이미 켜져 있으면 바로 다시 자리를 잡는다.</summary>
-    public void Configure(string side, int widthDip)
+    public void Configure(string side, int widthDip, bool tabs = true)
     {
+        _tabs = tabs;
         bool left = side == "left";
         bool sideChanged = left != _left;
         _left = left;
@@ -109,7 +124,7 @@ internal sealed class SidebarWindow : Window
     {
         _root.Children.Clear();
         _root.ColumnDefinitions.Clear();
-        UIElement[] order = _left ? [_bar, _scroll, _grip] : [_grip, _scroll, _bar];
+        UIElement[] order = _left ? [_barHost, _scroll, _grip] : [_grip, _scroll, _barHost];
         double[] widths = _left ? [BarWidth, -1, GripWidth] : [GripWidth, -1, BarWidth];
         for (int i = 0; i < 3; i++)
         {
@@ -227,8 +242,13 @@ internal sealed class SidebarWindow : Window
     internal void SetModules(IEnumerable<ModuleView> panels, string profile)
     {
         var list = panels.OrderBy(m => m.Placement.Order).ToList();
+        _panels = list;
+        _profile = profile;
+        // 탭 보기: 고른 모듈 하나만 보인다(고른 게 없거나 접혔으면 펼쳐진 첫 모듈).
+        if (_tabs && !list.Any(m => m.Id == _activeId && m.ShowsPanel)) _activeId = list.FirstOrDefault(m => m.ShowsPanel)?.Id;
         _items.Children.Clear();
         _bar.Children.Clear();
+        BuildFooter();
         double gap = (double)Application.Current.FindResource("Hunsu.Gap");
         foreach (var m in list)
         {
@@ -239,6 +259,7 @@ internal sealed class SidebarWindow : Window
             m.Frame.Width = double.NaN; // 사이드바 폭에 맞춘다
             m.Frame.ApplyBodyLimit(true); // 높이는 사이드바 스크롤이 맡는다
             m.Tab.Visibility = Visibility.Collapsed;
+            m.Slot.Visibility = _tabs && m.Id != _activeId ? Visibility.Collapsed : Visibility.Visible;
             _items.Children.Add(m.Slot);
             _bar.Children.Add(ActivityIcon(m, profile));
         }
@@ -246,19 +267,53 @@ internal sealed class SidebarWindow : Window
 
     private UIElement ActivityIcon(ModuleView m, string profile)
     {
-        bool open = m.ShowsPanel;
+        bool open = _tabs ? m.ShowsPanel && m.Id == _activeId : m.ShowsPanel;
         var brush = (Brush)Application.Current.FindResource(open ? "Hunsu.AccentInk" : ThemeKeys.Text);
         var glyph = IconFactory.Create(profile, m.Module.Manifest.Icon, 18, brush, m.Module.Manifest.Name);
         var b = new System.Windows.Controls.Border
         {
             Width = 32, Height = 32, Margin = new Thickness(4, 2, 4, 2), CornerRadius = new CornerRadius(6), Cursor = System.Windows.Input.Cursors.Hand,
-            ToolTip = m.Module.Manifest.Name + (open ? " (누르면 접기)" : " (누르면 펴기)"),
+            ToolTip = m.Module.Manifest.Name + (_tabs ? "" : open ? " (누르면 접기)" : " (누르면 펴기)"),
             Child = glyph,
         };
         b.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, open ? "Hunsu.Accent" : "Hunsu.GlassAlt");
         string id = m.Id;
-        b.MouseLeftButtonUp += (_, _) => ModuleClicked?.Invoke(id);
+        b.MouseLeftButtonUp += (_, _) =>
+        {
+            if (!_tabs) { ModuleClicked?.Invoke(id); return; }
+            _activeId = id;
+            _scroll.ScrollToTop();
+            if (m.ShowsPanel) SetModules(_panels, _profile); // 이미 펼쳐진 모듈: 보는 탭만 바꾼다
+            else ModuleClicked?.Invoke(id);                  // 접힌 모듈: 펼치면 앱이 다시 그린다
+        };
         return b;
+    }
+
+    /// <summary>활동 막대 맨 아래(VS Code의 톱니·계정 자리)에 일반 단추들.</summary>
+    private void BuildFooter()
+    {
+        _footer.Children.Clear();
+        (string Key, string Glyph, string Tip)[] items =
+        [
+            ("settings", "⚙", "설정 창"),
+            ("modules", "☰", "모듈 관리"),
+            ("look", "✎", "모양 바꾸기"),
+            ("profiles", "▣", "작업 프로필"),
+            ("view", _tabs ? "≣" : "▤", _tabs ? "쌓아 보기로 바꾸기" : "탭 보기로 바꾸기"),
+            ("cleanup", "🧹", "남은 엑셀 정리"),
+            ("off", "✕", "사이드바 끄기"),
+        ];
+        foreach (var (key, glyph, tip) in items)
+        {
+            var t = new TextBlock { Text = glyph, FontSize = 15, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            t.SetResourceReference(TextBlock.ForegroundProperty, ThemeKeys.Text);
+            var b = new System.Windows.Controls.Border { Width = 32, Height = 28, Margin = new Thickness(4, 1, 4, 1), CornerRadius = new CornerRadius(6), Cursor = System.Windows.Input.Cursors.Hand, ToolTip = tip, Background = Brushes.Transparent, Child = t };
+            b.MouseEnter += (_, _) => b.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, "Hunsu.GlassAlt");
+            b.MouseLeave += (_, _) => b.Background = Brushes.Transparent;
+            string k = key;
+            b.MouseLeftButtonUp += (_, _) => FooterClicked?.Invoke(k);
+            _footer.Children.Add(b);
+        }
     }
 
     /// <summary>앱 바를 풀고 닫는다(프로그램 끝).</summary>
