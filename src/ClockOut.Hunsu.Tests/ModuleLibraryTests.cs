@@ -3,6 +3,7 @@
 // 의존: ClockOut.Hunsu.Core(Manifest/HudSpec, QuickSetting, View)
 using System.Text.Json;
 using ClockOut.Hunsu.Core.Manifest;
+using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.View;
 
 namespace ClockOut.Hunsu.Tests;
@@ -83,6 +84,40 @@ public class ModuleLibraryTests
         string q = ",\"quick\":[{\"kind\":\"toggle\",\"key\":\"k\",\"label\":\"켜기\",\"apply\":\"refresh\"}]";
         Assert.Equal("refresh", ModuleManifest.Parse(Manifest(q)).Manifest!.Quick.Single().Apply);
         Assert.NotEmpty(ModuleManifest.Parse(Manifest(q.Replace("refresh", "boom"))).Errors);
+    }
+
+    [Theory]
+    [InlineData("Ctrl+Alt+D", true, 0x44, "Ctrl+Alt+D")]
+    [InlineData("alt + shift + f5", true, 0x74, "Alt+Shift+F5")]
+    [InlineData("D", false, 0, "")]
+    [InlineData("Ctrl+Alt+H", false, 0, "")]
+    [InlineData("Ctrl+Alt+Shift+H", false, 0, "")]
+    [InlineData("Ctrl+Alt", false, 0, "")]
+    [InlineData("Ctrl+Alt+D+E", false, 0, "")]
+    [InlineData("Ctrl+Alt+F13", false, 0, "")]
+    public void HotkeyChord_ParsesOrRejects(string text, bool ok, int key, string normalized)
+    {
+        Assert.Equal(ok, HotkeyChord.TryParse(text, out var c));
+        if (!ok) return;
+        Assert.Equal(key, c.Key);
+        Assert.Equal(normalized, c.Text);
+        Assert.True((c.Mods & ClockOut.Hunsu.Core.HotkeyPolicy.ModNoRepeat) != 0);
+    }
+
+    [Fact]
+    public void Quick_HotkeyOnlyOnToggle_AndValid()
+    {
+        string ok = ",\"quick\":[{\"kind\":\"toggle\",\"key\":\"k\",\"label\":\"켜기\",\"hotkey\":\"ctrl+alt+d\"}]";
+        Assert.Equal("Ctrl+Alt+D", ModuleManifest.Parse(Manifest(ok)).Manifest!.Quick.Single().Hotkey);
+        Assert.NotEmpty(ModuleManifest.Parse(Manifest(ok.Replace("ctrl+alt+d", "d"))).Errors);
+        Assert.NotEmpty(ModuleManifest.Parse(Manifest(ok.Replace("toggle", "choice").Replace("]", ",\"options\":[{\"value\":\"a\",\"label\":\"a\"},{\"value\":\"b\",\"label\":\"b\"}]}]"))).Errors);
+    }
+
+    [Fact]
+    public void Pencilflow_DeclaresCtrlAltDHotkey()
+    {
+        var m = ModuleManifest.Parse(File.ReadAllText(Path.Combine(Root(), "hunsu-pencilflow", "hunsu-pencilflow.hunsu.json"))).Manifest!;
+        Assert.Equal("Ctrl+Alt+D", m.Quick.First(q => q.Key == "pencilDraw").Hotkey);
     }
 
     [Fact]

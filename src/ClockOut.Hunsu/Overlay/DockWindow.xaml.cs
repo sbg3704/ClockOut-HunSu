@@ -58,7 +58,8 @@ public partial class DockWindow : Window
     public event Action? ToggleAllRequested;
     public event Action? SummonRequested;
     public event Action? HideAllRequested;
-    public event Action? DrawToggleRequested;
+    /// <summary>모듈이 선언한 켜고 끄기 항목(이름, 단축키 글, 동작). 허브 우클릭 메뉴가 열릴 때마다 새로 묻는다(ShellController가 넣는다).</summary>
+    internal Func<IReadOnlyList<(string Label, string Gesture, Action Act)>>? HubExtras { get; set; }
     public event Action? QuitRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
@@ -231,7 +232,19 @@ public partial class DockWindow : Window
         _toggleAll.Click += (_, _) => ToggleAllRequested?.Invoke();
         menu.Items.Add(_toggleAll);
         menu.Items.Add(Item("부르기 · 닫기", "Ctrl+Alt+H", () => SummonRequested?.Invoke()));
-        menu.Items.Add(Item("수식 흐름 그리기 켜기·끄기", "Ctrl+Alt+D", () => DrawToggleRequested?.Invoke()));
+        var extras = new List<MenuItem>();
+        menu.Opened += (_, _) =>
+        {
+            foreach (var x in extras) menu.Items.Remove(x);
+            extras.Clear();
+            int at = menu.Items.IndexOf(_toggleAll) + 2;
+            foreach (var (label, gesture, act) in HubExtras?.Invoke() ?? [])
+            {
+                var mi = Item(label, gesture, act);
+                extras.Add(mi);
+                menu.Items.Insert(Math.Min(at++, menu.Items.Count), mi);
+            }
+        };
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));

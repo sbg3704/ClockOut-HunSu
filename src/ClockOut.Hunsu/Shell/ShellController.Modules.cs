@@ -83,6 +83,7 @@ internal sealed partial class ShellController
         _right.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeRight && !m.Placement.Hidden));
         _left.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeLeft && !m.Placement.Hidden));
         UpdateDockVisibility();
+        UpdateModuleHotkeys();
         bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
         _right.SetAllCollapsedLabel(allCollapsed);
         _left.SetAllCollapsedLabel(allCollapsed);

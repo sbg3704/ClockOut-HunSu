@@ -10,7 +10,8 @@ namespace ClockOut.Hunsu.Shell;
 
 internal sealed class HotkeyService : IDisposable
 {
-    public const int SummonId = 1, HideAllId = 2, DrawId = 3;
+    public const int SummonId = 1, HideAllId = 2, ModuleIdBase = 100;
+    private IReadOnlyList<HotkeyChord> _moduleChords = [];
     private const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
     private readonly IntPtr _hwnd;
     private readonly RunLog _log;
@@ -30,7 +31,8 @@ internal sealed class HotkeyService : IDisposable
 
     public event Action? Summon;
     public event Action? HideAll;
-    public event Action? ToggleDraw;
+    /// <summary>모듈이 선언한 단축키가 눌렸다: 선언 목록에서의 번호.</summary>
+    public event Action<int>? ModuleHotkey;
 
     /// <summary>앞 창이 바뀌었을 때(엑셀 창이면 그 창 핸들도 알려 준다 — 따라갈 엑셀을 바꿀 때 쓴다).</summary>
     public event Action<IntPtr, bool>? ForegroundChanged;
@@ -51,17 +53,18 @@ internal sealed class HotkeyService : IDisposable
     {
         bool a = User32.RegisterHotKey(_hwnd, SummonId, HotkeyPolicy.SummonMods, HotkeyPolicy.Key);
         bool b = User32.RegisterHotKey(_hwnd, HideAllId, HotkeyPolicy.HideAllMods, HotkeyPolicy.Key);
-        bool c = User32.RegisterHotKey(_hwnd, DrawId, HotkeyPolicy.DrawMods, HotkeyPolicy.DrawKey);
-        _registered = a || b || c;
+        _registered = a || b;
+        var results = new List<bool>();
+        for (int i = 0; i < _moduleChords.Count; i++) { bool ok = User32.RegisterHotKey(_hwnd, ModuleIdBase + i, _moduleChords[i].Mods, _moduleChords[i].Key); results.Add(ok); _registered |= ok; }
         // 실패는 다른 프로그램이 이미 쓰는 키라는 뜻. 1단계는 기록만 하고, 알림과 키 바꾸기는 설정 화면이 생기면 더한다.
-        _log.Write("hotkey_register", ("summon", a), ("hideAll", b), ("draw", c));
+        _log.Write("hotkey_register", ("summon", a), ("hideAll", b), ("module", string.Join(",", results)));
     }
 
     private void Unregister()
     {
         User32.UnregisterHotKey(_hwnd, SummonId);
         User32.UnregisterHotKey(_hwnd, HideAllId);
-        User32.UnregisterHotKey(_hwnd, DrawId);
+        for (int i = 0; i < _moduleChords.Count; i++) User32.UnregisterHotKey(_hwnd, ModuleIdBase + i);
         _registered = false;
         _log.Write("hotkey_unregister");
     }
@@ -72,7 +75,17 @@ internal sealed class HotkeyService : IDisposable
         _log.Write("hotkey", ("id", id), ("at", Stopwatch.GetTimestamp()));
         if (id == SummonId) Summon?.Invoke();
         else if (id == HideAllId) HideAll?.Invoke();
-        else if (id == DrawId) ToggleDraw?.Invoke();
+        else if (id >= ModuleIdBase && id - ModuleIdBase < _moduleChords.Count) ModuleHotkey?.Invoke(id - ModuleIdBase);
+    }
+
+    /// <summary>모듈 선언의 단축키 목록을 바꾼다(켜진 모듈이 바뀔 때). 이미 등록돼 있으면 새 목록으로 다시 등록한다.</summary>
+    public void SetModuleChords(IReadOnlyList<HotkeyChord> chords)
+    {
+        if (_moduleChords.SequenceEqual(chords)) return;
+        bool was = _registered;
+        if (was) Unregister();
+        _moduleChords = chords;
+        if (was) Register();
     }
 
     public void Dispose()

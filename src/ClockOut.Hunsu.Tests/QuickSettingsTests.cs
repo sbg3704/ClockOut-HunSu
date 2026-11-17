@@ -81,10 +81,11 @@ public class QuickSettingsTests
         items.SelectMany(q => q.Kind == QuickSetting.Menu ? Flatten(q.Children) : [q]);
 
     [Fact]
-    public void DrawHotkey_IsCtrlAltD_AndNotTheSummonKey()
+    public void DrawHotkey_IsDeclaredByThePencilModule()
     {
-        Assert.Equal(0x44, HotkeyPolicy.DrawKey);
-        Assert.NotEqual(HotkeyPolicy.Key, HotkeyPolicy.DrawKey);
+        Assert.True(HotkeyChord.TryParse("Ctrl+Alt+D", out var c));
+        Assert.Equal(0x44, c.Key);
+        Assert.NotEqual(HotkeyPolicy.Key, c.Key);
         Assert.True(new HunsuSettings().PencilDraw);
         Assert.False(HunsuSettings.FromJson("""{"pencilDraw":false}""").PencilDraw);
     }
