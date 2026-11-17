@@ -29,14 +29,43 @@
         </DockPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,2,0">
           <Button x:Name="LockButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE785;" ToolTip="이 패널 자리 잠그기" Visibility="Collapsed" Click="LockButton_Click" />
+          <Button x:Name="PowerButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE7E8;" Visibility="Collapsed" ToolTip="켜고 끄기" Click="PowerButton_Click" />
           <Button x:Name="OpacityButton" Style="{StaticResource Hunsu.IconButton}" FontFamily="Segoe UI Symbol" Content="◐"
                   ToolTip="투명도: 누르면 막대" Click="OpacityButton_Click" />
           <Button x:Name="PinButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE718;" ToolTip="떼어 내기(핀 창)" Click="PinButton_Click" />
           <Button x:Name="CollapseButton" Style="{StaticResource Hunsu.IconButton}" Content="&#xE70E;" ToolTip="작게(아이콘으로)" Click="CollapseButton_Click" />
         </StackPanel>
       </Grid>
-      <!-- 핀 창을 줄이면 내용이 넘칠 수 있어 휠로 내린다(스크롤 막대는 숨김: 유리 바탕을 가리지 않게). 도크에서는 높이 제한이 없어 그대로다. -->
-      <ScrollViewer x:Name="BodyScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Focusable="False" PanningMode="VerticalOnly">
+      <!-- 내용이 넘치면 휠로 내리고, 넘칠 때만 가는 막대가 나온다(유리 바탕을 가리지 않게 6px 둥근 막대). 모든 패널 본문의 기본 동작이다. -->
+      <ScrollViewer x:Name="BodyScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False" PanningMode="VerticalOnly">
+        <ScrollViewer.Resources>
+          <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="7" />
+            <Setter Property="MinWidth" Value="7" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                  <Grid Background="Transparent" Width="7">
+                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                      <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" /></Track.DecreaseRepeatButton>
+                      <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" /></Track.IncreaseRepeatButton>
+                      <Track.Thumb>
+                        <Thumb>
+                          <Thumb.Template>
+                            <ControlTemplate TargetType="Thumb">
+                              <Border CornerRadius="3" Margin="1,0" Opacity="0.65" Background="{DynamicResource Hunsu.Muted}" />
+                            </ControlTemplate>
+                          </Thumb.Template>
+                        </Thumb>
+                      </Track.Thumb>
+                    </Track>
+                  </Grid>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </ScrollViewer.Resources>
         <ContentPresenter x:Name="BodyHost" Margin="{StaticResource Hunsu.PanelPadding}" />
       </ScrollViewer>
     </DockPanel>

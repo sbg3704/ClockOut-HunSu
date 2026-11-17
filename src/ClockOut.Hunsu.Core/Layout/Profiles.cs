@@ -19,7 +19,7 @@ public static class Profiles
         new("review", "검수·감사", "오류, 점검 모음, 링크, 조건부 서식, 입력 규칙, 이름을 훑습니다.",
             ["hunsu-errors", "hunsu-audit", "hunsu-links", "hunsu-condrules", "hunsu-validation", "hunsu-names"]),
         new("formula", "수식 따라가기", "수식 흐름과 그림, 오류, 셀 표시로 계산이 어디서 오는지 봅니다.",
-            ["hunsu-selection", "hunsu-flow", "hunsu-flowgraph", "hunsu-errors", "hunsu-marks"]),
+            ["hunsu-selection", "hunsu-flowgraph", "hunsu-errors", "hunsu-marks"]),
         new("explore", "큰 파일 둘러보기", "시트, 이름, 표, 이력, 메모로 낯선 파일을 파악합니다.",
             ["hunsu-sheets", "hunsu-names", "hunsu-tables", "hunsu-history", "hunsu-comments", "hunsu-book"]),
     ];

@@ -42,6 +42,18 @@ public partial class PanelFrame : UserControl
     public event Action? PinClicked;
     public event Action? CollapseClicked;
     public event Action? LockClicked;
+    /// <summary>제목줄의 켜고 끄기 단추(모듈의 대표 켜기 설정, 예: 그리기)를 눌렀다.</summary>
+    public event Action? PowerClicked;
+
+    /// <summary>켜고 끄기 단추를 보이거나 감춘다. on이면 강조색, 꺼지면 흐린 색. 모듈이 대표 켜기 설정(quick toggle)을 선언했을 때만 보인다.</summary>
+    public void SetPower(bool available, bool on, string label)
+    {
+        PowerButton.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
+        PowerButton.SetResourceReference(Control.ForegroundProperty, on ? ThemeKeys.Accent : ThemeKeys.Muted);
+        PowerButton.ToolTip = (on ? "끄기: " : "켜기: ") + label;
+    }
+
+    private void PowerButton_Click(object sender, RoutedEventArgs e) => PowerClicked?.Invoke();
     public event Action<MouseButtonEventArgs>? TitleDragStarted;
 
     public string Title
@@ -103,7 +115,7 @@ public partial class PanelFrame : UserControl
         {
             PinButton.Content = value ? "" : "";
             PinButton.ToolTip = value ? "도크로 되돌리기" : "떼어 내기(핀 창)";
-            CollapseButton.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
+            CollapseButton.ToolTip = "작게(아이콘으로)"; // 떼어 낸 창도 아이콘으로 줄일 수 있다
             ApplyBodyLimit(value);
         }
     }

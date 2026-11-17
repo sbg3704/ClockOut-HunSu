@@ -21,6 +21,7 @@ namespace ClockOut.Hunsu.Overlay;
 internal sealed class PinWindow : Window
 {
     private readonly Border _host = new();
+    private readonly StackPanel _stack = new(); // 엄마 패널: 패널 여러 개를 얇은 선으로 나눠 한 창에 담는다(보통은 하나)
     private readonly Thumb _grip = new();
     private PanelFrame? _frame;
     private PixelRect _rect;
@@ -68,10 +69,23 @@ internal sealed class PinWindow : Window
     /// <summary>끌기를 시작할 때 이 창과 자석으로 이어진 다른 핀 창들(같이 움직일 것). null이면 혼자. Alt를 누른 채 끌면 쓰지 않는다.</summary>
     public Func<IReadOnlyList<PinWindow>>? GroupPeers { get; set; }
 
-    /// <summary>묶음에 딸려 가서 옮겨진다(끈 창의 이동량). 자리를 저장하게 Moved도 알린다.</summary>
-    public void MoveBy(int dx, int dy)
+    private PixelRect _followStart;
+
+    /// <summary>묶음에 딸려 가기 시작(지금 자리를 기억).</summary>
+    public void FollowBegin() => _followStart = _rect;
+
+    /// <summary>끄는 동안 끈 창의 이동량만큼 따라간다(저장은 끝날 때).</summary>
+    public void FollowTo(int dx, int dy)
     {
-        MoveTo(_rect with { X = _rect.X + dx, Y = _rect.Y + dy });
+        if (Handle == IntPtr.Zero || !IsVisible) return;
+        User32.SetWindowPos(Handle, IntPtr.Zero, _followStart.X + dx, _followStart.Y + dy, 0, 0, User32.SWP_NOACTIVATE | User32.SWP_NOZORDER | User32.SWP_NOSIZE);
+    }
+
+    /// <summary>끌기가 끝났다: 최종 이동량으로 자리를 정하고 저장하게 알린다.</summary>
+    public void FollowEnd(int dx, int dy)
+    {
+        if (dx == 0 && dy == 0) { FollowTo(0, 0); return; }
+        MoveTo(_followStart with { X = _followStart.X + dx, Y = _followStart.Y + dy });
         Moved?.Invoke(_rect);
     }
 
@@ -96,14 +110,58 @@ internal sealed class PinWindow : Window
     /// <summary>창 핸들을 미리 만들어 둔다(처음 뗄 때 빨리 뜨게).</summary>
     public void Prepare() => new WindowInteropHelper(this).EnsureHandle();
 
+    /// <summary>이 창에 담긴 패널들(위에서 아래로). 보통 하나, 묶었으면 여럿.</summary>
+    public IReadOnlyList<PanelFrame> Frames => [.. _stack.Children.OfType<PanelFrame>()];
+
+    /// <summary>엄마 패널에 패널을 더한다(아래에 이어 붙임). 끌기·부르기 상태는 창 하나가 같이 갖는다.</summary>
+    public void AddFrame(PanelFrame f)
+    {
+        f.IsPinned = true;
+        f.Width = double.NaN;
+        f.TitleDragStarted += OnTitleDrag;
+        f.SetSummoned(_interactive);
+        _stack.Children.Add(f);
+        ApplyJoins();
+    }
+
+    /// <summary>묶음에서 패널 하나를 뺀다(창은 그대로, 나머지는 계속 담김).</summary>
+    public void RemoveFrame(PanelFrame f)
+    {
+        f.TitleDragStarted -= OnTitleDrag;
+        _stack.Children.Remove(f);
+        f.SetJoin(JoinPos.None);
+        if (ReferenceEquals(_frame, f)) _frame = Frames.FirstOrDefault();
+        ApplyJoins();
+    }
+
+    private void ApplyJoins()
+    {
+        var list = Frames;
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i].Margin = new Thickness(0, i == 0 ? 0 : -1, 0, 0); // 테두리 한 줄이 칸막이
+            list[i].SetJoin(list.Count == 1 ? JoinPos.None : i == 0 ? JoinPos.First : i == list.Count - 1 ? JoinPos.Last : JoinPos.Middle);
+        }
+    }
+
+    /// <summary>창 크기를 바꾼다(묶어서 높이가 늘 때).</summary>
+    public void ResizeTo(int width, int height)
+    {
+        _rect = _rect with { Width = width, Height = height };
+        if (Handle != IntPtr.Zero && IsVisible) User32.SetWindowPos(Handle, IntPtr.Zero, 0, 0, width, height, User32.SWP_NOACTIVATE | User32.SWP_NOMOVE | User32.SWP_NOZORDER);
+    }
+
     public void Host(PanelFrame frame)
     {
+        _stack.Children.Clear();
+        _stack.Children.Add(frame);
+        frame.Margin = new Thickness(0);
         _frame = frame;
         frame.IsPinned = true;
         frame.Width = double.NaN;
         frame.TitleDragStarted += OnTitleDrag;
         frame.SetTitleTip("Shift를 누른 채 끌어 옮기기(Ctrl+Alt+H로 부르면 그냥 끌기)");
-        _host.Child = frame;
+        _host.Child = _stack;
         frame.SetSummoned(_interactive);
         _grip.Visibility = _interactive && !_locked ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -146,7 +204,7 @@ internal sealed class PinWindow : Window
     public void SetInteractive(bool on)
     {
         _interactive = on;
-        _frame?.SetSummoned(on);
+        foreach (var f in Frames) f.SetSummoned(on);
         _grip.Visibility = on && !_locked && _frame != null ? Visibility.Visible : Visibility.Collapsed;
         ApplyStyle();
     }
@@ -156,10 +214,18 @@ internal sealed class PinWindow : Window
     {
         if (_interactive || Handle == IntPtr.Zero || !IsVisible || _frame == null) { SetHover(false); return; }
         var r = User32.WindowBounds(Handle);
+        if (!r.Contains(screenX, screenY)) { SetHover(false); return; }
         double scale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
-        var margin = _host.Margin;
-        int strip = (int)Math.Round((margin.Top + (double)FindResource("Hunsu.TitleBarHeight")) * scale);
-        SetHover(r.Contains(screenX, screenY) && screenY < r.Y + strip);
+        double title = (double)FindResource("Hunsu.TitleBarHeight");
+        // 묶음이면 칸마다 제목줄이 있다: 어느 제목줄 위든 그 순간 클릭을 받는다.
+        bool onTitle = false;
+        foreach (var f in Frames)
+        {
+            double top = f.TranslatePoint(new Point(0, 0), this).Y;
+            int y0 = r.Y + (int)Math.Round(top * scale), y1 = y0 + (int)Math.Round(title * scale);
+            if (screenY >= y0 && screenY < y1) { onTitle = true; break; }
+        }
+        SetHover(onTitle);
     }
 
     private void SetHover(bool on)
@@ -225,9 +291,18 @@ internal sealed class PinWindow : Window
         if (_locked || !(_interactive || _hover) || e.ButtonState != MouseButtonState.Pressed) return;
         // 잠금(기본)이면 Shift를 누른 채만 옮긴다. 부르기(편집 모드) 중이거나 잠금이 free면 그냥 옮긴다.
         if (!_interactive && !(FreeDrag?.Invoke() ?? false) && !User32.ShiftDown()) return;
-        var peers = User32.AltDown() ? [] : GroupPeers?.Invoke() ?? [];
+        IReadOnlyList<PinWindow> peers = User32.AltDown() ? [] : GroupPeers?.Invoke() ?? [];
         var before = User32.WindowBounds(Handle);
+        foreach (var p in peers) p.FollowBegin();
+        // 끄는 동안 붙은 창들도 같이 움직인다(실시간): 창이 움직일 때마다 이동량만큼 따라간다.
+        void Follow(object? s, EventArgs a)
+        {
+            var b = User32.WindowBounds(Handle);
+            foreach (var p in peers) p.FollowTo(b.X - before.X, b.Y - before.Y);
+        }
+        if (peers.Count > 0) LocationChanged += Follow;
         DragMove(); // 놓을 때까지 돌아오지 않는다
+        LocationChanged -= Follow;
         var now = User32.WindowBounds(Handle);
         if (SnapTargets != null && !User32.AltDown())
         {
@@ -241,7 +316,7 @@ internal sealed class PinWindow : Window
         }
         // 자석으로 붙어 있던 창들은 같은 만큼 따라 움직인다(2026-11-17: 붙은 패널끼리 같이 다니기).
         int dx = now.X - before.X, dy = now.Y - before.Y;
-        if (dx != 0 || dy != 0) foreach (var p in peers) p.MoveBy(dx, dy);
+        foreach (var p in peers) p.FollowEnd(dx, dy);
     }
 
     /// <summary>패널 틀을 놓아주고 창은 숨겨 둔다(다음에 다시 씀).</summary>
@@ -254,6 +329,7 @@ internal sealed class PinWindow : Window
             frame.SetSummoned(false);
         }
         _host.Child = null;
+        _stack.Children.Clear();
         _frame = null;
         _grip.Visibility = Visibility.Collapsed;
         _hover = false;
@@ -262,5 +338,5 @@ internal sealed class PinWindow : Window
         return frame;
     }
 
-    public bool HasFrame => _frame != null;
+    public bool HasFrame => _stack.Children.Count > 0;
 }
