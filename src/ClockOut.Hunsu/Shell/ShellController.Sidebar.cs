@@ -17,6 +17,7 @@ internal sealed partial class ShellController
         _sidebar = new SidebarWindow();
         _sidebar.ModuleClicked += OnModuleIcon;
         _sidebar.WidthChanged += w => ApplySetting("sidebarWidth", w);
+        _sidebar.FooterClicked += OnSidebarFooter;
     }
 
     /// <summary>엑셀이 없어졌다: 예약을 풀고(화면 가장자리를 돌려줌) 도크 배치로 되돌려 둔다. 엑셀이 다시 보이면 Follow가 UpdateSidebar로 켠다.</summary>
@@ -27,12 +28,27 @@ internal sealed partial class ShellController
         RefreshDocks();
     }
 
+    /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 탭↔쌓기, 엑셀 정리, 사이드바 끄기.</summary>
+    private void OnSidebarFooter(string key)
+    {
+        switch (key)
+        {
+            case "settings": OpenManager("general"); break;
+            case "modules": OpenManager("modules"); break;
+            case "look": OpenManager("look"); break;
+            case "profiles": OpenManager("profiles"); break;
+            case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
+            case "cleanup": OpenExcelCleanup(); break;
+            case "off": ApplySetting("sidebar", "off"); break;
+        }
+    }
+
     /// <summary>설정과 엑셀 유무에 맞춰 사이드바를 켜거나 끄고, 패널을 사이드바나 도크에 다시 놓는다.</summary>
     private void UpdateSidebar()
     {
         if (_sidebar == null) return;
         bool want = _settings.Sidebar != "off" && !_hiddenAll && _target != IntPtr.Zero;
-        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth);
+        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs);
         _sidebar.SetActive(want, _target);
         _log.Write("sidebar", ("side", _settings.Sidebar), ("width", _settings.SidebarWidth), ("active", _sidebar.Reserved));
         RefreshDocks();
