@@ -3,7 +3,9 @@
 // 의존: ShellController.Modules.cs(Save, Pin, MoveToDock, RefreshDocks), Core/Layout/OrderPlan, Core/TopicRouting, Shell/ManagerWindow.
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using System.Windows;
 using ClockOut.Hunsu.Ui.Frame;
+using ClockOut.Hunsu.Ui.Theme;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Overlay;
 using ClockOut.Hunsu.Ui.Controls;
@@ -52,6 +54,8 @@ internal sealed partial class ShellController
         Parts.ListMaxRows = next.ListMaxRows;
         PanelFrame.SharpenOnHover = next.HoverSharpen;
         PanelFrame.MaxBodyHeight = next.PanelMaxHeight;
+        // 룩·테마는 껐다 켜지 않고 바로 바꾼다(붓의 색만 바꿔 열린 창도 따라감).
+        if (key is "skin" or "theme") ThemePicker.Apply(Application.Current, next.Theme, next.PanelWidth, next.Skin);
         UpdateQuickBar();
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);
@@ -70,6 +74,7 @@ internal sealed partial class ShellController
         Parts.ListMaxRows = d.ListMaxRows;
         PanelFrame.SharpenOnHover = d.HoverSharpen;
         PanelFrame.MaxBodyHeight = d.PanelMaxHeight;
+        ThemePicker.Apply(Application.Current, d.Theme, d.PanelWidth, d.Skin);
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, d, _log);
         SettingsChanged?.Invoke();

@@ -5,7 +5,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ClockOut.Hunsu.Ui.Frame"
              x:Name="Self" Focusable="False" UseLayoutRounding="True" SnapsToDevicePixels="True">
-  <Border x:Name="Card" CornerRadius="{StaticResource Hunsu.PanelRadius}" Background="{StaticResource Hunsu.Glass}"
+  <Border x:Name="Card" CornerRadius="{DynamicResource Hunsu.PanelRadius}" Background="{StaticResource Hunsu.Glass}"
           BorderBrush="{StaticResource Hunsu.Line}" BorderThickness="1" Effect="{StaticResource Hunsu.Shadow1}">
     <!-- 그림자와 둥근 테두리를 한 번 그려 두고 움직임(투명도·이동) 동안 다시 그리지 않게 한다(1단계 측정: 움직임 중 프레임 건너뜀). -->
     <Border.CacheMode>
@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
         <DockPanel Margin="8,0,4,0" VerticalAlignment="Center" LastChildFill="True">
           <Border x:Name="Dot" DockPanel.Dock="Left" Width="5" Height="5" CornerRadius="3" Background="{StaticResource Hunsu.Accent}" Margin="0,0,6,0" />
-          <TextBlock x:Name="TitleText" FontFamily="{StaticResource Hunsu.FontTitle}" FontSize="{StaticResource Hunsu.FontPanelTitle}"
+          <TextBlock x:Name="TitleText" FontFamily="{DynamicResource Hunsu.FontTitle}" FontSize="{DynamicResource Hunsu.FontPanelTitle}"
                      FontWeight="SemiBold" Foreground="{StaticResource Hunsu.Text}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
         </DockPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,2,0">

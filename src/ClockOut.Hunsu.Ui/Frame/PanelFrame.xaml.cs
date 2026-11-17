@@ -27,6 +27,9 @@ public partial class PanelFrame : UserControl
     {
         InitializeComponent();
         ApplyBodyLimit(false);
+        // 룩을 바꾸면 제목 글꼴·크기가 바뀌므로 형광펜 칠 길이를 다시 잰다(자원 갱신이 끝난 뒤).
+        Loaded += (_, _) => ThemePicker.SkinChanged += OnSkinChanged;
+        Unloaded += (_, _) => ThemePicker.SkinChanged -= OnSkinChanged;
         MouseEnter += (_, _) => FadeTo(SharpenOnHover ? 1.0 : OpacityLevels.RestOpacity(_opacityLevel));
         MouseLeave += (_, _) => FadeTo(OpacityLevels.RestOpacity(_opacityLevel));
     }
@@ -47,6 +50,9 @@ public partial class PanelFrame : UserControl
             Hand.TitleTextWidth = MeasureTitle(value);
         }
     }
+
+    private void OnSkinChanged() =>
+        Dispatcher.BeginInvoke(() => Hand.TitleTextWidth = MeasureTitle(TitleText.Text), System.Windows.Threading.DispatcherPriority.Loaded);
 
     /// <summary>제목 글자 폭(손그림 형광펜 칠이 글자 밑까지만 가도록). 빈 글이면 0.</summary>
     private double MeasureTitle(string text)

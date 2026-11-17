@@ -22,13 +22,14 @@ internal static class LauncherParts
             Background = B(scope, "Hunsu.Glass"), BorderBrush = B(scope, "Hunsu.Line"), BorderThickness = new Thickness(1),
             Cursor = System.Windows.Input.Cursors.Hand,
             Effect = scope.TryFindResource("Hunsu.Shadow1") as System.Windows.Media.Effects.Effect,
-            Child = new TextBlock
-            {
-                Text = "훈", FontSize = size * 0.42, FontWeight = FontWeights.SemiBold, Foreground = B(scope, ThemeKeys.Text),
-                FontFamily = scope.TryFindResource("Hunsu.FontTitle") as FontFamily ?? new FontFamily("Malgun Gothic"),
-                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-            },
         };
+        var glyph = new TextBlock
+        {
+            Text = "훈", FontSize = size * 0.42, FontWeight = FontWeights.SemiBold, Foreground = B(scope, ThemeKeys.Text),
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+        };
+        glyph.SetResourceReference(TextBlock.FontFamilyProperty, "Hunsu.FontTitle"); // 룩을 바꾸면 따라간다
+        b.Child = new Grid { Children = { glyph, new HandFrame { Mode = HandMode.Ring, Seed = "hub" } } };
         return b;
     }
 
@@ -51,6 +52,7 @@ internal static class LauncherParts
         var glyph = IconFactory.Create(profile, icon, g, B(scope, ThemeKeys.Text), name);
         Canvas.SetLeft(glyph, (size - g) / 2); Canvas.SetTop(glyph, (size - g) / 2);
         c.Children.Add(circle);
+        c.Children.Add(new HandFrame { Mode = HandMode.Ring, Seed = name, Width = size, Height = size }); // 손그림 룩의 외곽선
         c.Children.Add(glyph);
         if (Shown(badge))
         {
@@ -84,7 +86,7 @@ internal static class LauncherParts
         {
             Height = height, CornerRadius = new CornerRadius(height / 2), Padding = new Thickness(height * 0.28, 0, 12, 0),
             Background = B(scope, "Hunsu.Glass"), BorderBrush = open ? B(scope, ThemeKeys.Accent) : B(scope, "Hunsu.Line"), BorderThickness = new Thickness(open ? 2 : 1),
-            Cursor = System.Windows.Input.Cursors.Hand, Child = row,
+            Cursor = System.Windows.Input.Cursors.Hand, Child = new Grid { Children = { row, new HandFrame { Mode = HandMode.Box, Seed = name } } },
         };
     }
 
