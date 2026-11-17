@@ -105,6 +105,23 @@ public class SkinTests
         Assert.True(longTitle > shortTitle + 60);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Outline_IsStableAndStaysNearTheElement(bool circle)
+    {
+        var a = SkinSketch.Plan(0, 0, 0, 0, SkinKind.None, 1); // 빈 계획은 그대로 비어 있다
+        Assert.Empty(a);
+        var o1 = SkinSketch.Outline(40, 40, circle, SkinKind.Pencil, 3);
+        var o2 = SkinSketch.Outline(40, 40, circle, SkinKind.Pencil, 3);
+        Assert.Equal(2, o1.Count);                                   // 연필: 선 + 덧그림
+        Assert.Equal(o1[0].Points[5], o2[0].Points[5]);
+        Assert.Single(SkinSketch.Outline(40, 40, circle, SkinKind.Pen, 3)); // 펜: 한 줄
+        foreach (var s in o1) foreach (var p in s.Points) { Assert.InRange(p.X, -8, 48); Assert.InRange(p.Y, -8, 48); }
+        Assert.Empty(SkinSketch.Outline(40, 40, circle, SkinKind.None, 3));
+        Assert.Empty(SkinSketch.Outline(4, 4, circle, SkinKind.Pen, 3));
+    }
+
     private static string FindThemeDir()
     {
         var d = new DirectoryInfo(AppContext.BaseDirectory);

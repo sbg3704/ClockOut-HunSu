@@ -48,6 +48,19 @@ public static class SkinSketch
         return list;
     }
 
+    /// <summary>작은 요소(둥근 아이콘, 훈 원, 알약, 빠른 띠 카드)의 손그림 외곽선. circle이면 손으로 한 바퀴 두른 고리, 아니면 손으로 그은 네모. 연필·분필은 덧그림이 한 줄 더 있다.</summary>
+    public static IReadOnlyList<SkinStroke> Outline(double width, double height, bool circle, SkinKind kind, ulong seed)
+    {
+        if (kind == SkinKind.None || width < 8 || height < 8) return [];
+        var rng = new HandRng(seed ^ ((ulong)kind * 0x9E3779B97F4A7C15UL) ^ (circle ? 0x51UL : 0x1AUL));
+        var box = new MarkBox(1.5, 1.5, width - 3, height - 3);
+        IReadOnlyList<PointD> Make(HandRng r, double pad) => circle ? PencilStroke.Loop(box, r, pad) : PencilStroke.Box(box, r, pad);
+        var list = new List<SkinStroke> { new(SkinRole.Frame, Make(rng, 0)) };
+        if (kind is SkinKind.Pencil or SkinKind.Chalk)
+            list.Add(new SkinStroke(SkinRole.FrameEcho, PencilStroke.Retrace(Make(rng, 0.8), rng, 1.0)));
+        return list;
+    }
+
     /// <summary>사각형 안을 왼쪽 아래→오른쪽 위로 비스듬히 긋는 따로따로의 빗금(색연필로 칠한 띠).</summary>
     private static IEnumerable<SkinStroke> Hatch(double x, double y, double w, double h, double gap, HandRng rng)
     {

@@ -38,16 +38,16 @@ internal sealed class QuickBar : Window
         Title = "훈수꾼 빠른 띠";
         _card = new Border
         {
-            Child = _row,
+            Child = new Grid { Children = { _row, new Ui.Frame.HandFrame { Mode = Ui.Frame.HandMode.Box, Seed = "quickbar" } } },
             Margin = new Thickness(8),
             Padding = new Thickness(4),
-            CornerRadius = (CornerRadius)FindResource("Hunsu.PanelRadius"),
             Background = (Brush)FindResource("Hunsu.Glass"),
             BorderBrush = (Brush)FindResource("Hunsu.Line"),
             BorderThickness = new Thickness(1),
             Effect = (System.Windows.Media.Effects.Effect)FindResource("Hunsu.Shadow1"),
             Opacity = 0.85,
         };
+        _card.SetResourceReference(Border.CornerRadiusProperty, "Hunsu.PanelRadius"); // 룩을 바꾸면 따라간다
         _card.MouseEnter += (_, _) => _card.Opacity = 1.0;
         _card.MouseLeave += (_, _) => _card.Opacity = 0.85;
         _card.MouseLeftButtonDown += OnCardDown;

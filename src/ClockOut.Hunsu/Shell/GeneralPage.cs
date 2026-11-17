@@ -28,10 +28,10 @@ internal sealed class GeneralPage : ScrollViewer
         var s = _shell.Settings;
         _root.Children.Clear();
 
-        Section("패널 룩 (손그림 프로필)", "껐다 켜면 바뀝니다. 룩이 밝기까지 정합니다. 기본은 B");
+        Section("패널 룩 (손그림 프로필)", "바로 반영. 룩이 밝기까지 정합니다. 기본은 B");
         Choices("skin", s.Skin, [("penmarker", "B 펜과 형광펜"), ("pencilnote", "A 색연필 노트"), ("chalk", "C 먹빛 유리와 분필"), ("plain", "기본 (손그림 없음)")]);
 
-        Section("화면 테마", "껐다 켜면 바뀝니다. 위 룩이 '기본 (손그림 없음)'일 때만 쓰입니다");
+        Section("화면 테마", "바로 반영. 위 룩이 '기본 (손그림 없음)'일 때만 쓰입니다");
         Choices("theme", s.Theme, [("dark", "어둡게"), ("light", "밝게"), ("auto", "Windows 따라")]);
 
         Section("패널 너비", "껐다 켜면 바뀝니다");
