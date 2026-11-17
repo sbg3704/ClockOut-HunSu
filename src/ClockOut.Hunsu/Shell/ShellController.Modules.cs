@@ -109,12 +109,16 @@ internal sealed partial class ShellController
             // 사이드바 모드: 패널은 모두 사이드바 구역으로, 도크 창에는 아무것도 두지 않는다.
             _right.SetModules([], []);
             _left.SetModules([], []);
-            _sidebar!.SetModules(docked, _settings.IconProfile);
+            _sidebar!.SetModules(docked, _settings.IconProfile, SidebarTabs(docked), id => _store.State.Get(id).SideHeight);
         }
         else
         {
-            _sidebar?.SetModules([], _settings.IconProfile);
-            foreach (var m in docked) m.Frame.ApplyBodyLimit(false);
+            _sidebar?.SetModules([], _settings.IconProfile, [], _ => 0);
+            foreach (var m in docked)
+            {
+                m.Frame.ApplyBodyLimit(false);
+                m.Frame.SetTitleTip(null); // 사이드바의 끌기 안내를 지운다
+            }
             _right.SetModules(docked, docked.Where(m => m.Placement.Place == Places.EdgeRight));
             _left.SetModules([], docked.Where(m => m.Placement.Place == Places.EdgeLeft).Concat(minimizedPins));
         }

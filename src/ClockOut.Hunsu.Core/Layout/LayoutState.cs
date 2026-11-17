@@ -30,6 +30,9 @@ public sealed record ModulePlacement
 
     /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
     public bool? Enabled { get; init; }
+
+    /// <summary>사이드바에서 스플리터로 정한 본문 높이(DIP). 0이면 내용만큼(자동).</summary>
+    public double SideHeight { get; init; }
 }
 
 /// <summary>선언과 사용자 값을 합친 결과.</summary>
@@ -53,6 +56,9 @@ public sealed class LayoutState
 
     public const double DefaultDockRatio = 0.45;
 
+    /// <summary>사이드바 묶음 탭(순서와 구성). 비어 있으면 기능 묶음(order 범위) 그대로. 끌어 놓으면 SideTabs.Persist로 채운다.</summary>
+    public List<SideTabState> SideTabs { get; set; } = [];
+
     /// <summary>그 도크의 훈 원 세로 비율(0.1~0.9). 정하지 않았으면 기본.</summary>
     public double DockRatio(string place) => Docks.TryGetValue(place, out var r) ? Math.Clamp(r, 0.1, 0.9) : DefaultDockRatio;
 
@@ -64,7 +70,7 @@ public sealed class LayoutState
         {
             var s = JsonSerializer.Deserialize<LayoutState>(text, Json);
             if (s == null || s.Spec > CurrentSpec) return (new LayoutState(), false);
-            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal), Docks = new Dictionary<string, double>(s.Docks ?? [], StringComparer.Ordinal) }, true);
+            return (new LayoutState { Spec = s.Spec, Modules = new Dictionary<string, ModulePlacement>(s.Modules, StringComparer.Ordinal), Docks = new Dictionary<string, double>(s.Docks ?? [], StringComparer.Ordinal), SideTabs = s.SideTabs ?? [] }, true);
         }
         catch (JsonException)
         {

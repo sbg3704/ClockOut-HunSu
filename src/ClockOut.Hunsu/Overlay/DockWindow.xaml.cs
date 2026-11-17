@@ -144,6 +144,7 @@ public partial class DockWindow : Window
         foreach (var m in _modules)
         {
             if (m.Slot.Parent is Panel p) p.Children.Remove(m.Slot);
+            else if (m.Slot.Parent is System.Windows.Controls.Decorator d) d.Child = null; // 사이드바 칸(테두리)에 들어 있던 것
             m.UseTab = false; // 접힌 모듈은 손잡이 대신 런처 아이콘으로만 남는다
             double g = (double)FindResource("Hunsu.Gap");
             m.Slot.Margin = new Thickness(0, 0, 0, g);

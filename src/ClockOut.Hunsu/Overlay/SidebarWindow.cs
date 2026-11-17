@@ -1,6 +1,6 @@
-// 기능: 창 밖 사이드바(VS Code·비주얼 스튜디오·오토캐드의 속성 패널처럼). 엑셀이 최대화면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀이 남은 영역으로 줄어든다. 최대화가 아니면 앱 바를 쓰지 않고 엑셀 창의 높이에 맞춰 옆구리(바깥)에 붙어 창을 따라 움직이고 크기를 맞춘다(바깥 자리가 모자라면 안쪽 가장자리). 안쪽: 아이콘 막대(활동 막대) + 모듈 구역들(위에서 아래, 구역마다 ▾로 접기)·세로 스크롤.
+// 기능: 창 밖 사이드바(VS Code·비주얼 스튜디오·오토캐드의 속성 패널처럼). 이 파일은 창·앱 바·폭 조절·하단 단추, 묶음 탭과 스플리터는 SidebarWindow.Tabs.cs, 끌어 옮기기는 SidebarWindow.Drag.cs. 엑셀이 최대화면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀이 남은 영역으로 줄어든다. 최대화가 아니면 앱 바를 쓰지 않고 엑셀 창의 높이에 맞춰 옆구리(바깥)에 붙어 창을 따라 움직이고 크기를 맞춘다(바깥 자리가 모자라면 안쪽 가장자리). 안쪽: 활동 막대(묶음 탭 아이콘) + 고른 묶음의 모듈들(위에서 아래, 사이 스플리터로 높이 조절)·세로 스크롤.
 //       안쪽 가장자리를 끌어 폭을 바꾼다(저장은 WidthChanged로 앱이). 끄면 예약을 풀어 엑셀이 원래 크기로 돌아온다.
-// 사용법: var s = new SidebarWindow(); s.Configure("right", 300); s.SetActive(true); s.SetModules(panelModules, iconModules); s.ModuleClicked += id => ...; s.WidthChanged += w => 저장;
+// 사용법: var s = new SidebarWindow(); s.Configure("right", 300); s.SetActive(true); s.SetModules(views, profile, tabs, id => 높이); s.TabsChanged += tabs => 저장; s.HeightChanged += (id, h) => 저장; s.WidthChanged += w => 저장;
 // 의존: Native/AppBar, Native/User32, Ui/Frame/PanelFrame(ModuleView의 Slot), Ui/Icons/IconFactory, Theme 이름. 화면(WPF) 일이라 시험은 못 하고 설정 값 정리만 시험한다. 엑셀 창을 직접 옮기지 않는다(앱 바가 일을 한다).
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +14,7 @@ using ClockOut.Hunsu.Ui.Theme;
 
 namespace ClockOut.Hunsu.Overlay;
 
-internal sealed class SidebarWindow : Window
+internal sealed partial class SidebarWindow : Window
 {
     private const double BarWidth = 40, GripWidth = 6;
     private readonly Grid _root = new();
@@ -22,9 +22,6 @@ internal sealed class SidebarWindow : Window
     private readonly StackPanel _footer = new();
     private readonly DockPanel _barHost = new();
     private bool _tabs = true;
-    private string? _activeId;
-    private List<ModuleView> _panels = [];
-    private string _profile = "";
     private readonly StackPanel _items = new();
     private readonly ScrollViewer _scroll = new();
     private readonly Thumb _grip = new();
@@ -63,7 +60,7 @@ internal sealed class SidebarWindow : Window
         _grip.Cursor = System.Windows.Input.Cursors.SizeWE;
         _grip.Opacity = 0.01; // 보이지 않지만 잡힌다
         _grip.Background = Brushes.Gray;
-        _grip.Template = new ControlTemplate(typeof(Thumb)) { VisualTree = Border(Brushes.Transparent) };
+        _grip.Template = new ControlTemplate(typeof(Thumb)) { VisualTree = BorderFactory(Brushes.Transparent) };
         _grip.DragDelta += (_, e) =>
         {
             // 안쪽 가장자리를 끈다: 오른쪽 사이드바는 왼쪽으로 끌면 넓어지고, 왼쪽 사이드바는 오른쪽으로 끌면 넓어진다.
@@ -74,6 +71,7 @@ internal sealed class SidebarWindow : Window
         };
         _grip.DragCompleted += (_, _) => WidthChanged?.Invoke(_widthDip);
         Content = _root;
+        InitDrag();
         Build();
         SourceInitialized += (_, _) =>
         {
@@ -95,10 +93,10 @@ internal sealed class SidebarWindow : Window
     /// <summary>활동 막대 맨 아래 일반 단추를 눌렀다("settings", "modules", "look", "profiles", "view", "cleanup", "off").</summary>
     public event Action<string>? FooterClicked;
 
-    /// <summary>활동 막대의 아이콘을 눌렀다(모듈 id).</summary>
+    /// <summary>접힌 모듈을 펴 달라(모듈 id). 묶음 탭 안의 접힌 모듈 이름을 누르거나, 모두 접힌 탭을 고르면.</summary>
     public event Action<string>? ModuleClicked;
 
-    private static FrameworkElementFactory Border(Brush b)
+    private static FrameworkElementFactory BorderFactory(Brush b)
     {
         var f = new FrameworkElementFactory(typeof(System.Windows.Controls.Border));
         f.SetValue(System.Windows.Controls.Border.BackgroundProperty, b);
@@ -132,6 +130,8 @@ internal sealed class SidebarWindow : Window
             Grid.SetColumn(order[i], i);
             _root.Children.Add(order[i]);
         }
+        Grid.SetColumnSpan(_overlay, 3); // 끌어 옮길 때 따라다니는 이름표
+        _root.Children.Add(_overlay);
     }
 
     /// <summary>엑셀이 있을 때만 켠다: 보이기, 최대화면 앱 바 등록(가장자리 예약), 아니면 엑셀 옆에 붙이기. 끄면 예약을 풀어 엑셀 창이 원래 크기로 돌아온다. anchor = 붙을 엑셀 창.</summary>
@@ -236,57 +236,6 @@ internal sealed class SidebarWindow : Window
     {
         if ((uint)msg == _callbackMsg && wParam.ToInt32() == AppBar.ABN_POSCHANGED && _appBar) Reposition();
         return IntPtr.Zero;
-    }
-
-    /// <summary>모듈 구역(panels)과 활동 막대 아이콘(icons)을 지금 상태로 다시 넣는다. 접힌 모듈은 구역을 감추고 아이콘만 남는다.</summary>
-    internal void SetModules(IEnumerable<ModuleView> panels, string profile)
-    {
-        var list = panels.OrderBy(m => m.Placement.Order).ToList();
-        _panels = list;
-        _profile = profile;
-        // 탭 보기: 고른 모듈 하나만 보인다(고른 게 없거나 접혔으면 펼쳐진 첫 모듈).
-        if (_tabs && !list.Any(m => m.Id == _activeId && m.ShowsPanel)) _activeId = list.FirstOrDefault(m => m.ShowsPanel)?.Id;
-        _items.Children.Clear();
-        _bar.Children.Clear();
-        BuildFooter();
-        double gap = (double)Application.Current.FindResource("Hunsu.Gap");
-        foreach (var m in list)
-        {
-            if (m.Slot.Parent is Panel p) p.Children.Remove(m.Slot);
-            m.UseTab = false;
-            m.Slot.Margin = new Thickness(0, 0, 0, gap);
-            ((FrameworkElement)m.Slot).HorizontalAlignment = HorizontalAlignment.Stretch;
-            m.Frame.Width = double.NaN; // 사이드바 폭에 맞춘다
-            m.Frame.ApplyBodyLimit(true); // 높이는 사이드바 스크롤이 맡는다
-            m.Tab.Visibility = Visibility.Collapsed;
-            m.Slot.Visibility = _tabs && m.Id != _activeId ? Visibility.Collapsed : Visibility.Visible;
-            _items.Children.Add(m.Slot);
-            _bar.Children.Add(ActivityIcon(m, profile));
-        }
-    }
-
-    private UIElement ActivityIcon(ModuleView m, string profile)
-    {
-        bool open = _tabs ? m.ShowsPanel && m.Id == _activeId : m.ShowsPanel;
-        var brush = (Brush)Application.Current.FindResource(open ? "Hunsu.AccentInk" : ThemeKeys.Text);
-        var glyph = IconFactory.Create(profile, m.Module.Manifest.Icon, 18, brush, m.Module.Manifest.Name);
-        var b = new System.Windows.Controls.Border
-        {
-            Width = 32, Height = 32, Margin = new Thickness(4, 2, 4, 2), CornerRadius = new CornerRadius(6), Cursor = System.Windows.Input.Cursors.Hand,
-            ToolTip = m.Module.Manifest.Name + (_tabs ? "" : open ? " (누르면 접기)" : " (누르면 펴기)"),
-            Child = glyph,
-        };
-        b.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, open ? "Hunsu.Accent" : "Hunsu.GlassAlt");
-        string id = m.Id;
-        b.MouseLeftButtonUp += (_, _) =>
-        {
-            if (!_tabs) { ModuleClicked?.Invoke(id); return; }
-            _activeId = id;
-            _scroll.ScrollToTop();
-            if (m.ShowsPanel) SetModules(_panels, _profile); // 이미 펼쳐진 모듈: 보는 탭만 바꾼다
-            else ModuleClicked?.Invoke(id);                  // 접힌 모듈: 펼치면 앱이 다시 그린다
-        };
-        return b;
     }
 
     /// <summary>활동 막대 맨 아래(VS Code의 톱니·계정 자리)에 일반 단추들.</summary>

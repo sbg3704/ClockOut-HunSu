@@ -86,8 +86,21 @@ public sealed class HunsuSettings
     /// <summary>도크의 패널들을 틈 없이 한 창처럼 이어 붙여 보인다(칸 사이는 얇은 선). false(기본)면 카드가 따로 떠 있다. 허브 우클릭 메뉴·설정 창에서 켜고 끈다.</summary>
     public bool PanelJoin { get; init; }
 
-    /// <summary>창 밖 사이드바(VS Code·비주얼 스튜디오처럼): "off"(기본), "left", "right". 켜면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀 창이 남은 곳으로 줄어들고, 도크 패널이 모두 사이드바 안에 구역(접기 가능)으로 쌓인다.</summary>
-    public string Sidebar { get; init; } = "off";
+    /// <summary>창 밖 사이드바(VS Code·비주얼 스튜디오처럼): "right"(기본, 2026-11-17 사용자 요청), "left", "off". 켜면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀 창이 남은 곳으로 줄어들고, 도크 패널이 모두 사이드바 안에 구역(접기 가능)으로 쌓인다.</summary>
+    public string Sidebar { get; init; } = "right";
+
+    /// <summary>사이드바 기본값 안내를 적용한 판. 1 미만이면(예전 설정) 처음 한 번 sidebar를 오른쪽으로 바꾼다(WithSidebarDefault). 그 뒤 사용자가 끄면 그대로 둔다.</summary>
+    public int SidebarIntro { get; init; }
+
+    /// <summary>예전 설정(사이드바가 기본값이 되기 전)을 한 번만 오른쪽 사이드바로 옮긴 새 설정. 이미 옮겼으면 changed=false.</summary>
+    public (HunsuSettings Settings, bool Changed) WithSidebarDefault()
+    {
+        if (SidebarIntro >= 1) return (this, false);
+        var node = System.Text.Json.Nodes.JsonNode.Parse(ToJson())!;
+        if (Sidebar == "off") node["sidebar"] = "right";
+        node["sidebarIntro"] = 1;
+        return (FromJson(node.ToJsonString()), true);
+    }
 
     /// <summary>사이드바 폭(DIP). 범위 200~700. 가장자리를 끌어 바꾼 값이 저장된다.</summary>
     public int SidebarWidth { get; init; } = 300;
@@ -183,6 +196,7 @@ public sealed class HunsuSettings
             Sidebar = (Sidebar ?? "").Trim().ToLowerInvariant() is "left" or "right" ? Sidebar!.Trim().ToLowerInvariant() : "off",
             SidebarWidth = InRange(SidebarWidth, 200, 700) ? SidebarWidth : d.SidebarWidth,
             SidebarTabs = SidebarTabs,
+            SidebarIntro = Math.Max(0, SidebarIntro),
             Profile = Profile ?? "",
             QuickBar = QuickBar,
             CursorHud = CursorHud,
