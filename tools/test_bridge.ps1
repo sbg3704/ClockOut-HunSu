@@ -1,7 +1,7 @@
 ﻿<#
 기능: 다리(out\clockout-hunsu.xlam)를 보이지 않는 엑셀에 열고 COM으로 hello, selection.summary, bridge.stats, 없는 조회를 불러 JSON을 검증한다(docs/02 9장).
 사용법: pwsh -File tools\test_bridge.ps1      (먼저 tools\build_bridge.ps1)
-의존: 엑셀 데스크톱판. 시험용 새 통합 문서에 숫자, 글자, 수식, 오류를 넣어 쓴다(저장하지 않음). 키보드·화면 조작 없음.
+의존: 엑셀 데스크톱판, tools/_com.ps1(거부되면 다시 부름: 다리 호출뿐 아니라 칸 고르기·값 넣기 같은 모든 엑셀 호출에 씌운다). 시험용 새 통합 문서에 숫자, 글자, 수식, 오류를 넣어 쓴다(저장하지 않음). 키보드·화면 조작 없음.
       이 스크립트가 띄운 엑셀만 닫는다. 종료 코드: 0 모두 통과, 1 실패.
 #>
 param([string]$Xlam)
@@ -21,12 +21,12 @@ $xl = $null; $xlPid = 0
 try {
     $xl = New-Object -ComObject Excel.Application
     Invoke-ComRetry { $xl.Visible = $false; $xl.DisplayAlerts = $false }
-    $p = [uint32]0; [void][HunsuTest.Win]::GetWindowThreadProcessId([IntPtr]$xl.Hwnd, [ref]$p); $xlPid = [int]$p
+    $p = [uint32]0; [void][HunsuTest.Win]::GetWindowThreadProcessId([IntPtr](Invoke-ComRetry { $xl.Hwnd }), [ref]$p); $xlPid = [int]$p
     $null = Invoke-ComRetry { $xl.Workbooks.Open($Xlam) }
     $wb = Invoke-ComRetry { $xl.Workbooks.Add() }
-    $ws = $wb.Worksheets.Item(1)
-    $ws.Range('A1').Value2 = 10; $ws.Range('A2').Value2 = 20.5; $ws.Range('A3').Value2 = '글자'
-    $ws.Range('A4').Formula = '=A1*2'; $ws.Range('A5').Formula = '=1/0'
+    $ws = Invoke-ComRetry { $wb.Worksheets.Item(1) }
+    Invoke-ComRetry { $ws.Range('A1').Value2 = 10; $ws.Range('A2').Value2 = 20.5; $ws.Range('A3').Value2 = '글자' }
+    Invoke-ComRetry { $ws.Range('A4').Formula = '=A1*2'; $ws.Range('A5').Formula = '=1/0' }
     $run = { param($proc, $a1, $a2) if ($PSBoundParameters.Count -ge 3) { Invoke-ComRetry { $xl.Run("'clockout-hunsu.xlam'!$proc", $a1, $a2) } } else { Invoke-ComRetry { $xl.Run("'clockout-hunsu.xlam'!$proc") } } }
 
     Write-Host "hello"
@@ -37,7 +37,7 @@ try {
     Write-Host "  판 $($h.data.version), 엑셀 $($h.data.office.version) $($h.data.office.bits)비트"
 
     Write-Host "selection.summary"
-    $null = $ws.Range('A1:A6').Select()
+    Invoke-ComRetry { $null = $ws.Range('A1:A6').Select() }
     $s = (& $run 'CoHunsu_Query' 'selection.summary' '{}') | ConvertFrom-Json
     Check 'ok' ($s.ok -eq $true) ($s | ConvertTo-Json -Compress)
     Check 'addr $A$1:$A$6' ($s.data.addr -eq '$A$1:$A$6') $s.data.addr
@@ -45,26 +45,26 @@ try {
     Check 'sum 50.5 (10+20.5+20)' ([math]::Abs($s.data.sum - 50.5) -lt 1e-9) $s.data.sum
     Check 'min 10, max 20.5' ($s.data.min -eq 10 -and $s.data.max -eq 20.5)
     Check 'errors 1, formula 2, text 1, num 3' ($s.data.errors -eq 1 -and $s.data.types.formula -eq 2 -and $s.data.types.text -eq 1 -and $s.data.types.num -eq 3) ($s.data.types | ConvertTo-Json -Compress)
-    $null = $ws.Range('C1').Select()
+    Invoke-ComRetry { $null = $ws.Range('C1').Select() }
     $e = (& $run 'CoHunsu_Query' 'selection.summary' '{}') | ConvertFrom-Json
     Check '빈 칸: sum null, count 1' ($e.ok -and $null -eq $e.data.sum -and $e.data.count -eq 1 -and $e.data.nonEmpty -eq 0)
-    $null = $ws.Range('A:A').Select()
+    Invoke-ComRetry { $null = $ws.Range('A:A').Select() }
     $t = [Diagnostics.Stopwatch]::StartNew()
     $c = (& $run 'CoHunsu_Query' 'selection.summary' '{}') | ConvertFrom-Json
     $t.Stop()
     Check "열 전체(104만 칸) 선택도 빠르게: $($t.ElapsedMilliseconds)ms" ($c.ok -and $c.data.count -eq 1048576 -and $c.data.nonEmpty -eq 5 -and $t.ElapsedMilliseconds -lt 500)
-    $null = $ws.Range('A1:B2,A4').Select()
+    Invoke-ComRetry { $null = $ws.Range('A1:B2,A4').Select() }
     $m = (& $run 'CoHunsu_Query' 'selection.summary' '{}') | ConvertFrom-Json
     Check '여러 영역 A1:B2,A4' ($m.ok -and $m.data.count -eq 5 -and [math]::Abs($m.data.sum - 50.5) -lt 1e-9) "$($m.data.addr) sum=$($m.data.sum)"
 
     Write-Host "flow.graph (시트를 넘는 수식 흐름, 다리 0.0.014)"
-    $ws2 = $wb.Worksheets.Add([Type]::Missing, $ws)
-    $ws2.Range('B1').Formula = "='$($ws.Name)'!A4*3"
-    $null = $ws.Activate(); $null = $ws.Range('A4').Select()
+    $ws2 = Invoke-ComRetry { $wb.Worksheets.Add([Type]::Missing, $ws) }
+    Invoke-ComRetry { $ws2.Range('B1').Formula = "='$($ws.Name)'!A4*3" }
+    Invoke-ComRetry { $null = $ws.Activate(); $null = $ws.Range('A4').Select() }
     $fg = (& $run 'CoHunsu_Query' 'flow.graph' '{}') | ConvertFrom-Json
     Check 'flow.graph ok, 앞쪽에 A1' ($fg.ok -and ($fg.data.pre.items | Where-Object { $_.addr -eq 'A1' })) ($fg | ConvertTo-Json -Compress -Depth 6)
     Check 'flow.graph 뒤쪽에 다른 시트 B1(cross)' ($fg.ok -and ($fg.data.dep.items | Where-Object { $_.addr -eq 'B1' -and $_.cross })) ($fg.data.dep | ConvertTo-Json -Compress -Depth 4)
-    $ws2.Range('C1').Formula = "='$($ws.Name)'!A1+1"
+    Invoke-ComRetry { $ws2.Range('C1').Formula = "='$($ws.Name)'!A1+1" }
     $fg2 = (& $run 'CoHunsu_Query' 'flow.graph' '{}') | ConvertFrom-Json
     Check 'flow.graph 값이 바뀌면 캐시를 버림(cached false)' ($fg2.ok -and -not $fg2.data.cached) "cached=$($fg2.data.cached)"
 
@@ -84,22 +84,22 @@ try {
 
     Write-Host "bridge.stats (틀 창이 없으면 신호를 보내지 않고 시간만 잰다)"
     $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
-    foreach ($i in 1..20) { $null = $ws.Cells.Item($i, 2).Select() }
+    foreach ($i in 1..20) { Invoke-ComRetry { $null = $ws.Cells.Item($i, 2).Select() } }
     $b = (& $run 'CoHunsu_Query' 'bridge.stats' '{}') | ConvertFrom-Json
     Check 'events 20' ($b.ok -and $b.data.events -eq 20) "events=$($b.data.events)"
     $mx = ($b.data.samplesUs | Measure-Object -Maximum).Maximum
     Check "이벤트 처리 최대 ${mx}µs < 5000µs" ($mx -lt 5000)
     # SpecialCells가 선택 바뀜 이벤트를 일으켜 조회가 자기 신호로 끝없이 다시 돌던 문제(일#305)
-    $null = $ws.Range('A1:A6').Select()
+    Invoke-ComRetry { $null = $ws.Range('A1:A6').Select() }
     $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
     $null = (& $run 'CoHunsu_Query' 'selection.summary' '{}')
     $z = (& $run 'CoHunsu_Query' 'bridge.stats' '{}') | ConvertFrom-Json
     Check '조회 중 생긴 이벤트는 신호로 안 보냄(조회 → 신호 → 조회 고리 없음)' ($z.ok -and $z.data.events -eq 0) "events=$($z.data.events) muted=$($z.data.muted)"
-    Check '설정 그대로(ScreenUpdating, EnableEvents, Calculation)' ($xl.ScreenUpdating -and $xl.EnableEvents -and $xl.Calculation -eq -4105)
+    Check '설정 그대로(ScreenUpdating, EnableEvents, Calculation)' (Invoke-ComRetry { $xl.ScreenUpdating -and $xl.EnableEvents -and $xl.Calculation -eq -4105 })
 }
 catch {
     $script:fail++
-    Write-Host "[오류] $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "[오류] $($_.Exception.Message) (test_bridge.ps1 $($_.InvocationInfo.ScriptLineNumber)줄: $($_.InvocationInfo.Line.Trim()))" -ForegroundColor Red
 }
 finally {
     if ($null -ne $xl) {

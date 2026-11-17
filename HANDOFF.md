@@ -1,5 +1,9 @@
 # 인수인계 (2026-11-17 갱신)
 
+## 2026-11-17 다리 COM 시험 거부(0x80010001)로 빌드 실패
+- 사용자 PC 릴리즈 빌드(0.0.201)에서 `test_bridge.ps1`이 selection.summary 단계에서 RPC_E_CALL_REJECTED로 멈춤. hello 뒤 첫 `Range.Select()`처럼 `Invoke-ComRetry`를 안 씌운 직접 호출이 엑셀이 잠깐 바쁠 때 거부된 것으로 본다(앱 코드·#62와 무관, 앱은 OleMessageFilter로 이미 다시 시도).
+- 고침: 시험 안의 모든 엑셀 호출(칸 고르기, 값·수식 넣기, 시트 더하기, 설정 읽기)을 `Invoke-ComRetry`로 감쌈. 오류 줄에 몇 번째 줄인지 찍음. 못 본 것: PC에서 다시 돌리기. 30초 넘게 거부되면 숨은 엑셀에 안내창(첫 실행 개인 정보 등)이 떠 있는 것.
+
 ## 2026-11-17 커서 '계산 중' 깜빡임 (판 0.0.191)
 - 사용자 신고: 훈수꾼을 켜 두면 마우스 커서가 약 1초 주기로 '계산 중'과 기본 사이를 오감.
 - 원인: 표시층(marks·crosshair 등 marks 선언 모듈)이 켜져 있고 엑셀이 앞에 있으면 `PollMarks`가 markPollMs(기본 400ms)마다 다리 `CoHunsu_Query "mark"`를 `Application.Run`으로 불렀다. 엑셀은 매크로를 도는 동안 커서를 바쁨으로 바꾼다.
