@@ -83,6 +83,7 @@ internal sealed partial class ShellController : IDisposable
         _tray.QuitClicked += Quit;
         _tray.ManagerClicked += () => OpenManager();
         _tray.LookClicked += () => OpenManager("look");
+        _tray.ExcelCleanupClicked += OpenExcelCleanup;
         foreach (var d in new[] { _right, _left })
         {
             d.ModuleIconClicked += OnModuleIcon;
@@ -94,6 +95,7 @@ internal sealed partial class ShellController : IDisposable
             d.QuitRequested += Quit;
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
+            d.ExcelCleanupRequested += OpenExcelCleanup;
             var side = d.Side;
             d.SetCenterRatio(_store.State.DockRatio(side));
             d.HubDropped += (ratio, x) => OnHubDropped(side, ratio, x);
@@ -111,6 +113,7 @@ internal sealed partial class ShellController : IDisposable
         foreach (var mv in _modules.Where(m => m.Module.Manifest.Shapes.Contains("window") || m.Module.Manifest.Shapes.Contains("panel"))) PinWindowFor(mv);
         _right.Show();
         _left.Show();
+        StartExcelCleanup();
         _right.ContentRendered += (_, _) => OnReady();
         if (_settings.ManagerOnStart) OpenManager();
     }
@@ -241,6 +244,7 @@ internal sealed partial class ShellController : IDisposable
 
     public void Dispose()
     {
+        _cleanupTimer?.Stop();
         _store.Flush();
         _log.Write("exit");
         foreach (var f in _followers) f.Dispose();

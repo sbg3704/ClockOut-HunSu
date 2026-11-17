@@ -21,6 +21,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(_hideItem);
         menu.Items.Add("모듈 관리…", null, (_, _) => ManagerClicked?.Invoke());
         menu.Items.Add("모양 바꾸기…", null, (_, _) => LookClicked?.Invoke());
+        menu.Items.Add("남은 엑셀 정리…", null, (_, _) => ExcelCleanupClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("훈수꾼 끄기", null, (_, _) => QuitClicked?.Invoke());
         _icon = new System.Windows.Forms.NotifyIcon { Icon = _image, Text = Trim("훈수꾼 " + BuildInfo.Text), ContextMenuStrip = menu, Visible = true };
@@ -32,6 +33,7 @@ internal sealed class TrayIcon : IDisposable
     public event Action? QuitClicked;
     public event Action? ManagerClicked;
     public event Action? LookClicked;
+    public event Action? ExcelCleanupClicked;
 
     /// <summary>알림 영역 풍선 안내(다리 갱신처럼 사용자가 알아야 하는 한 줄).</summary>
     public void Balloon(string text) => _icon.ShowBalloonTip(8000, "훈수꾼", text, System.Windows.Forms.ToolTipIcon.Info);

@@ -103,6 +103,9 @@ public sealed class HunsuSettings
     /// <summary>색연필 수식 흐름을 지금 그릴지(기본 켜짐). 우클릭 메뉴·Ctrl+Alt+D로 켜고 끈다. 끄면 그림만 멈추고 모듈은 켜진 채다.</summary>
     public bool PencilDraw { get; init; } = true;
 
+    /// <summary>엑셀을 닫은 뒤 창 없이 남은 EXCEL.EXE 찌꺼기를 15초 뒤 자동으로 끝낸다(true, 기본). 보이던 엑셀이 창만 없어진 것만 해당하고, 처음부터 창이 없던 엑셀은 건드리지 않는다.</summary>
+    public bool CleanOrphanExcel { get; init; } = true;
+
     public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
 
     /// <summary>도크 모양 5칸(설정 창 [모양]이 바꾸는 값).</summary>
@@ -171,6 +174,7 @@ public sealed class HunsuSettings
 
             PencilLook = Marks.SketchLook.ByName(PencilLook).Name,
             PencilDraw = PencilDraw,
+            CleanOrphanExcel = CleanOrphanExcel,
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
     }

@@ -107,7 +107,7 @@ internal sealed class ExcelStaWorker : IDisposable
     {
         if (_app != null)
         {
-            try { Marshal.ReleaseComObject(_app); }
+            try { Marshal.FinalReleaseComObject(_app); }
             catch (InvalidComObjectException) { /* 이미 끊긴 객체: 놓기만 하면 된다 */ }
         }
         _app = null;

@@ -250,3 +250,7 @@
 - 파일: `Shell/LookPage.cs`(새), `Shell/ManagerParts.cs`(단추·스위치를 관리자 창에서 떼어 냄), `Core/Settings/HunsuSettings.cs`(`DockLook`, `Look`, `WithLook`), `DockWindow.ApplyLook`, `ShellController.ApplyLook`, `SettingsStore.Save`, `LauncherView.Hold`(미리보기를 깨어 있거나 잠든 모습으로 멈춤).
 - 확인: 클라우드 컴파일 경고 0, Core 시험 161개 통과. 화면은 아직 못 봤다.
 - 알아 둘 것: 설정 창에서 고르면 settings.json이 지금 설정 전체로 다시 쓰여 모르는 키·손으로 쓴 줄 배치는 사라진다.
+
+## 2026-11-17 남은 엑셀 정리 (판 0.0.119)
+- 엑셀을 닫아도 EXCEL.EXE가 남는 문제: 원인은 훈수꾼이 쥔 COM 참조. 창이 사라진 인스턴스를 놓도록 고치고, 찌꺼기 자동 정리와 수동 창을 더했다. 상세는 `docs/17_남은_엑셀_정리.md`.
+- 컴파일·실행 확인 못 함(클라우드). 확인용 엑셀에 "(공통) 남은 엑셀 정리" 줄을 더했다.

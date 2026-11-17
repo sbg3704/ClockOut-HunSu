@@ -21,6 +21,6 @@ $xl.Visible = $true
 $null = $xl.Workbooks.Open($xlam)
 $null = $xl.Workbooks.Open($book)
 $xl.Run("'clockout-hunsu.xlam'!CoHunsu_Start")
-[void][Runtime.InteropServices.Marshal]::ReleaseComObject($xl)   # 엑셀은 사용자가 계속 쓴다(닫지 않음)
+[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($xl); [GC]::Collect(); [GC]::WaitForPendingFinalizers()   # 엑셀은 사용자가 계속 쓴다(닫지 않음)
 if (-not (Get-Process ClockOut.Hunsu -ErrorAction SilentlyContinue)) { Start-Process $exe }
 Write-Host "엑셀과 훈수꾼을 켰습니다. [안내] 시트의 순서대로 확인해 보세요."

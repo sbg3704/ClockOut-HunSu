@@ -168,6 +168,19 @@ internal sealed class InstanceRegistry : IDisposable
     /// <summary>hello를 불러 거절·재시도 결과를 본다(측정 도구와 연결 확인용).</summary>
     public Task<BridgeCall> ProbeAsync(IntPtr hwnd) => Get(hwnd).Worker.CallAsync("CoHunsu_Hello");
 
+    /// <summary>엑셀 창이 없어진 인스턴스의 COM 참조를 놓는다. 참조를 쥐고 있으면 사용자가 엑셀을 닫아도 EXCEL.EXE가 창 없이 남기 때문이다(작업 관리자에 계속 보임).</summary>
+    public int ReleaseGone()
+    {
+        var gone = _items.Keys.Where(h => !User32.IsWindow(h)).ToList();
+        foreach (var h in gone)
+        {
+            _items[h].Worker.Dispose();
+            _items.Remove(h);
+            _log.Write("instance_released", ("excel", h.ToInt64()), ("count", _items.Count));
+        }
+        return gone.Count;
+    }
+
     public void Dispose()
     {
         foreach (var inst in _items.Values) inst.Worker.Dispose();

@@ -61,6 +61,12 @@ internal sealed class GeneralPage : ScrollViewer
         Section("빠른 띠", "바로 반영. 모듈마다의 옵션(색연필 모양, 커서 HUD 등)은 [옵션] 쪽과 아이콘 우클릭에 있습니다. 띠는 Ctrl+Alt+H(편집 모드)에서 끌어 옮깁니다");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.QuickBar, () => _shell.ApplySetting("quickBar", !s.QuickBar)), "빠른 띠: 주요 모듈 아이콘을 엑셀 위에 한 줄로 (프로필이 바뀌면 같이 바뀜)"));
 
+        Section("남은 엑셀 정리", "엑셀을 닫고도 작업 관리자에 EXCEL.EXE가 남을 때");
+        _root.Children.Add(Row(ManagerParts.Switch(this, s.CleanOrphanExcel, () => _shell.ApplySetting("cleanOrphanExcel", !s.CleanOrphanExcel)), "닫은 엑셀이 창 없이 15초 넘게 남으면 자동으로 끝낸다 (처음부터 창이 없던 엑셀은 그대로)"));
+        var cleanup = new WrapPanel { Margin = new Thickness(0, 2, 0, 4) };
+        cleanup.Children.Add(ManagerParts.Chip(this, "남은 엑셀 정리…", false, _shell.OpenExcelCleanup));
+        _root.Children.Add(cleanup);
+
         Section("시작할 때", "다음 실행부터");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.ManagerOnStart, () => _shell.ApplySetting("managerOnStart", !s.ManagerOnStart)), "설정 창을 바로 연다"));
         bool all = s.EnabledByDefault.Contains("*");
