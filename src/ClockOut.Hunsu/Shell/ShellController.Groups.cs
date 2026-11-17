@@ -4,6 +4,7 @@
 // 의존: Overlay/PinWindow(AddFrame, RemoveFrame, ResizeTo), Core/Layout(PinGroups, ModulePlacement.Group). 주인 창을 도크로 되돌리면 묶음을 먼저 푼다(주인이 바뀌면 자리 저장이 어긋나서).
 using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Native;
 using ClockOut.Hunsu.Overlay;
 using ClockOut.Hunsu.Ui.Frame;
 
@@ -66,6 +67,25 @@ internal sealed partial class ShellController
             Pin(m, null, restoring: true); // 묶기 전 저장된 자리(PinRect)로
         }
         RefreshDocks();
+    }
+
+    private const int DockSnapPx = 40;
+
+    /// <summary>떼어 낸 창을 엑셀 창 오른쪽 가장자리 가까이에 놓았으면 사이드 패널(오른쪽 도크)로 붙인다(자석). 묶음이면 담긴 패널 모두. true면 이 창은 곧 닫힌다.</summary>
+    private bool TryDockDrop(ModuleView mv, PixelRect rect)
+    {
+        if (_target == IntPtr.Zero || !_pins.TryGetValue(mv.Id, out var w)) return false;
+        var ex = User32.VisibleBounds(_target);
+        bool nearEdge = Math.Abs(rect.Right - ex.Right) <= DockSnapPx && rect.Bottom > ex.Y && rect.Y < ex.Bottom;
+        if (!nearEdge) return false;
+        var members = w.Frames.Select(ModuleOf).OfType<ModuleView>().ToList();
+        // 끌기 처리 중에 창을 닫지 않도록 한 박자 뒤에 한다.
+        System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            foreach (var m in members) MoveToDock(m, Places.EdgeRight);
+            _log.Write("dock_snap", ("count", members.Count));
+        }, System.Windows.Threading.DispatcherPriority.Background);
+        return true;
     }
 
     /// <summary>핀 창에서 mv의 패널을 거둔다(도크로 되돌리기·편집 취소). 묶음이면: 주인이면 나머지를 먼저 풀고 창을 닫고, 담긴 패널이면 그것만 빼고 창은 둔다.</summary>

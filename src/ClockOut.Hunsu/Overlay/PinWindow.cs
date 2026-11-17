@@ -69,6 +69,9 @@ internal sealed class PinWindow : Window
     /// <summary>끌기를 시작할 때 이 창과 자석으로 이어진 다른 핀 창들(같이 움직일 것). null이면 혼자. Alt를 누른 채 끌면 쓰지 않는다.</summary>
     public Func<IReadOnlyList<PinWindow>>? GroupPeers { get; set; }
 
+    /// <summary>끌어 놓은 자리(실제 픽셀)를 받아, 사이드 패널(오른쪽 도크)에 붙였으면 true를 돌려준다(이 창은 닫히므로 자리를 저장하지 않는다).</summary>
+    public Func<PixelRect, bool>? DropHandler { get; set; }
+
     private PixelRect _followStart;
 
     /// <summary>묶음에 딸려 가기 시작(지금 자리를 기억).</summary>
@@ -309,14 +312,14 @@ internal sealed class PinWindow : Window
             var snapped = PinPlacement.Snap(now, SnapTargets());
             if (snapped != now) { MoveTo(snapped); now = snapped; }
         }
+        int fdx = now.X - before.X, fdy = now.Y - before.Y;
+        foreach (var p in peers) p.FollowEnd(fdx, fdy);
+        if (DropHandler?.Invoke(now) == true) return; // 엑셀 오른쪽 가장자리 근처에 놓음 → 사이드 패널로 붙음
         if (now != _rect)
         {
             _rect = now;
             Moved?.Invoke(now);
         }
-        // 자석으로 붙어 있던 창들은 같은 만큼 따라 움직인다(2026-11-17: 붙은 패널끼리 같이 다니기).
-        int dx = now.X - before.X, dy = now.Y - before.Y;
-        foreach (var p in peers) p.FollowEnd(dx, dy);
     }
 
     /// <summary>패널 틀을 놓아주고 창은 숨겨 둔다(다음에 다시 씀).</summary>

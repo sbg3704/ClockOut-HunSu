@@ -25,6 +25,9 @@ public sealed record ModulePlacement
     /// <summary>엄마 패널(묶음)의 주인 모듈 id. 값이 있으면 이 패널은 그 모듈의 핀 창 안에 담겨 있다(떼어 낸 채 묶은 것만). 비어 있으면 혼자.</summary>
     public string? Group { get; init; }
 
+    /// <summary>제목줄만 남기고 본문을 접어 둔다(▾). 작게(아이콘으로)와 달리 그 자리에 제목이 남아 다시 펼치기 쉽다.</summary>
+    public bool Folded { get; init; }
+
     /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
     public bool? Enabled { get; init; }
 }
