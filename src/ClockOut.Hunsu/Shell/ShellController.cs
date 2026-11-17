@@ -58,6 +58,7 @@ internal sealed partial class ShellController : IDisposable
         _right = new DockWindow(Places.EdgeRight, _settings);
         _left = new DockWindow(Places.EdgeLeft, _settings);
         CreateQuick();
+        CreateSidebar();
         StartActivityWatch();
         _log.Write("launcher", ("shape", _settings.DockShape), ("groups", _settings.DockGroups), ("size", _settings.DockSize), ("icons", _settings.IconProfile), ("idle", _settings.IdleOpacity));
         _registry = new InstanceRegistry(_log, _settings) { TopicsFor = TopicsForSignal, AllTopics = AllEnabledTopics };
@@ -170,6 +171,7 @@ internal sealed partial class ShellController : IDisposable
         UpdateDockVisibility();
         UpdateQuickBar();
         ApplyDefaultForms();
+        UpdateSidebar();
     }
 
     private void OnTargetGone()
@@ -177,6 +179,7 @@ internal sealed partial class ShellController : IDisposable
         _log.Write("target_gone", ("target", _target.ToInt64()));
         foreach (var p in _pins.Values) p.Hide();
         _markWindow?.Clear();
+        UpdateSidebarOffNoTarget();
         if (_options.FollowHwnd == 0) HideDocksAndWait();
     }
 
@@ -185,6 +188,7 @@ internal sealed partial class ShellController : IDisposable
     {
         User32.ShowWindow(_right.Handle, User32.SW_HIDE);
         User32.ShowWindow(_left.Handle, User32.SW_HIDE);
+        UpdateSidebarOffNoTarget();
         _finder ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) =>
         {
             var hwnd = ExcelWindows.FindVisibleMain();
@@ -213,7 +217,7 @@ internal sealed partial class ShellController : IDisposable
         foreach (var (f, dock) in docks)
         {
             // 왼쪽 도크(훈 원)는 모듈이 하나도 없어도 늘 보인다: 훈수꾼이 켜져 있다는 표시이고, 우클릭 메뉴(모듈 관리)로 가는 길이다(2026-11-17 "안 보여" 신고).
-            bool any = dock.Modules.Count > 0 || dock == _left;
+            bool any = !SidebarOn && (dock.Modules.Count > 0 || dock == _left); // 사이드바가 켜지면 도크 창은 둘 다 감춘다
             f.Suspended = _hiddenAll || !any;
             f.Sync(any ? "show" : "empty");
         }
@@ -223,6 +227,7 @@ internal sealed partial class ShellController : IDisposable
     {
         _hiddenAll = !_hiddenAll;
         foreach (var f in _followers) f.Suspended = _hiddenAll;
+        UpdateSidebar();
         UpdateDockVisibility();
         UpdateQuickBar();
         foreach (var p in ActivePins()) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
@@ -249,6 +254,7 @@ internal sealed partial class ShellController : IDisposable
         _cleanupTimer?.Stop();
         _store.Flush();
         _log.Write("exit");
+        _sidebar?.Shutdown(); // 앱 바 예약을 풀어 엑셀 창이 원래 크기로 돌아오게
         foreach (var f in _followers) f.Dispose();
         _hotkeys.Dispose();
         _bridgeUpdater?.Dispose();

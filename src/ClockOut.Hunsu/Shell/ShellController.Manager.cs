@@ -57,6 +57,7 @@ internal sealed partial class ShellController
         // 룩·테마는 껐다 켜지 않고 바로 바꾼다(붓의 색만 바꿔 열린 창도 따라감).
         if (key is "skin" or "theme") ThemePicker.Apply(Application.Current, next.Theme, next.PanelWidth, next.Skin);
         UpdateQuickBar();
+        if (key is "sidebar" or "sidebarWidth") UpdateSidebar();
         if (key == "panelJoin") { _right.ApplyLook(next); _left.ApplyLook(next); } // 합쳐 보기는 바로 반영
         foreach (var mv in _modules) mv.Frame.ApplyBodyLimit(!mv.InDock);
         SettingsStore.Save(SettingsPath, next, _log);

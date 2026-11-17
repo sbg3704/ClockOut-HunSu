@@ -86,6 +86,12 @@ public sealed class HunsuSettings
     /// <summary>도크의 패널들을 틈 없이 한 창처럼 이어 붙여 보인다(칸 사이는 얇은 선). false(기본)면 카드가 따로 떠 있다. 허브 우클릭 메뉴·설정 창에서 켜고 끈다.</summary>
     public bool PanelJoin { get; init; }
 
+    /// <summary>창 밖 사이드바(VS Code·비주얼 스튜디오처럼): "off"(기본), "left", "right". 켜면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀 창이 남은 곳으로 줄어들고, 도크 패널이 모두 사이드바 안에 구역(접기 가능)으로 쌓인다.</summary>
+    public string Sidebar { get; init; } = "off";
+
+    /// <summary>사이드바 폭(DIP). 범위 200~700. 가장자리를 끌어 바꾼 값이 저장된다.</summary>
+    public int SidebarWidth { get; init; } = 300;
+
     /// <summary>쓰기 명령(실험 기능) 공지를 확인한 공지 판. 현재 공지 판(WritePolicy.NoticeVersion)과 다르면 쓰기 전에 공지를 다시 보인다(docs/11 2장).</summary>
     public string WriteAck { get; init; } = "";
 
@@ -171,6 +177,8 @@ public sealed class HunsuSettings
             WriteAck = WriteAck ?? "",
             HoverSharpen = HoverSharpen,
             PanelJoin = PanelJoin,
+            Sidebar = (Sidebar ?? "").Trim().ToLowerInvariant() is "left" or "right" ? Sidebar!.Trim().ToLowerInvariant() : "off",
+            SidebarWidth = InRange(SidebarWidth, 200, 700) ? SidebarWidth : d.SidebarWidth,
             Profile = Profile ?? "",
             QuickBar = QuickBar,
             CursorHud = CursorHud,
