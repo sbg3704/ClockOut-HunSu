@@ -20,7 +20,7 @@ internal sealed class WriteDialog : Window
         Title = "훈수꾼";
         Width = 420;
         SizeToContent = SizeToContent.Height;
-        ResizeMode = ResizeMode.NoResize;
+        ResizeMode = ResizeMode.CanResize; MinWidth = 340; MinHeight = 160;
         Topmost = true;
         ShowInTaskbar = true;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -67,7 +67,7 @@ internal sealed class WriteDialog : Window
     {
         var win = new Window
         {
-            Title = "훈수꾼", Width = 420, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize,
+            Title = "훈수꾼", Width = 420, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.CanResize, MinWidth = 340, MinHeight = 160,
             Topmost = true, ShowInTaskbar = true, WindowStartupLocation = WindowStartupLocation.CenterScreen,
         };
         win.Background = (Brush)win.FindResource("Hunsu.Surface");

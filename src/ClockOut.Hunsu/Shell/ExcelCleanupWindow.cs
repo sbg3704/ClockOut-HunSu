@@ -26,7 +26,7 @@ internal sealed class ExcelCleanupWindow : Window
         Width = 520;
         SizeToContent = SizeToContent.Height;
         MaxHeight = 560;
-        ResizeMode = ResizeMode.NoResize;
+        ResizeMode = ResizeMode.CanResize; MinWidth = 420; MinHeight = 240;
         Topmost = true;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         SetResourceReference(BackgroundProperty, "Hunsu.Surface"); // 룩·테마를 바꾸면 따라간다
