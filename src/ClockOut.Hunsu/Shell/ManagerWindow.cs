@@ -1,4 +1,4 @@
-// 기능: 훈수꾼 설정 창. 위의 [모듈] [모양] 두 쪽. [모듈]: 설치된 모듈을 분류 묶음별 한 줄씩 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
+// 기능: 훈수꾼 설정 창. 위의 [모듈] [프로필] [옵션] [모양] [일반] 쪽. 머리글은 두 줄(제목·요약 / 쪽 단추)이라 좁아도 글씨가 가리지 않는다. [모듈]: 설치된 모듈을 분류 묶음별 한 줄씩 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
 //       새 모듈을 받는 일은 칼퇴 왼쪽 레일(카탈로그 modules 구역)이 맡고, 여기서는 받은 모듈을 다룬다(docs/07).
 //       [모양]: 도크 배치 모양·묶음·크기·아이콘 세트·쉴 때 진하기를 미리보기와 함께 고른다(Shell/LookPage).
 // 사용법: 알림 영역 아이콘 → "모듈 관리…", 훈 원 우클릭 → "모듈 관리…" / "모양 바꾸기…", 또는 settings.json의 managerOnStart. new ManagerWindow(shell, "look").Show()
@@ -20,7 +20,7 @@ internal sealed class ManagerWindow : Window
     private readonly StackPanel _cards = new();
     private readonly TextBlock _summary = new();
     private readonly Border _body = new();
-    private readonly StackPanel _tabs = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+    private readonly WrapPanel _tabs = new() { Margin = new Thickness(0, 12, 0, 0) };
     private ScrollViewer? _modulesView;
     private LookPage? _look;
     private GeneralPage? _general;
@@ -32,19 +32,20 @@ internal sealed class ManagerWindow : Window
     {
         _shell = shell;
         Title = "훈수꾼 · 설정";
-        Width = 680;
-        Height = 660;
+        Width = 880; // 모듈 한 줄에 이름·설명·단추가 다 보이는 폭(2026-11-17 사용자 요청)
+        Height = 680;
         MinWidth = 480;
         MinHeight = 360;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Background = (Brush)FindResource("Hunsu.Surface");
-        Foreground = (Brush)FindResource(ThemeKeys.Text);
-        FontFamily = (FontFamily)FindResource("Hunsu.Font");
+        SetResourceReference(BackgroundProperty, "Hunsu.Surface"); // 룩·테마를 바꾸면 따라간다
+        SetResourceReference(ForegroundProperty, ThemeKeys.Text);
+        SetResourceReference(FontFamilyProperty, "Hunsu.Font");
         FontSize = (double)FindResource("Hunsu.FontBody");
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         Content = BuildLayout();
         _shell.ModulesChanged += Rebuild;
-        Closed += (_, _) => _shell.ModulesChanged -= Rebuild;
+        ThemePicker.SkinChanged += OnSkinChanged;
+        Closed += (_, _) => { _shell.ModulesChanged -= Rebuild; ThemePicker.SkinChanged -= OnSkinChanged; };
         Rebuild();
         ShowPage(page);
     }
@@ -52,7 +53,7 @@ internal sealed class ManagerWindow : Window
     /// <summary>[모듈] 또는 [모양] 쪽을 보인다("modules" | "look").</summary>
     internal void ShowPage(string page)
     {
-        _page = page is "look" or "general" or "profiles" ? page : "modules";
+        _page = page is "look" or "general" or "profiles" or "options" ? page : "modules";
         if (_page == "look")
         {
             _look ??= new LookPage(_shell);
@@ -86,13 +87,40 @@ internal sealed class ManagerWindow : Window
         _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
     }
 
+    /// <summary>룩·테마가 바뀌면 창 안을 새 색으로 다시 짓는다. 부품들이 만들 때 색을 한 번 읽으므로(FindResource) 옛 색이 남아
+    /// 밝은 바탕에 밝은 글씨처럼 안 읽히던 문제를 막는다(2026-11-17 사용자 신고).</summary>
+    private void OnSkinChanged()
+    {
+        // 단추를 누른 처리 중에 불릴 수 있어 그 처리가 끝난 뒤 다시 짓는다.
+        Dispatcher.BeginInvoke(RebuildForTheme);
+    }
+
+    private void RebuildForTheme()
+    {
+        // 다시 쓰는 부품을 옛 부모에서 떼어 낸다(한 부품은 부모가 하나뿐).
+        foreach (var e in new UIElement[] { _tabs, _body, _summary })
+            if (e is FrameworkElement { Parent: Panel p }) p.Children.Remove(e);
+        if (_modulesView != null) _modulesView.Content = null;
+        _look = null;
+        _general = null;
+        _profiles = null;
+        _options = null;
+        _body.Child = null;
+        Content = BuildLayout();
+        Rebuild();
+        ShowPage(_page);
+    }
+
     private UIElement BuildLayout()
     {
         var dock = new DockPanel();
+        // 머리글: 넓으면 한 줄(로고·제목·요약 | 쪽 단추), 좁아 글씨가 단추에 가릴 폭이면 쪽 단추를 아래 줄로 내린다(PlaceTabs).
         var header = new Grid { Margin = new Thickness(22, 18, 22, 8) };
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        header.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         var logo = new Border
         {
             Width = 40,
@@ -110,6 +138,7 @@ internal sealed class ManagerWindow : Window
                 VerticalAlignment = VerticalAlignment.Center,
             },
         };
+        logo.VerticalAlignment = VerticalAlignment.Top;
         header.Children.Add(logo);
         var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         titles.Children.Add(new TextBlock
@@ -118,15 +147,18 @@ internal sealed class ManagerWindow : Window
             FontFamily = (FontFamily)FindResource("Hunsu.FontTitle"),
             FontSize = (double)FindResource("Hunsu.FontTitleSize") + 5,
             FontWeight = FontWeights.SemiBold,
+            TextTrimming = TextTrimming.CharacterEllipsis,
             ToolTip = "훈수꾼 판 " + BuildInfo.Text,
         });
         _summary.Foreground = (Brush)FindResource(ThemeKeys.Muted);
         _summary.Margin = new Thickness(0, 2, 0, 0);
+        _summary.TextWrapping = TextWrapping.Wrap;
         titles.Children.Add(_summary);
         Grid.SetColumn(titles, 1);
         header.Children.Add(titles);
-        Grid.SetColumn(_tabs, 2);
         header.Children.Add(_tabs);
+        header.SizeChanged += (_, _) => PlaceTabs(header, logo, titles);
+        PlaceTabs(header, logo, titles);
         DockPanel.SetDock(header, Dock.Top);
         dock.Children.Add(header);
 
@@ -151,6 +183,22 @@ internal sealed class ManagerWindow : Window
         _modulesView = new ScrollViewer { Content = _cards, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         dock.Children.Add(_body);
         return dock;
+    }
+
+    /// <summary>제목·요약이 한 줄로 다 들어가면 쪽 단추를 오른쪽에, 아니면 아래 줄에 둔다.</summary>
+    private void PlaceTabs(Grid header, FrameworkElement logo, FrameworkElement titles)
+    {
+        var inf = new Size(double.PositiveInfinity, double.PositiveInfinity);
+        _tabs.Measure(inf);
+        titles.Measure(inf);
+        double need = logo.Width + logo.Margin.Right + titles.DesiredSize.Width + 16 + _tabs.DesiredSize.Width;
+        double have = header.ActualWidth > 0 ? header.ActualWidth : Width - 44;
+        bool below = need > have;
+        Grid.SetRow(_tabs, below ? 1 : 0);
+        Grid.SetColumn(_tabs, below ? 0 : 2);
+        Grid.SetColumnSpan(_tabs, below ? 3 : 1);
+        _tabs.Margin = below ? new Thickness(0, 12, 0, 0) : new Thickness(16, 0, 0, 0);
+        _tabs.VerticalAlignment = VerticalAlignment.Center;
     }
 
     private readonly HashSet<string> _folded = new();
@@ -190,6 +238,7 @@ internal sealed class ManagerWindow : Window
             Text = $"{(folded ? "▸" : "▾")} {name}  {on}/{members.Count}",
             FontWeight = FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
         });
         row.MouseLeftButtonUp += (_, _) => { if (!_folded.Remove(name)) _folded.Add(name); Rebuild(); };
         return row;
@@ -216,8 +265,11 @@ internal sealed class ManagerWindow : Window
         toggle.Margin = new Thickness(0, 0, 10, 0);
         DockPanel.SetDock(toggle, Dock.Left);
         dock.Children.Add(toggle);
-        var text = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(new TextBlock { Text = man.Name, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 8, 0) });
+        // 이름과 설명은 남은 폭만 쓰고 넘치면 말줄임(…)으로 줄인다. 오른쪽 단추에 가려 잘리지 않는다.
+        var text = new DockPanel { VerticalAlignment = VerticalAlignment.Center, LastChildFill = true };
+        var nameBlock = new TextBlock { Text = man.Name, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 8, 0), TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+        DockPanel.SetDock(nameBlock, Dock.Left);
+        text.Children.Add(nameBlock);
         text.Children.Add(new TextBlock
         {
             Text = man.Description,
@@ -225,7 +277,6 @@ internal sealed class ManagerWindow : Window
             Foreground = (Brush)FindResource(ThemeKeys.Muted),
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
-            MaxWidth = 230,
         });
         dock.Children.Add(text);
         // 줄 어디에 올려도 전체 설명이 팝업으로 뜬다(설명이 잘려 있어도 읽을 수 있게).

@@ -24,9 +24,9 @@ internal sealed class WriteDialog : Window
         Topmost = true;
         ShowInTaskbar = true;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Background = (Brush)FindResource("Hunsu.Surface");
-        Foreground = (Brush)FindResource(ThemeKeys.Text);
-        FontFamily = (FontFamily)FindResource("Hunsu.Font");
+        SetResourceReference(BackgroundProperty, "Hunsu.Surface"); // 룩·테마를 바꾸면 따라간다
+        SetResourceReference(ForegroundProperty, ThemeKeys.Text);
+        SetResourceReference(FontFamilyProperty, "Hunsu.Font");
         FontSize = (double)FindResource("Hunsu.FontBody");
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         var root = new StackPanel { Margin = new Thickness(22, 20, 22, 18) };
