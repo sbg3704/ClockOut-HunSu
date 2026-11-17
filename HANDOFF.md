@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-17 갱신)
 
+## 2026-11-17 훈수꾼이 두 개 켜짐 (판 0.0.202)
+- 사용자 신고: 테스트 PC에서 훈수꾼이 두 번 켜짐. 원인(코드 읽기, PC 확인 전): 훈수꾼에 단일 실행 잠금이 없고, 칼퇴 레일의 켜기는 `%LOCALAPPDATA%\ClockOut\apps\hunsu\` 안의 exe만 켜져 있다고 센다. 개발 빌드나 `try_hunsu.ps1`로 띄운 복사본이 있으면 둘이 같이 켜진다.
+- 고침: `Core/SingleInstance`(이름 있는 Mutex `Local\ClockOut.Hunsu.SingleInstance`). 인자 없는 보통 모드만 잠그고, `--follow·--layout·--log·--snapshot`을 주는 측정 실행은 잠그지 않는다. 이미 켜져 있으면 새로 켠 쪽이 조용히 끝난다. 시험 `SingleInstanceTests` 2개 추가.
+- 못 한 것: 클라우드에 dotnet이 없어 빌드·시험을 돌리지 못했다. PC에서 `tools\co build hunsu`(또는 `tools\build.ps1`)로 확인 필요. 실제로 두 번 켜 봐서 두 번째가 사라지는지, 레일 [끄기]가 그대로 되는지도 못 봤다.
+
+
 ## 2026-11-17 다리 COM 시험 거부(0x80010001)로 빌드 실패
 - 사용자 PC 릴리즈 빌드(0.0.201)에서 `test_bridge.ps1`이 selection.summary 단계에서 RPC_E_CALL_REJECTED로 멈춤. hello 뒤 첫 `Range.Select()`처럼 `Invoke-ComRetry`를 안 씌운 직접 호출이 엑셀이 잠깐 바쁠 때 거부된 것으로 본다(앱 코드·#62와 무관, 앱은 OleMessageFilter로 이미 다시 시도).
 - 고침: 시험 안의 모든 엑셀 호출(칸 고르기, 값·수식 넣기, 시트 더하기, 설정 읽기)을 `Invoke-ComRetry`로 감쌈. 오류 줄에 몇 번째 줄인지 찍음. 못 본 것: PC에서 다시 돌리기. 30초 넘게 거부되면 숨은 엑셀에 안내창(첫 실행 개인 정보 등)이 떠 있는 것.
