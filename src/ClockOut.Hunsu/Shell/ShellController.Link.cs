@@ -116,8 +116,10 @@ internal sealed partial class ShellController
         var same = ExcelWindows.List().Where(w => w.Pid == (int)pidU).ToList();
         var lines = new List<string>();
         if (ExcelElevationText(_target) is { } elevated) lines.Add("⚠ " + elevated);
+        static string Rights(bool? e) => e == null ? "알 수 없음(못 열었다)" : e == true ? "관리자" : "일반";
         lines.AddRange(new[]
         {
+            $"권한: 엑셀 {Rights(Native.ProcessElevation.TryIsElevated((int)pidU))} · 훈수꾼 {Rights(Native.ProcessElevation.TryIsElevated(Environment.ProcessId))} (다르면 못 읽어요)",
             "훈수꾼 판 " + BuildInfo.Text,
             $"따라가는 창 {_target.ToInt64()} · 프로세스 {pidU}번 · 같은 프로세스의 엑셀 주 창 {same.Count}개(보이는 것 {same.Count(w => w.Visible)}개) · 붙는 방법 {r.Attach}",
             "다리 파일: " + (BridgeFilePath() ?? "못 찾음"),

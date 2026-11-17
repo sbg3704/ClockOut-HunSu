@@ -32,7 +32,8 @@ internal static class ProcessElevation
         return target == true && self == false ? ElevationRelation.TargetHigher : ElevationRelation.Same;
     }
 
-    private static bool? TryIsElevated(int pid)
+    /// <summary>그 프로세스가 관리자 권한인가(true), 일반인가(false), 알 수 없나(null: 못 열었다).</summary>
+    public static bool? TryIsElevated(int pid)
     {
         IntPtr proc = OpenProcess(ProcessQueryLimitedInformation, false, pid);
         if (proc == IntPtr.Zero) return null;
