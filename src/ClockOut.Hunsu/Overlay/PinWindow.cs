@@ -72,6 +72,9 @@ internal sealed class PinWindow : Window
     /// <summary>끌어 놓은 자리(실제 픽셀)를 받아, 사이드 패널(오른쪽 도크)에 붙였으면 true를 돌려준다(이 창은 닫히므로 자리를 저장하지 않는다).</summary>
     public Func<PixelRect, bool>? DropHandler { get; set; }
 
+    /// <summary>끄는 동안 지금 자리(실제 픽셀)에 보여 줄 안내 글. null이면 안내 없음(예: 오른쪽 가장자리 가까이에서 사이드 패널과 사이드바를 알려 줌).</summary>
+    public Func<PixelRect, string?>? DragHint { get; set; }
+
     private PixelRect _followStart;
 
     /// <summary>묶음에 딸려 가기 시작(지금 자리를 기억).</summary>
@@ -303,9 +306,21 @@ internal sealed class PinWindow : Window
             var b = User32.WindowBounds(Handle);
             foreach (var p in peers) p.FollowTo(b.X - before.X, b.Y - before.Y);
         }
+        HintWindow? hint = null;
+        void ShowHint(object? s, EventArgs a)
+        {
+            var b = User32.WindowBounds(Handle);
+            var text = DragHint?.Invoke(b);
+            if (text == null) { hint?.HideHint(); return; }
+            hint ??= new HintWindow();
+            hint.ShowAt(text, b.X, Math.Max(0, b.Y - 40));
+        }
         if (peers.Count > 0) LocationChanged += Follow;
+        if (DragHint != null) LocationChanged += ShowHint;
         DragMove(); // 놓을 때까지 돌아오지 않는다
         LocationChanged -= Follow;
+        LocationChanged -= ShowHint;
+        hint?.Close();
         var now = User32.WindowBounds(Handle);
         if (SnapTargets != null && !User32.AltDown())
         {

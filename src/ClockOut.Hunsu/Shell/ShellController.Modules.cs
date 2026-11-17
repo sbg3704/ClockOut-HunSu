@@ -228,6 +228,7 @@ internal sealed partial class ShellController
         w.SnapTargets = () => SnapTargetsFor(mv.Id);
         w.GroupPeers = () => ConnectedPins(mv.Id);
         w.DropHandler = rect => TryDockDrop(mv, rect);
+        w.DragHint = DockDragHint;
         w.Moved += r => Save(mv, p => p with { PinRect = r });
         w.Prepare();
         _pinWindows[mv.Id] = w;
