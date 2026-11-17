@@ -11,7 +11,7 @@
     {"id": "clockout-hunsu", "min_version": "0.0.020", "reason": "칸 자리 조회(mark, 2단계 pre2·dep2), 다른 시트 흐름(flow.graph), 시트 탭 이름(sheets)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["mark", "tab", "panel"],
-  "place": "edge-right",
+  "place": "edge-left",
   "order": 215,
   "icon": "flow",
   "form": "mini",
@@ -20,7 +20,7 @@
     {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"},
     {"topic": "sheets", "on": ["sheet", "book"], "weight": "light"}
   ],
-  "quick": [{"kind":"toggle","key":"pencilDraw","label":"그리기 켜기 (Ctrl+Alt+D)","group":"그리기","order":1},{"kind":"choice","key":"pencilLook","label":"그림 모양","group":"그리기","order":2,"options":[{"value":"pencil","label":"색연필"},{"value":"marker","label":"형광 마커"},{"value":"ink","label":"펜"}]}],
+  "quick": [{"kind":"toggle","key":"pencilDraw","apply":"refresh","label":"그리기 켜기 (Ctrl+Alt+D)","group":"그리기","order":1},{"kind":"choice","key":"pencilLook","apply":"redraw","label":"그림 모양","group":"그리기","order":2,"options":[{"value":"pencil","label":"색연필"},{"value":"marker","label":"형광 마커"},{"value":"ink","label":"펜"}]}],
   "commands": [],
   "scope": "sheet",
   "params": []

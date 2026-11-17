@@ -58,7 +58,7 @@ internal sealed class InstanceRegistry : IDisposable
     public event Action<IntPtr, string>? Stale;
 
     /// <summary>신호 번호 → 다시 조회할 주제들(켜진 모듈의 구독). 정하지 않으면 sel → selection.summary만.</summary>
-    public Func<int, IReadOnlyList<string>> TopicsFor { get; set; } = code => code == SignalCodec.Sel ? new[] { "selection.summary" } : Array.Empty<string>();
+    public Func<int, IReadOnlyList<string>> TopicsFor { get; set; } = code => code == SignalCodec.Sel ? new[] { TopicRouting.SelectionSummary } : Array.Empty<string>();
 
     /// <summary>켜진 모듈이 구독한 모든 주제. 엑셀에서 처음 신호가 왔을 때 아직 한 번도 못 채운 주제들도 함께 채운다(예: 시트 목록).</summary>
     public Func<IReadOnlyList<string>> AllTopics { get; set; } = () => Array.Empty<string>();
@@ -147,7 +147,7 @@ internal sealed class InstanceRegistry : IDisposable
                 st.LastEndMs = NowMs();
                 st.LastDurMs = (qd - qs) * 1000.0 / Stopwatch.Frequency;
                 TopicReady?.Invoke(new TopicResult(hwnd, topic, n.Seq, n.At, qs, qd, call, resp));
-                if (topic == "selection.summary")
+                if (topic == TopicRouting.SelectionSummary)
                 {
                     var summary = resp.Ok ? SelectionSummary.From(resp.Data) : null;
                     SummaryReady?.Invoke(new SummaryResult(hwnd, n.Seq, n.At, qs, qd, call, resp, summary));

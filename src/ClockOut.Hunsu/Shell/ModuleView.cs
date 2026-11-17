@@ -69,6 +69,9 @@ internal sealed class ModuleView
 
     public bool ShowsPanel => InDock && !Placement.Collapsed && !ForcedCollapsed;
 
+    /// <summary>이 모듈이 받은 주제별 최신 값(HUD 글·조건을 만들 때 셸이 읽는다).</summary>
+    public DataScope Scope => _scope;
+
     public bool Wants(string topic) => Module.Manifest.Data.Any(d => d.Topic == topic);
 
     public void SetData(string topic, JsonElement data)

@@ -162,7 +162,7 @@ internal sealed partial class ShellController : IDisposable
         foreach (var p in _pinWindows.Values) p.SetOwner(target);
         _markData.Clear();
         _markWindow?.Clear();
-        UpdateLeftVisibility();
+        UpdateDockVisibility();
         UpdateQuickBar();
         ApplyDefaultForms();
     }
@@ -194,28 +194,30 @@ internal sealed partial class ShellController : IDisposable
     /// <summary>다른 엑셀 창이 앞으로 나오면 그 창을 따라간다(보통 모드만).</summary>
     private void OnForeground(IntPtr fg, bool isExcel)
     {
-        if (!isExcel) _cursorHud?.HideNow();
+        if (!isExcel) HideHuds();
         if (!isExcel || _options.FollowHwnd != 0 || fg == _target) return;
         _log.Write("retarget", ("from", _target.ToInt64()), ("to", fg.ToInt64()));
         Follow(fg);
     }
 
-    /// <summary>왼쪽 도크에 모듈이 없으면 그 창을 숨겨 둔다(빈 투명 창도 숨김).</summary>
-    private void UpdateLeftVisibility()
+    /// <summary>모듈이 없는 도크는 창을 숨겨 둔다(빈 투명 창과 훈 원도 보이지 않게). 기본은 왼쪽 도크 하나이고, 오른쪽 도크는 사용자가 모듈을 옮겨 놓았을 때만 나타난다. _followers[0]=오른쪽, [1]=왼쪽.</summary>
+    private void UpdateDockVisibility()
     {
-        bool any = _left.Modules.Count > 0;
-        var f = _followers.Count > 1 ? _followers[1] : null;
-        if (f == null) return;
-        f.Suspended = _hiddenAll || !any;
-        f.Sync(any ? "show" : "empty");
+        if (_followers.Count < 2) return;
+        (WindowFollower f, DockWindow dock)[] docks = [(_followers[0], _right), (_followers[1], _left)];
+        foreach (var (f, dock) in docks)
+        {
+            bool any = dock.Modules.Count > 0;
+            f.Suspended = _hiddenAll || !any;
+            f.Sync(any ? "show" : "empty");
+        }
     }
 
     public void ToggleHideAll()
     {
         _hiddenAll = !_hiddenAll;
         foreach (var f in _followers) f.Suspended = _hiddenAll;
-        if (_followers.Count > 0) _followers[0].Sync("show");
-        UpdateLeftVisibility();
+        UpdateDockVisibility();
         UpdateQuickBar();
         foreach (var p in ActivePins()) { if (_hiddenAll) p.Hide(); else p.Reappear(); }
         _tray.SetHidden(_hiddenAll);

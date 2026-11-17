@@ -11,6 +11,9 @@ public static class TopicRouting
     /// <summary>앱이 채우는 주제·명령의 앞글자. 다리 조회·명령으로 보내지 않는다.</summary>
     public const string AppPrefix = "app.";
 
+    /// <summary>앱이 직접 쓰는 유일한 다리 주제: 신호 지연 측정(SummaryReady)과 최근 이동 기록(app.history)이 이 주제의 결과를 읽는다. 모듈 화면·HUD는 선언으로 받으므로 이 이름을 모른다.</summary>
+    public const string SelectionSummary = "selection.summary";
+
     public static bool IsAppTopic(string topic) => topic.StartsWith(AppPrefix, StringComparison.Ordinal);
 
     public static IReadOnlyList<string> TopicsFor(int signalCode, IEnumerable<DataSubscription> subscriptions)

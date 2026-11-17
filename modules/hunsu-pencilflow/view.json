@@ -1,14 +1,14 @@
 {
   "tab": { "title": "색연필", "tone": "info" },
   "marks": [
-    { "items": "mark.active", "tone": "warn", "style": "pencil", "role": "active" },
-    { "items": "mark.pre", "tone": "info", "style": "pencil", "role": "pre" },
-    { "items": "mark.dep", "tone": "good", "style": "pencil", "role": "dep" },
-    { "items": "mark.pre2", "tone": "info", "style": "pencil", "role": "pre2" },
-    { "items": "mark.dep2", "tone": "good", "style": "pencil", "role": "dep2" },
-    { "items": "flow.graph.pre.items", "tone": "info", "style": "pencil", "role": "crossPre" },
-    { "items": "flow.graph.dep.items", "tone": "good", "style": "pencil", "role": "crossDep" },
-    { "items": "sheets.items", "tone": "muted", "style": "pencil", "role": "tabs" }
+    { "items": "mark.active", "tone": "warn", "style": "pencil", "enabledKey": "pencilDraw", "role": "active" },
+    { "items": "mark.pre", "tone": "info", "style": "pencil", "enabledKey": "pencilDraw", "role": "pre" },
+    { "items": "mark.dep", "tone": "good", "style": "pencil", "enabledKey": "pencilDraw", "role": "dep" },
+    { "items": "mark.pre2", "tone": "info", "style": "pencil", "enabledKey": "pencilDraw", "role": "pre2" },
+    { "items": "mark.dep2", "tone": "good", "style": "pencil", "enabledKey": "pencilDraw", "role": "dep2" },
+    { "items": "flow.graph.pre.items", "tone": "info", "style": "pencil", "enabledKey": "pencilDraw", "role": "crossPre" },
+    { "items": "flow.graph.dep.items", "tone": "good", "style": "pencil", "enabledKey": "pencilDraw", "role": "crossDep" },
+    { "items": "sheets.items", "tone": "muted", "style": "pencil", "enabledKey": "pencilDraw", "role": "tabs" }
   ],
   "panel": [
     { "type": "badge", "text": "주황 두 겹 고리 · 지금 고른 칸", "tone": "warn" },

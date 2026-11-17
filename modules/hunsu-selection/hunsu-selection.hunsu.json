@@ -13,12 +13,22 @@
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "form": "hud",
+  "size": {"width": 250, "height": 170},
+  "hud": {
+    "anchor": "cursor", "enabledKey": "cursorHud", "anchorKey": "hudAnchor",
+    "when": "selection.summary.count > 0",
+    "parts": [
+      {"text": "합계 {selection.summary.sum:n} · {selection.summary.nonEmpty:n0}개", "when": "selection.summary.sum != null"},
+      {"text": "{selection.summary.count:n0}칸", "when": "selection.summary.sum == null"},
+      {"text": "오류 {selection.summary.errors:n0}", "when": "selection.summary.errors > 0"}
+    ]
+  },
   "order": 100,
   "icon": "sum",
   "data": [
     {"topic": "selection.summary", "on": ["sel"], "weight": "light"}
   ],
-  "quick": [{"kind":"toggle","key":"cursorHud","label":"끄는 동안 커서 옆에 합계","group":"합계 HUD","order":1},{"kind":"choice","key":"hudAnchor","label":"붙는 곳","group":"합계 HUD","order":2,"options":[{"value":"cursor","label":"커서 옆 (범위를 끄는 동안)"},{"value":"cell","label":"고른 칸 옆 (계속)"}]}],
+  "quick": [{"kind":"toggle","key":"cursorHud","label":"끄는 동안 커서 옆에 합계","group":"합계 HUD","order":1},{"kind":"choice","key":"hudAnchor","apply":"refresh","label":"붙는 곳","group":"합계 HUD","order":2,"options":[{"value":"cursor","label":"커서 옆 (범위를 끄는 동안)"},{"value":"cell","label":"고른 칸 옆 (계속)"}]}],
   "commands": [],
   "scope": "selection",
   "params": []
