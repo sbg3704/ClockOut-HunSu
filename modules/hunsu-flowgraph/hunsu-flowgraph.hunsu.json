@@ -1,21 +1,22 @@
 {
   "spec": 0,
   "id": "hunsu-flowgraph",
-  "name": "수식 족보",
+  "name": "수식 흐름",
   "version": "0.1.000",
   "host": "excel",
   "category": "수식",
   "author": "ClockOut",
-  "description": "고른 칸의 수식이 어디서 오고 어디로 가는지 시트를 넘어 두 단계까지 나무처럼 보여 줍니다. 줄을 누르면 그 칸으로 갑니다. 다른 통합 문서 참조는 수만 셉니다.",
+  "description": "고른 칸의 값과 수식, 그 수식이 어디서 오고 어디로 가는지를 시트를 넘어 두 단계까지 나무처럼 보여 줍니다(쓰는 칸 파랑, 쓰이는 칸 초록). 줄을 누르면 그 칸으로 갑니다. 다른 통합 문서 참조는 수만 셉니다. (예전 수식 흐름 목록 모듈을 합쳤습니다)",
   "dependencies": [
-    {"id": "clockout-hunsu", "min_version": "0.0.014", "reason": "시트를 넘는 수식 흐름 조회(flow.graph)와 이동(goto)에 훈수꾼 다리를 씁니다"}
+    {"id": "clockout-hunsu", "min_version": "0.0.014", "reason": "시트를 넘는 수식 흐름 조회(flow.graph), 칸 값(flow.neighbors), 이동(goto)에 훈수꾼 다리를 씁니다"}
   ],
   "shapes": ["tab", "panel", "window"],
   "place": "edge-left",
   "order": 410,
   "icon": "graph",
   "data": [
-    {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"}
+    {"topic": "flow.graph", "on": ["sel", "change"], "weight": "heavy"},
+    {"topic": "flow.neighbors", "on": ["sel", "change"], "weight": "normal"}
   ],
   "quick": [{"kind":"choice","key":"listMaxRows","label":"목록에 한 번에 보일 줄 수","group":"목록","options":[{"value":"20","label":"20"},{"value":"50","label":"50 (기본)"},{"value":"100","label":"100"},{"value":"200","label":"200"}]}],
   "commands": ["goto"],

@@ -62,6 +62,7 @@ internal sealed partial class ShellController
         SettingsStore.Save(SettingsPath, next, _log);
         OnHudSettingChanged(key);
         OnQuickApply(key);
+        RefreshPower();
         _log.Write("setting", ("key", key), ("value", value.ToString() ?? ""));
         SettingsChanged?.Invoke();
         ModulesChanged?.Invoke();
@@ -180,7 +181,7 @@ internal sealed partial class ShellController
         _log.Write("layout_reset");
     }
 
-    private IEnumerable<PinWindow> ActivePins() => _pins.Where(kv => !_modules.Any(m => m.Id == kv.Key && m.Placement.Hidden)).Select(kv => kv.Value);
+    private IEnumerable<PinWindow> ActivePins() => _pins.Where(kv => !_modules.Any(m => m.Id == kv.Key && (m.Placement.Hidden || m.Placement.Collapsed))).Select(kv => kv.Value);
 
     /// <summary>설정 창을 연다(page: "modules" | "look"). 이미 열려 있으면 그 쪽으로 넘기고 앞으로 가져온다.</summary>
     private void OpenManager(string page = "modules")

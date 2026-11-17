@@ -25,11 +25,14 @@ internal sealed partial class ShellController
         mv.Tab.Clicked += () => SetCollapsed(mv, false, null);
         mv.Frame.AlphaCommitted += a => { Save(mv, p => p with { Alpha = a }); ModulesChanged?.Invoke(); }; // ◐ 막대로 정한 투명도 저장
         mv.Frame.LockClicked += () => ToggleLock(mv);
+        mv.Frame.PowerClicked += () => { if (MainToggle(mv) is { } q) ToggleQuick(q.Key); };
         mv.Frame.SetLocked(mv.Placement.Locked);
         mv.Frame.ContextMenu = ModuleIconMenu(mv.Id);
-        mv.BadgeChanged += () => DockOf(mv)?.RefreshLauncher(); // 아이콘은 그 모듈의 도크 쪽 런처에 있다
+        mv.BadgeChanged += () => (DockOf(mv) ?? _left).RefreshLauncher(); // 아이콘은 그 모듈의 도크 쪽 런처에 있다
         return mv;
     }
+
+    private bool IsPinMinimized(ModuleView mv) => mv.Placement.Place == Places.Pin && mv.Placement.Collapsed && _pins.ContainsKey(mv.Id);
 
     private DockWindow? DockOf(ModuleView mv) => !mv.InDock ? null : mv.Placement.Place == Places.EdgeLeft ? _left : _right;
 
@@ -37,8 +40,9 @@ internal sealed partial class ShellController
     private void OnModuleIcon(string id)
     {
         var mv = _modules.FirstOrDefault(m => m.Id == id);
-        if (mv == null || !mv.InDock) return;
-        bool open = !mv.ShowsPanel;
+        if (mv == null || !(mv.InDock || IsPinMinimized(mv))) return;
+        bool open = mv.InDock ? !mv.ShowsPanel : true; // 떼어 낸 채 줄어든 것은 누르면 다시 나온다
+
         _log.Write("launcher_click", ("id", id), ("open", open));
         SetCollapsed(mv, !open, null);
     }
@@ -55,11 +59,17 @@ internal sealed partial class ShellController
         pin.Click += (_, _) => { if (mv.InDock) Pin(mv, null); };
         var other = new MenuItem();
         other.Click += (_, _) => MoveToDock(mv, mv.Placement.Place == Places.EdgeLeft ? Places.EdgeRight : Places.EdgeLeft);
+        var merge = new MenuItem { Header = "붙은 패널을 한 틀로 묶기" };
+        merge.Click += (_, _) => MergePins(mv);
+        var split = new MenuItem { Header = "묶음에서 빼기" };
+        split.Click += (_, _) => SplitOut(mv);
         var manager = new MenuItem { Header = "자세히 설정…" };
         manager.Click += (_, _) => OpenManager();
         menu.Items.Add(open);
         menu.Items.Add(pin);
         menu.Items.Add(other);
+        menu.Items.Add(merge);
+        menu.Items.Add(split);
         menu.Items.Add(new Separator());
         menu.Items.Add(manager);
         menu.Opened += (_, _) =>
@@ -67,6 +77,8 @@ internal sealed partial class ShellController
             FillQuick(menu, mv);
             open.Header = mv.ShowsPanel ? "패널 닫기" : "패널 열기";
             other.Header = mv.Placement.Place == Places.EdgeLeft ? "오른쪽 도크로" : "왼쪽 도크로";
+            merge.Visibility = CanMerge(mv) ? Visibility.Visible : Visibility.Collapsed; // 떼어 낸 채 자석으로 붙은 패널이 있을 때만
+            split.Visibility = InGroup(mv) ? Visibility.Visible : Visibility.Collapsed;
         };
         return menu;
     }
@@ -74,7 +86,8 @@ internal sealed partial class ShellController
     /// <summary>저장된 배치대로 모든 모듈을 도크나 핀 창에 놓는다.</summary>
     private void PlaceAll()
     {
-        foreach (var mv in _modules.Where(m => m.Placement.Place == Places.Pin && !m.Placement.Hidden)) Pin(mv, null, restoring: true);
+        // 묶음의 주인(Group 없음)을 먼저, 담긴 패널은 나중에.
+        foreach (var mv in _modules.Where(m => m.Placement.Place == Places.Pin && !m.Placement.Hidden).OrderBy(m => string.IsNullOrEmpty(_store.State.Get(m.Id).Group) ? 0 : 1)) Pin(mv, null, restoring: true);
         RefreshDocks();
     }
 
@@ -82,8 +95,10 @@ internal sealed partial class ShellController
     {
         // 기본 모양: 왼쪽 창에는 런처(훈 원, 반쯤 숨음)만, 패널은 모두 오른쪽 창에 쌓는다. 오른쪽에 아이콘을 둔 모듈(edge-right)은 오른쪽 런처도 쓴다.
         var docked = _modules.Where(m => m.InDock && !m.Placement.Hidden).ToList();
+        var minimizedPins = _modules.Where(m => !m.Placement.Hidden && IsPinMinimized(m)).ToList(); // 떼어 낸 채 줄인 것은 왼쪽 런처에 아이콘으로
         _right.SetModules(docked, docked.Where(m => m.Placement.Place == Places.EdgeRight));
-        _left.SetModules([], docked.Where(m => m.Placement.Place == Places.EdgeLeft));
+        _left.SetModules([], docked.Where(m => m.Placement.Place == Places.EdgeLeft).Concat(minimizedPins));
+        RefreshPower();
         UpdateDockVisibility();
         UpdateModuleHotkeys();
         bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
@@ -109,7 +124,18 @@ internal sealed partial class ShellController
 
     internal void SetCollapsed(ModuleView mv, bool collapsed, Action<long>? done)
     {
-        if (!mv.InDock) { done?.Invoke(0); return; }
+        if (!mv.InDock)
+        {
+            // 떼어 낸 패널을 줄이면 창만 숨기고 런처에 아이콘으로 남는다. 아이콘을 누르면 같은 자리에 다시 나온다.
+            if (_pins.TryGetValue(mv.Id, out var pw))
+            {
+                Save(mv, p => p with { Collapsed = collapsed });
+                if (collapsed) pw.Hide(); else if (!_hiddenAll && _target != IntPtr.Zero) pw.Reappear();
+                RefreshDocks();
+            }
+            done?.Invoke(0);
+            return;
+        }
         Save(mv, p => p with { Collapsed = collapsed });
         mv.ApplyCollapsed(collapsed, animate: !collapsed, done);
         _right.Relayout(); // 패널은 오른쪽 창에 쌓인다
@@ -134,6 +160,14 @@ internal sealed partial class ShellController
     internal void Pin(ModuleView mv, Action<long>? done, bool restoring = false)
     {
         if (_pins.ContainsKey(mv.Id)) { done?.Invoke(0); return; }
+        // 엄마 패널에 담겨 있던 패널은 그 창에 다시 담는다(주인이 먼저 놓여 있어야 한다: PlaceAll이 주인을 먼저 처리).
+        if (restoring && mv.Placement.Place == Places.Pin && _store.State.Get(mv.Id).Group is { Length: > 0 } owner && owner != mv.Id && _pins.TryGetValue(owner, out var mother))
+        {
+            mother.AddFrame(mv.DetachFrame());
+            _pins[mv.Id] = mother;
+            RefreshDocks();
+            return;
+        }
         var dock = _right; // 패널이 쌓이는 창
         var rect = mv.Placement.PinRect ?? DefaultPinRect(mv, dock);
         rect = PinPlacement.KeepOnScreen(rect, WorkAreas());
@@ -147,7 +181,7 @@ internal sealed partial class ShellController
         if (!restoring) Save(mv, p => p with { Place = Places.Pin, PinRect = rect });
         // 그림은 나타나는 움직임이 끝난 뒤에 찍는다(첫 프레임은 투명도 0이라 빈 그림).
         Action<long> shown = t => { done?.Invoke(t); if (!restoring) Snap("pin.png", w); };
-        if (!_hiddenAll && _target != IntPtr.Zero) w.ShowAt(rect, shown);
+        if (!_hiddenAll && _target != IntPtr.Zero && !(restoring && mv.Placement.Collapsed)) w.ShowAt(rect, shown);
         else { w.SetRectOnly(rect); done?.Invoke(0); }
         RefreshDocks();
         LogPlacement(mv);
@@ -169,7 +203,7 @@ internal sealed partial class ShellController
     /// <summary>모듈마다 핀 창을 한 번만 만든다(처음 뗄 때 빨리 뜨게 시작할 때 미리 만듦).</summary>
     private PinWindow PinWindowFor(ModuleView mv)
     {
-        if (_pinWindows.TryGetValue(mv.Id, out var w)) return w;
+        if (_pinWindows.TryGetValue(mv.Id, out var w) && !w.HasFrame) return w;
         w = new PinWindow(_target) { FreeDrag = () => _settings.LayoutLock == "free", Locked = mv.Placement.Locked };
         w.SnapTargets = () => SnapTargetsFor(mv.Id);
         w.GroupPeers = () => ConnectedPins(mv.Id);
@@ -183,7 +217,7 @@ internal sealed partial class ShellController
     internal void Unpin(ModuleView mv, Action<long>? done)
     {
         if (!_pins.Remove(mv.Id, out var w)) { done?.Invoke(0); return; }
-        w.Release();
+        ReleasePinWindow(mv, w);
         if (_pins.Count == 0) _pinHover?.Stop();
         string side = Places.IsDock(mv.Module.Manifest.Place) ? mv.Module.Manifest.Place : Places.EdgeLeft;
         Save(mv, p => p with { Place = side, Collapsed = false });
@@ -207,9 +241,11 @@ internal sealed partial class ShellController
     /// <summary>자석으로 붙어 이어진 다른 핀 창들(끌 때 같이 움직인다).</summary>
     private IReadOnlyList<PinWindow> ConnectedPins(string selfId)
     {
-        var all = _pins.ToList();
-        int start = all.FindIndex(kv => kv.Key == selfId);
-        return [.. PinGroups.Connected([.. all.Select(kv => kv.Value.Rect)], start).Where(i => i != start).Select(i => all[i].Value)];
+        // 같은 창(엄마 패널)에 담긴 것은 한 창으로 세고, 보이는 창만 본다.
+        var all = _pins.Values.Distinct().Where(w => w.IsVisible).ToList();
+        if (!_pins.TryGetValue(selfId, out var own)) return [];
+        int start = all.IndexOf(own);
+        return [.. PinGroups.Connected([.. all.Select(w => w.Rect)], start).Where(i => i != start).Select(i => all[i])];
     }
 
     /// <summary>핀 창을 끌어 놓을 때 붙일 대상: 작업 영역, 엑셀 창, 다른 핀 창(자기 자신 제외).</summary>
@@ -217,7 +253,8 @@ internal sealed partial class ShellController
     {
         var list = new List<PixelRect>(WorkAreas());
         if (_target != IntPtr.Zero) list.Add(User32.VisibleBounds(_target));
-        foreach (var kv in _pins) if (kv.Key != selfId) list.Add(kv.Value.Rect);
+        _pins.TryGetValue(selfId, out var own);
+        foreach (var w in _pins.Values.Distinct()) if (!ReferenceEquals(w, own)) list.Add(w.Rect);
         return list;
     }
 

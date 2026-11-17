@@ -1,11 +1,13 @@
 {
-  "tab": { "title": "족보", "badge": "{flow.graph.pre.count:n0}·{flow.graph.dep.count:n0}", "tone": "info" },
+  "tab": { "title": "흐름", "badge": "{flow.graph.pre.count:n0}·{flow.graph.dep.count:n0}", "tone": "info" },
   "panel": [
-    { "type": "text", "text": "{flow.graph.sheet}!{flow.graph.addr}  {flow.graph.formula}", "tone": "muted" },
-    { "type": "text", "text": "이 칸이 쓰는 칸", "showWhen": "flow.graph.pre.count > 0" },
+    { "type": "text", "text": "{flow.neighbors.sheet} ! {flow.neighbors.addr}  =  {flow.neighbors.value}" },
+    { "type": "text", "text": "{flow.neighbors.formula}", "tone": "muted", "showWhen": "flow.neighbors.hasFormula == true" },
+    { "type": "divider" },
+    { "type": "text", "text": "이 칸이 쓰는 칸 {flow.graph.pre.count:n0}개", "tone": "info", "showWhen": "flow.graph.pre.count > 0" },
     { "type": "list", "items": "flow.graph.pre.items", "text": "{item.indent}{item.label}", "sub": "{item.value}", "command": "goto", "arg.sheet": "{item.sheet}", "arg.addr": "{item.addr}", "activeWhen": "item.cross == true", "max": 20, "emptyText": "쓰는 칸이 없습니다(값만 든 칸)." },
     { "type": "divider" },
-    { "type": "text", "text": "이 칸을 쓰는 칸", "showWhen": "flow.graph.dep.count > 0" },
+    { "type": "text", "text": "이 칸을 쓰는 칸 {flow.graph.dep.count:n0}개", "tone": "good", "showWhen": "flow.graph.dep.count > 0" },
     { "type": "list", "items": "flow.graph.dep.items", "text": "{item.indent}{item.label}", "sub": "{item.value}", "command": "goto", "arg.sheet": "{item.sheet}", "arg.addr": "{item.addr}", "activeWhen": "item.cross == true", "max": 20, "emptyText": "이 칸을 쓰는 칸이 없습니다." },
     { "type": "badge", "text": "다른 통합 문서 참조 {flow.graph.external:n0}개(따라가지 않음)", "tone": "warn", "showWhen": "flow.graph.external > 0" },
     { "type": "badge", "text": "수식이 많아 일부만 훑었습니다", "tone": "muted", "showWhen": "flow.graph.scanTruncated == true" }

@@ -23,6 +23,18 @@ internal sealed partial class ShellController
         _hotkeys.SetModuleChords([.. list.Select(x => x.Item3)]);
     }
 
+    /// <summary>모듈의 대표 켜기 설정: quick 선언의 첫 toggle(순서 기준). 제목줄 켜고 끄기 단추가 이것을 뒤집는다.</summary>
+    private static QuickSetting? MainToggle(ModuleView mv) =>
+        QuickSchema.Arrange(Flat(mv.Module.Manifest.Quick).ToList()).SelectMany(g => g.Items).FirstOrDefault(q => q.Kind == QuickSetting.Toggle);
+
+    /// <summary>모든 패널 제목줄의 켜고 끄기 단추 상태를 지금 설정에 맞춘다.</summary>
+    private void RefreshPower()
+    {
+        foreach (var mv in _modules)
+            if (MainToggle(mv) is { } q) mv.Frame.SetPower(true, SettingOn(q.Key), q.Label);
+            else mv.Frame.SetPower(false, false, "");
+    }
+
     private void OnModuleHotkey(int index)
     {
         if (index < 0 || index >= _moduleHotkeys.Count) return;

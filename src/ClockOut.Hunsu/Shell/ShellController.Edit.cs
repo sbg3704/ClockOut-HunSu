@@ -80,7 +80,7 @@ internal sealed partial class ShellController
             var eff = _store.State.Effective(mv.Id, man.Place, man.Order, man.Shapes, _settings.IsEnabledByDefault(man.Id));
             if (pinned && eff.Place != Places.Pin && _pins.Remove(mv.Id, out var gone))
             {
-                gone.Release();
+                ReleasePinWindow(mv, gone);
                 mv.AttachFrameToSlot();
             }
             mv.Placement = eff;

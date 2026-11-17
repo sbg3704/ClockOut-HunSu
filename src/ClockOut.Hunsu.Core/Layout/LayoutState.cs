@@ -22,6 +22,9 @@ public sealed record ModulePlacement
     /// <summary>이 모듈의 자리를 잠근다(편집 모드에서도 끌어 옮기지 못함). 편집 모드에서 자물쇠 단추로 바꾼다.</summary>
     public bool Locked { get; init; }
 
+    /// <summary>엄마 패널(묶음)의 주인 모듈 id. 값이 있으면 이 패널은 그 모듈의 핀 창 안에 담겨 있다(떼어 낸 채 묶은 것만). 비어 있으면 혼자.</summary>
+    public string? Group { get; init; }
+
     /// <summary>사용자가 모듈 관리자에서 켜고 끈 값. null은 "아직 정하지 않음 = 설정(settings.json)의 기본값을 따름".</summary>
     public bool? Enabled { get; init; }
 }
