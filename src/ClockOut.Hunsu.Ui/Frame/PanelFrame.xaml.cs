@@ -40,7 +40,22 @@ public partial class PanelFrame : UserControl
     public string Title
     {
         get => TitleText.Text;
-        set => TitleText.Text = value;
+        set
+        {
+            TitleText.Text = value;
+            Hand.Seed = value;
+            Hand.TitleTextWidth = MeasureTitle(value);
+        }
+    }
+
+    /// <summary>제목 글자 폭(손그림 형광펜 칠이 글자 밑까지만 가도록). 빈 글이면 0.</summary>
+    private double MeasureTitle(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return 0;
+        var tf = new System.Windows.Media.Typeface(TitleText.FontFamily, TitleText.FontStyle, TitleText.FontWeight, TitleText.FontStretch);
+        var ft = new System.Windows.Media.FormattedText(text, System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, tf,
+            TitleText.FontSize, System.Windows.Media.Brushes.Black, System.Windows.Media.VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        return ft.Width;
     }
 
     public object? Body
