@@ -14,9 +14,7 @@ public static class HotkeyPolicy
     public const int SummonMods = ModControl | ModAlt | ModNoRepeat;
     public const int HideAllMods = ModControl | ModAlt | ModShift | ModNoRepeat;
 
-    /// <summary>Ctrl+Alt+D: 수식 흐름 그리기 켜고 끄기. (엑셀의 Ctrl+클릭 다중 선택을 가로채지 않으려고 마우스 대신 키로 둔다.)</summary>
-    public const int DrawKey = 0x44;
-    public const int DrawMods = ModControl | ModAlt | ModNoRepeat;
+    // 모듈이 고르는 단축키(예: 색연필의 Ctrl+Alt+D)는 manifest quick의 hotkey 선언이고 HotkeyChord가 읽는다.
 
     public static bool ShouldRegister(string? foregroundClass, int foregroundPid, int ownPid) =>
         foregroundPid == ownPid || string.Equals(foregroundClass, ExcelMainClass, StringComparison.Ordinal);

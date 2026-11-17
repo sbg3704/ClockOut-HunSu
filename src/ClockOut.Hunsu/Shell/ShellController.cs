@@ -75,7 +75,7 @@ internal sealed partial class ShellController : IDisposable
         _signal.Hotkey += _hotkeys.OnHotkey;
         _hotkeys.Summon += ToggleSummon;
         _hotkeys.HideAll += ToggleHideAll;
-        _hotkeys.ToggleDraw += ToggleDraw;
+        _hotkeys.ModuleHotkey += OnModuleHotkey;
         _hotkeys.ForegroundChanged += OnForeground;
         _tray = new TrayIcon();
         _tray.SummonClicked += ToggleSummon;
@@ -90,7 +90,7 @@ internal sealed partial class ShellController : IDisposable
             d.ToggleAllRequested += ToggleAllCollapsed;
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;
-            d.DrawToggleRequested += ToggleDraw;
+            d.HubExtras = HubToggles;
             d.QuitRequested += Quit;
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");

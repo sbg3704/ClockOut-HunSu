@@ -37,9 +37,6 @@ internal sealed class GeneralPage : ScrollViewer
         Section("패널 높이(내용 최대)", "바로 반영. 넘치면 패널 안에서 휠로 내립니다");
         Choices("panelMaxHeight", s.PanelMaxHeight, [(90, "작게 90"), (120, "기본 120"), (180, "크게 180"), (300, "300"), (600, "제한 없음")]);
 
-        Section("수식 흐름 그림 (색연필 수식 흐름 모듈)", "바로 반영");
-        Choices("pencilLook", s.PencilLook, [("pencil", "색연필"), ("marker", "형광 마커"), ("ink", "펜")]);
-
         Section("패널 위치 잠금", "바로 반영");
         Choices("layoutLock", s.LayoutLock, [("locked", "잠금 (Shift+끌기로 옮김)"), ("free", "자유 (그냥 끌어서 옮김)")]);
 
@@ -58,12 +55,8 @@ internal sealed class GeneralPage : ScrollViewer
         Section("패널 투명도", "패널마다 투명도는 [모듈] 쪽 줄의 ◐ 단추나 패널 제목줄의 투명도 단추로 바꿉니다");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.HoverSharpen, () => _shell.ApplySetting("hoverSharpen", !s.HoverSharpen)), "마우스를 올리면 선명하게 (끄면 정한 투명도 그대로)"));
 
-        Section("빠른 띠와 커서 HUD", "바로 반영. 띠는 Ctrl+Alt+H(편집 모드)에서 끌어 옮깁니다");
+        Section("빠른 띠", "바로 반영. 모듈마다의 옵션(색연필 모양, 커서 HUD 등)은 [옵션] 쪽과 아이콘 우클릭에 있습니다. 띠는 Ctrl+Alt+H(편집 모드)에서 끌어 옮깁니다");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.QuickBar, () => _shell.ApplySetting("quickBar", !s.QuickBar)), "빠른 띠: 주요 모듈 아이콘을 엑셀 위에 한 줄로 (프로필이 바뀌면 같이 바뀜)"));
-        _root.Children.Add(Row(ManagerParts.Switch(this, s.CursorHud, () => _shell.ApplySetting("cursorHud", !s.CursorHud)), "커서 HUD: 범위를 끄는 동안 합계를 커서 옆에"));
-
-        Section("합계 HUD가 붙는 곳", "바로 반영");
-        Choices("hudAnchor", s.HudAnchor, [("cursor", "커서 옆 (범위를 끄는 동안)"), ("cell", "고른 칸 옆 (계속)")]);
 
         Section("시작할 때", "다음 실행부터");
         _root.Children.Add(Row(ManagerParts.Switch(this, s.ManagerOnStart, () => _shell.ApplySetting("managerOnStart", !s.ManagerOnStart)), "설정 창을 바로 연다"));

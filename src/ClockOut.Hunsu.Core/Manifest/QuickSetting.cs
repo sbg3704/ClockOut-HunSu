@@ -3,6 +3,7 @@
 //   {"kind":"toggle","key":"pencilDraw","label":"그리기"}                          켜기·끄기(체크 표시)
 //   {"kind":"choice","key":"pencilLook","label":"모양","options":[{"value":"pencil","label":"색연필"}, ...]}   여러 값 중 하나(드롭박스 · 하위 메뉴)
 //   {"kind":"menu","label":"고급","items":[ {항목}, ... ]}                          하위 메뉴(안에 항목을 또 넣을 수 있다)
+//   toggle 전용(선택): "hotkey":"Ctrl+Alt+D" — 엑셀이 앞일 때 이 단축키로 켜고 끄고, 허브 우클릭 메뉴에도 항목이 생긴다(HotkeyChord 규칙).
 //   공통(선택): "apply": "redraw"|"refresh"(값이 바뀐 뒤 셸이 할 일, 기본 저장만), "order": 숫자(작을수록 위, 없으면 선언 순서), "group": "묶음 이름"(같은 이름끼리 모아 구분선·작은 제목으로 나눔). key는 settings.json의 키다.
 //   현재 값은 QuickSettings.Current로 읽고, 바꿀 값은 Typed로 만든다. 줄 배치는 QuickSchema.Arrange.
 // 의존: 없음(순수 계산, 화면 없이 시험된다).
@@ -13,7 +14,7 @@ namespace ClockOut.Hunsu.Core.Manifest;
 
 public sealed record QuickOption(string Value, string Label);
 
-public sealed record QuickSetting(string Key, string Label, string Kind, IReadOnlyList<QuickOption> Options, int Order = 0, string Group = "", IReadOnlyList<QuickSetting>? Items = null, string Apply = "")
+public sealed record QuickSetting(string Key, string Label, string Kind, IReadOnlyList<QuickOption> Options, int Order = 0, string Group = "", IReadOnlyList<QuickSetting>? Items = null, string Apply = "", string Hotkey = "")
 {
     /// <summary>값이 바뀐 뒤 셸이 할 일: ""(저장만) | "redraw"(셀 위 그림을 다시 그림) | "refresh"(켜진 주제를 엑셀에 다시 묻고 다시 그림).</summary>
     public static readonly IReadOnlySet<string> Applies = new HashSet<string> { "", "redraw", "refresh" };
@@ -44,7 +45,8 @@ public static class QuickSchema
         var list = new List<QuickSetting>();
         foreach (var e in array.EnumerateArray())
         {
-            string key = Str(e, "key"), label = Str(e, "label"), kind = Str(e, "kind"), group = Str(e, "group"), apply = Str(e, "apply");
+            string key = Str(e, "key"), label = Str(e, "label"), kind = Str(e, "kind"), group = Str(e, "group"), apply = Str(e, "apply"), hotkey = Str(e, "hotkey");
+            if (hotkey.Length > 0 && (kind != QuickSetting.Toggle || !HotkeyChord.TryParse(hotkey, out _))) { errors.Add($"quick '{label}' hotkey는 toggle에만, 올바른 글(Ctrl+Alt+D)로: {hotkey}"); continue; }
             if (!QuickSetting.Applies.Contains(apply)) { errors.Add($"quick '{label}' 모르는 apply: {apply}"); continue; }
             int order = e.ValueKind == JsonValueKind.Object && e.TryGetProperty("order", out var o) && o.TryGetInt32(out var ov) ? ov : 0;
             var opts = new List<QuickOption>();
@@ -60,7 +62,7 @@ public static class QuickSchema
             else if (key.Length == 0) errors.Add($"quick '{label}'에 key 필요");
             else if (kind != QuickSetting.Toggle && kind != QuickSetting.Choice) errors.Add($"quick 모르는 kind: {kind}");
             else if (kind == QuickSetting.Choice && opts.Count < 2) errors.Add($"quick {key}: choice는 options 2개 이상");
-            else list.Add(new QuickSetting(key, label, kind, opts, order, group, null, apply));
+            else list.Add(new QuickSetting(key, label, kind, opts, order, group, null, apply, hotkey.Length > 0 ? HotkeyChord.TryParse(hotkey, out var hc) ? hc.Text : hotkey : ""));
         }
         return list;
     }
