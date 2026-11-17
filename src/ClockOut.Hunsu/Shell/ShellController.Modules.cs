@@ -296,7 +296,7 @@ internal sealed partial class ShellController
     private void OnTopic(TopicResult r)
     {
         if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); NoteActivity(m); });
-        else ForTopic(r.Topic, m => m.SetStale(true));
+        else { ForTopic(r.Topic, m => m.SetStale(true)); NoteBridgeProblem(r); }
         if (r.Response.Ok && r.Topic == TopicRouting.SelectionSummary) ObserveHistory(r);
         if (r.Response.Ok) OnTopicForMarks(r);
         if (r.Response.Ok && r.Topic == "mark" && r.Excel == _target) OnMarkForHud(r.Response.Data);
