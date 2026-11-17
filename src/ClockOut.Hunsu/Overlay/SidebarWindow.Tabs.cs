@@ -203,6 +203,7 @@ internal sealed partial class SidebarWindow
             return;
         }
         _activeKey = key;
+        if (_collapsed) FooterClicked?.Invoke("fold"); // 접힌 채 고르면 펴서 그 묶음을 보인다
         var members = tab.Members.Select(ViewOf).OfType<ModuleView>().ToList();
         _scroll.ScrollToTop();
         if (members.Count > 0 && members.All(m => !m.ShowsPanel))

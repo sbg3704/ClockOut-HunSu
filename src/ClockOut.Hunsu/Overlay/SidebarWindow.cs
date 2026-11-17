@@ -22,6 +22,7 @@ internal sealed partial class SidebarWindow : Window
     private readonly StackPanel _footer = new();
     private readonly DockPanel _barHost = new();
     private bool _tabs = true;
+    private bool _collapsed; // 접힘: 활동 막대만 남기고 폭을 줄인다(엑셀이 그만큼 넓어짐)
     private readonly StackPanel _items = new();
     private readonly ScrollViewer _scroll = new();
     private readonly Thumb _grip = new();
@@ -90,7 +91,10 @@ internal sealed partial class SidebarWindow : Window
     /// <summary>폭을 끌어 바꾼 뒤(DIP).</summary>
     public event Action<int>? WidthChanged;
 
-    /// <summary>활동 막대 맨 아래 일반 단추를 눌렀다("settings", "modules", "look", "profiles", "view", "cleanup", "off").</summary>
+    /// <summary>활동 막대 맨 아래 일반 단추를 눌렀다("settings", "modules", "look", "profiles", "view", "cleanup", "fold"). 접힌 채 묶음 아이콘을 눌러도 "fold"(펴기).</summary>
+
+    /// <summary>지금 접혀 있는가(활동 막대만).</summary>
+    public bool Collapsed => _collapsed;
     public event Action<string>? FooterClicked;
 
     /// <summary>접힌 모듈을 펴 달라(모듈 id). 묶음 탭 안의 접힌 모듈 이름을 누르거나, 모두 접힌 탭을 고르면.</summary>
@@ -106,14 +110,19 @@ internal sealed partial class SidebarWindow : Window
     private double Scale() => PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
 
     /// <summary>왼쪽/오른쪽과 폭(DIP). 이미 켜져 있으면 바로 다시 자리를 잡는다.</summary>
-    public void Configure(string side, int widthDip, bool tabs = true)
+    public void Configure(string side, int widthDip, bool tabs = true, bool collapsed = false)
     {
         _tabs = tabs;
         bool left = side == "left";
-        bool sideChanged = left != _left;
+        bool changed = left != _left || collapsed != _collapsed;
         _left = left;
+        _collapsed = collapsed;
         _widthDip = Math.Clamp(widthDip, 200, 700);
-        if (sideChanged) Build();
+        if (changed)
+        {
+            Build();
+            BuildFooter(); // 접기 단추 모양이 바뀐다
+        }
         if (_active) Reposition();
     }
 
@@ -123,7 +132,9 @@ internal sealed partial class SidebarWindow : Window
         _root.Children.Clear();
         _root.ColumnDefinitions.Clear();
         UIElement[] order = _left ? [_barHost, _scroll, _grip] : [_grip, _scroll, _barHost];
-        double[] widths = _left ? [BarWidth, -1, GripWidth] : [GripWidth, -1, BarWidth];
+        double grip = _collapsed ? 0 : GripWidth, rest = _collapsed ? 0 : -1;
+        double[] widths = _left ? [BarWidth, rest, grip] : [grip, rest, BarWidth];
+        _scroll.Visibility = _grip.Visibility = _collapsed ? Visibility.Collapsed : Visibility.Visible;
         for (int i = 0; i < 3; i++)
         {
             _root.ColumnDefinitions.Add(new ColumnDefinition { Width = widths[i] < 0 ? new GridLength(1, GridUnitType.Star) : new GridLength(widths[i]) });
@@ -172,7 +183,7 @@ internal sealed partial class SidebarWindow : Window
     {
         if (!_active || Handle == IntPtr.Zero) return;
         var screen = _anchor != IntPtr.Zero ? System.Windows.Forms.Screen.FromHandle(_anchor) : System.Windows.Forms.Screen.PrimaryScreen ?? System.Windows.Forms.Screen.AllScreens[0];
-        int px = (int)Math.Round(_widthDip * Scale());
+        int px = (int)Math.Round((_collapsed ? BarWidth : _widthDip) * Scale());
         if (Maximized)
         {
             // 최대화: 앱 바로 가장자리를 예약한다(엑셀이 남은 영역으로 줄어든다).
@@ -250,7 +261,8 @@ internal sealed partial class SidebarWindow : Window
             ("profiles", "▣", "작업 프로필"),
             ("view", _tabs ? "≣" : "▤", _tabs ? "쌓아 보기로 바꾸기" : "탭 보기로 바꾸기"),
             ("cleanup", "🧹", "남은 엑셀 정리"),
-            ("off", "✕", "사이드바 끄기"),
+            // 끄기 대신 접기·펴기(2026-11-17 사용자 요청). 끄기는 설정 창·훈 원 메뉴에 남아 있다.
+            ("fold", _collapsed == _left ? "»" : "«", _collapsed ? "사이드바 펴기" : "사이드바 접기 (아이콘 막대만)"),
         ];
         foreach (var (key, glyph, tip) in items)
         {

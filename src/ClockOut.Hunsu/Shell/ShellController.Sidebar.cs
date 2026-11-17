@@ -55,7 +55,7 @@ internal sealed partial class ShellController
         RefreshDocks();
     }
 
-    /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 탭↔쌓기, 엑셀 정리, 사이드바 끄기.</summary>
+    /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 탭↔쌓기, 엑셀 정리, 사이드바 접기·펴기.</summary>
     private void OnSidebarFooter(string key)
     {
         switch (key)
@@ -66,7 +66,7 @@ internal sealed partial class ShellController
             case "profiles": OpenManager("profiles"); break;
             case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
             case "cleanup": OpenExcelCleanup(); break;
-            case "off": ApplySetting("sidebar", "off"); break;
+            case "fold": ApplySetting("sidebarCollapsed", !_settings.SidebarCollapsed); break;
         }
     }
 
@@ -75,7 +75,7 @@ internal sealed partial class ShellController
     {
         if (_sidebar == null) return;
         bool want = _settings.Sidebar != "off" && !_hiddenAll && _target != IntPtr.Zero;
-        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs);
+        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs, _settings.SidebarCollapsed);
         _sidebar.SetActive(want, _target);
         _log.Write("sidebar", ("side", _settings.Sidebar), ("width", _settings.SidebarWidth), ("active", _sidebar.Reserved));
         RefreshDocks();

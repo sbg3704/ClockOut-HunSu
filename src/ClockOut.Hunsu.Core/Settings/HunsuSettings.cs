@@ -108,6 +108,9 @@ public sealed class HunsuSettings
     /// <summary>사이드바 보기: true(기본)면 활동 막대 아이콘을 누르는 모듈 하나만 보이는 탭 보기, false면 모든 모듈이 구역으로 쌓인다.</summary>
     public bool SidebarTabs { get; init; } = true;
 
+    /// <summary>사이드바를 접어 활동 막대(아이콘 줄)만 남긴다. 활동 막대 맨 아래 «/» 단추로 바꾸고 기억한다.</summary>
+    public bool SidebarCollapsed { get; init; }
+
     /// <summary>쓰기 명령(실험 기능) 공지를 확인한 공지 판. 현재 공지 판(WritePolicy.NoticeVersion)과 다르면 쓰기 전에 공지를 다시 보인다(docs/11 2장).</summary>
     public string WriteAck { get; init; } = "";
 
@@ -196,6 +199,7 @@ public sealed class HunsuSettings
             Sidebar = (Sidebar ?? "").Trim().ToLowerInvariant() is "left" or "right" ? Sidebar!.Trim().ToLowerInvariant() : "off",
             SidebarWidth = InRange(SidebarWidth, 200, 700) ? SidebarWidth : d.SidebarWidth,
             SidebarTabs = SidebarTabs,
+            SidebarCollapsed = SidebarCollapsed,
             SidebarIntro = Math.Max(0, SidebarIntro),
             Profile = Profile ?? "",
             QuickBar = QuickBar,
