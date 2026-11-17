@@ -31,6 +31,8 @@
   <sys:Double x:Key="Hunsu.FontBody">13</sys:Double>
   <sys:Double x:Key="Hunsu.FontTitleSize">15</sys:Double>
   <sys:Double x:Key="Hunsu.FontStat">20</sys:Double>
+  <!-- 패널 제목 글자 크기. 손그림 룩(Skin*.xaml)은 손글씨 글꼴이 작아 보여 키운다. -->
+  <sys:Double x:Key="Hunsu.FontPanelTitle">11</sys:Double>
 
   <!-- 간격, 모서리, 크기: docs/03 5장, 7장, 8장 -->
   <Thickness x:Key="Hunsu.PanelPadding">8,2,8,6</Thickness>

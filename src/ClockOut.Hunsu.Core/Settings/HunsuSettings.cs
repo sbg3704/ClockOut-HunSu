@@ -41,6 +41,9 @@ public sealed class HunsuSettings
     /// <summary>화면 테마: "dark"(기본), "light", "auto"(Windows 앱 모드를 따름). 켤 때 한 번 정한다(바꾸면 껐다 켬).</summary>
     public string Theme { get; init; } = ThemeChoice.Dark;
 
+    /// <summary>패널 룩(손그림 프로필): "penmarker"(기본, B), "pencilnote"(A), "chalk"(C), "plain"(손그림 없음, 위 theme을 따름). 켤 때 한 번 정한다(바꾸면 껐다 켬). 룩이 밝기를 정하므로 theme은 plain일 때만 쓰인다.</summary>
+    public string Skin { get; init; } = SkinChoice.Default;
+
     /// <summary>도크 패널 너비(DIP). 범위 200~480. 핀 창은 끌어서 크기를 바꾼다(부르기 중).</summary>
     public int PanelWidth { get; init; } = 220;
 
@@ -150,6 +153,7 @@ public sealed class HunsuSettings
             EnabledByDefault = EnabledByDefault ?? d.EnabledByDefault,
             ManagerOnStart = ManagerOnStart,
             Theme = ThemeChoice.Normalize(Theme),
+            Skin = SkinChoice.Normalize(Skin),
             PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,
             PanelMaxHeight = InRange(PanelMaxHeight, 60, 600) ? PanelMaxHeight : d.PanelMaxHeight,
             MarkPollMs = MarkPollMs == 0 || InRange(MarkPollMs, 150, 5000) ? MarkPollMs : d.MarkPollMs,

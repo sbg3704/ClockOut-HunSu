@@ -1,0 +1,29 @@
+<!-- 기능: 패널 룩 "B 펜과 형광펜"의 색·모서리·손그림 값. Theme.xaml과 같은 이름의 값만 다시 정한다(손그림 종류와 선 색은 이 룩만의 이름 Hunsu.Skin.*). -->
+<!-- 사용법: 앱이 켜질 때 settings.json의 skin이 이 룩이면 ThemePicker가 Theme.xaml(밝은 룩은 ThemeLight.xaml도) 뒤에 합친다. 바꾸면 껐다 켠다. 모듈은 이 파일을 모른다. -->
+<!-- 의존: 이름은 Theme.xaml과 같아야 한다. Hunsu.Skin.Kind는 Core/Settings/SkinChoice의 SkinKind 이름. 그리는 쪽은 Frame/HandFrame. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <Color x:Key="Hunsu.GlassColor">#F2FFFFFF</Color>
+  <SolidColorBrush x:Key="Hunsu.Glass" Color="#F2FFFFFF" />
+  <SolidColorBrush x:Key="Hunsu.Surface" Color="#F6F8FF" />
+  <SolidColorBrush x:Key="Hunsu.GlassAlt" Color="#0F1C2042" />
+  <SolidColorBrush x:Key="Hunsu.GlassHover" Color="#1C1C2042" />
+  <SolidColorBrush x:Key="Hunsu.Line" Color="#1F1C2042" />
+  <SolidColorBrush x:Key="Hunsu.Text" Color="#1C2042" />
+  <SolidColorBrush x:Key="Hunsu.Muted" Color="#646A8C" />
+  <SolidColorBrush x:Key="Hunsu.Accent" Color="#FFD23F" />
+  <SolidColorBrush x:Key="Hunsu.AccentInk" Color="#1C2042" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Info" Color="#1493C0" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Good" Color="#2E9A58" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Warn" Color="#C77D00" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Bad" Color="#D93A6C" />
+  <SolidColorBrush x:Key="Hunsu.Tone.Muted" Color="#646A8C" />
+  <CornerRadius x:Key="Hunsu.PanelRadius">6</CornerRadius>
+  <sys:Double x:Key="Hunsu.FontPanelTitle">17</sys:Double>
+  <!-- 손그림: 잉크 펜 선 + 제목 밑 형광펜 칠 -->
+  <sys:String x:Key="Hunsu.Skin.Kind">Pen</sys:String>
+  <SolidColorBrush x:Key="Hunsu.Skin.Frame" Color="#1C2042" />
+  <SolidColorBrush x:Key="Hunsu.Skin.Swash" Color="#FFD23F" />
+  <sys:Double x:Key="Hunsu.Skin.FrameWidth">1.6</sys:Double>
+</ResourceDictionary>
