@@ -106,5 +106,7 @@ public class SideTabsTests
         Assert.Equal("off", s2.Sidebar);
         var (s3, _) = HunsuSettings.FromJson("""{"sidebar":"left"}""").WithSidebarDefault();
         Assert.Equal("left", s3.Sidebar);
+        Assert.False(s3.SidebarCollapsed);
+        Assert.True(HunsuSettings.FromJson(HunsuSettings.FromJson("""{"sidebarCollapsed":true}""").ToJson()).SidebarCollapsed);
     }
 }
