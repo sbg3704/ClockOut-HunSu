@@ -6,6 +6,9 @@
 - 고침: `ExcelStaWorker.ViewKeyAsync`가 ActiveWindow 속성(ScrollRow·ScrollColumn·Zoom·Split·FreezePanes·시트 이름)만 읽고(매크로 없음), `InstanceRegistry.RefreshIfViewMoved`가 Core `ViewWatch`로 비교해 바뀌었을 때만 다리를 부른다. 엑셀을 다시 따라갈 때·표시층을 끌 때 `ForgetView`.
 - 못 본 것: PC에서 커서가 멈췄는지, 속성 읽기만으로도 커서가 바뀌는지(바뀌면 markPollMs=0 '신호 때만'으로 피하고 다른 길을 찾는다), 열 너비만 바꿨을 때 표시가 늦게 따라오는지(다음 선택 신호 때 맞춰짐).
 
+## 2026-11-17 사이드바 ＋ 줄이 안 펴짐 (판 0.0.201)
+- 사용자 신고: 「＋ 책 정보」 같은 접힌 모듈 줄을 눌러도 안 펴짐. 원인(코드 읽기): 엑셀 안 도크가 공간이 모자라 붙인 `ForcedCollapsed`가 사이드바로 넘어와 남아, 펴기(Collapsed=false)를 해도 ShowsPanel이 false. 사이드바에 넣을 때 강제 접힘을 푼다(`SidebarWindow.SetModules`).
+
 ## 2026-11-17 사이드바가 창 전환마다 다시 그리고 엑셀 크기가 흔들림 (판 0.0.200)
 - 사용자 지적 2개(딜레이, 클릭할 때마다 창이 커졌다 작아졌다). 창만 바뀌면 다시 놓지 않음, 같은 내용이면 안 지음, 같은 자리면 앱 바 재예약 안 함, 엑셀이 사라지면 3초 뒤에 풂, 자리 고정 `sidebarStay` 기본 켬(📌/📍). docs/19. 못 본 것: 실제 화면(PC). 흔들림이 남으면 logs의 sidebar·target_gone·retarget 줄이 필요.
 

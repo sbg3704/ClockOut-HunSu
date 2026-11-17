@@ -40,6 +40,9 @@ internal sealed partial class SidebarWindow
     {
         foreach (var m in _panels) Detach(m.Slot); // 빠지는 모듈의 칸도 놓아 준다(도크로 돌아갈 때 부모가 남지 않게)
         _panels = panels.ToList();
+        // 엑셀 안 도크가 자리가 모자라 억지로 접어 둔 표시는 사이드바(스크롤이 있음)에서는 풀어 준다.
+        // 남아 있으면 「＋ 이름」을 눌러도 펴지지 않았다(2026-11-17 사용자 신고).
+        foreach (var m in _panels) m.SetForcedCollapsed(false);
         _profile = profile;
         _tabList = tabs;
         _heightOf = heightOf;
