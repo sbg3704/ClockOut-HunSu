@@ -21,6 +21,12 @@ public sealed record ModuleManifest(
     /// <summary>처음 보이는 모양(선택, 기본 "panel"). "panel"은 도크 패널, "hud"는 처음부터 떼어 낸 반투명 창으로 엑셀 시트 오른쪽 위에 뜬다(사용자가 한 번 옮기거나 바꾸면 그 값을 따름).</summary>
     public string Form { get; init; } = "panel";
 
+    /// <summary>따라다니는 글 HUD 선언(선택, HudSpec.cs). 커서 옆·고른 칸 옆에 글을 보이는 일은 셸이 공용으로 한다.</summary>
+    public HudSpec? Hud { get; init; }
+
+    /// <summary>form이 hud일 때 처음 창 크기(선택). 없으면 테마 기본.</summary>
+    public FormSize? Size { get; init; }
+
     /// <summary>빠른 설정(선택): 우클릭 메뉴에서 창 없이 바꾸는 값들(QuickSetting.cs).</summary>
     public IReadOnlyList<QuickSetting> Quick { get; init; } = [];
 
@@ -74,9 +80,13 @@ public sealed record ModuleManifest(
                     data.Add(new DataSubscription(topic, Strings(e, "on"), weight));
                 }
             }
+            HudSpec? hud = null;
+            if (r.TryGetProperty("hud", out var hj)) hud = HudSpec.Read(hj, errors);
+            FormSize? size = null;
+            if (r.TryGetProperty("size", out var sj)) size = FormSize.Read(sj, errors);
             var quick = r.TryGetProperty("quick", out var q) && q.ValueKind == JsonValueKind.Array ? QuickSchema.Read(q, errors) : [];
             if (errors.Count > 0) return (null, errors);
-            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant(), Form = form, Quick = quick }, errors);
+            return (new ModuleManifest(spec, id, name, version, Str(r, "category"), Str(r, "description"), shapes, place, order, data, Strings(r, "commands")) { Icon = Str(r, "icon").Trim().ToLowerInvariant(), Form = form, Quick = quick, Hud = hud, Size = size }, errors);
         }
         catch (JsonException ex)
         {

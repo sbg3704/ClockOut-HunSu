@@ -21,7 +21,7 @@ internal sealed partial class ShellController
 
     /// <summary>줄어든(패널이 안 보이는) 모듈이 일하는 중인가: 셀 위에 표시를 그리고 있거나 방금 데이터를 받았다.</summary>
     private bool IsModuleWorking(ModuleView mv) =>
-        !mv.Placement.Hidden && Minimize.IsWorking(!mv.ShowsPanel, mv.Module.View.Marks.Any(s => _settings.PencilDraw || s.Style != "pencil"), _activity.IsRecent(mv.Id, DateTime.UtcNow));
+        !mv.Placement.Hidden && Minimize.IsWorking(!mv.ShowsPanel, mv.Module.View.Marks.Any(s => SettingOn(s.EnabledKey)), _activity.IsRecent(mv.Id, DateTime.UtcNow));
 
     /// <summary>데이터가 온 모듈을 "방금 일했다"고 적는다. 줄어든 모듈이면 점이 바로 켜지도록 다시 그린다.</summary>
     private void NoteActivity(ModuleView mv)

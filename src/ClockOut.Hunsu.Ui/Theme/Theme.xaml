@@ -43,6 +43,11 @@
   <sys:Double x:Key="Hunsu.TabWidth">28</sys:Double>
   <sys:Double x:Key="Hunsu.TabWidthHover">36</sys:Double>
   <sys:Double x:Key="Hunsu.WindowMinWidth">320</sys:Double>
+  <!-- 처음부터 떼어 낸 반투명 창(form hud)의 기본 크기와 자리: 엑셀 창 오른쪽 위. 모듈은 manifest size로 크기만 따로 정할 수 있다. -->
+  <sys:Double x:Key="Hunsu.HudWidth">250</sys:Double>
+  <sys:Double x:Key="Hunsu.HudHeight">170</sys:Double>
+  <sys:Double x:Key="Hunsu.HudRightGap">24</sys:Double>
+  <sys:Double x:Key="Hunsu.HudTop">200</sys:Double>
   <sys:Double x:Key="Hunsu.WindowMinHeight">200</sys:Double>
   <sys:Double x:Key="Hunsu.Gap">4</sys:Double>
   <!-- 그림자: 창 크기를 늘리지 않도록 창 안쪽 여백(ShadowMargin)에 그린다 -->

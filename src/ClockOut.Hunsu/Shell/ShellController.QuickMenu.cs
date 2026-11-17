@@ -25,12 +25,24 @@ internal sealed partial class ShellController
     /// <summary>수식 흐름 그리기 켜고 끄기(Ctrl+Alt+D, 허브·모듈 우클릭 메뉴). 끄면 그림만 멈추고 모듈은 켜진 채다.</summary>
     internal void ToggleDraw() => ApplyQuick("pencilDraw", !_settings.PencilDraw);
 
-    /// <summary>설정이 바뀐 뒤 셀 위 그림을 다시 맞춘다(그리기 켜고 끄기·모양). 켤 때는 값을 새로 받는다.</summary>
-    private void OnMarkSettingChanged(string key)
+    /// <summary>설정이 바뀐 뒤 할 일은 모듈 선언의 quick apply가 정한다("redraw": 셀 위 그림만 다시, "refresh": 켜진 주제를 엑셀에 다시 묻고 다시). 키마다 셸 코드가 없다.</summary>
+    private void OnQuickApply(string key)
     {
-        if (key is not ("pencilDraw" or "pencilLook")) return;
-        if (key == "pencilDraw" && _settings.PencilDraw && _target != IntPtr.Zero) _registry.Refresh(_target, AllEnabledTopics());
+        string apply = _modules.Where(m => !m.Placement.Hidden).Select(m => ApplyOf(m.Module.Manifest.Quick, key)).FirstOrDefault(a => a.Length > 0) ?? "";
+        if (apply.Length == 0) return;
+        if (apply == "refresh" && _target != IntPtr.Zero) _registry.Refresh(_target, AllEnabledTopics());
         DrawMarks();
         RefreshWorking();
+    }
+
+    private static string ApplyOf(IReadOnlyList<QuickSetting> items, string key)
+    {
+        foreach (var q in items)
+        {
+            if (q.Key == key && q.Apply.Length > 0) return q.Apply;
+            string inner = ApplyOf(q.Children, key);
+            if (inner.Length > 0) return inner;
+        }
+        return "";
     }
 }

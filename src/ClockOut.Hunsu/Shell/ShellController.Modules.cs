@@ -82,7 +82,7 @@ internal sealed partial class ShellController
     {
         _right.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeRight && !m.Placement.Hidden));
         _left.SetModules(_modules.Where(m => m.Placement.Place == Places.EdgeLeft && !m.Placement.Hidden));
-        UpdateLeftVisibility();
+        UpdateDockVisibility();
         bool allCollapsed = _modules.Where(m => m.InDock && !m.Placement.Hidden).All(m => m.Placement.Collapsed);
         _right.SetAllCollapsedLabel(allCollapsed);
         _left.SetAllCollapsedLabel(allCollapsed);
@@ -175,13 +175,13 @@ internal sealed partial class ShellController
         return w;
     }
 
-    /// <summary>핀 창을 닫고 패널을 원래 도크(선언 자리가 도크면 그쪽, 아니면 오른쪽)로 되돌린다.</summary>
+    /// <summary>핀 창을 닫고 패널을 원래 도크(선언 자리가 도크면 그쪽, 아니면 왼쪽: 독은 왼쪽이 기본)로 되돌린다.</summary>
     internal void Unpin(ModuleView mv, Action<long>? done)
     {
         if (!_pins.Remove(mv.Id, out var w)) { done?.Invoke(0); return; }
         w.Release();
         if (_pins.Count == 0) _pinHover?.Stop();
-        string side = Places.IsDock(mv.Module.Manifest.Place) ? mv.Module.Manifest.Place : Places.EdgeRight;
+        string side = Places.IsDock(mv.Module.Manifest.Place) ? mv.Module.Manifest.Place : Places.EdgeLeft;
         Save(mv, p => p with { Place = side, Collapsed = false });
         mv.AttachFrameToSlot();
         RefreshDocks();
@@ -222,9 +222,10 @@ internal sealed partial class ShellController
     {
         if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); NoteActivity(m); });
         else ForTopic(r.Topic, m => m.SetStale(true));
-        if (r.Response.Ok && r.Topic == "selection.summary") ObserveHistory(r);
+        if (r.Response.Ok && r.Topic == TopicRouting.SelectionSummary) ObserveHistory(r);
         if (r.Response.Ok) OnTopicForMarks(r);
         if (r.Response.Ok && r.Topic == "mark" && r.Excel == _target) OnMarkForHud(r.Response.Data);
+        else if (r.Response.Ok && r.Excel == _target) RefreshHuds();
     }
 
     /// <summary>다리 신호 하나가 왔을 때 다시 조회할 주제: 켜진 모듈의 구독만(꺼진 모듈은 엑셀을 바쁘게 하지 않는다).</summary>
@@ -252,7 +253,6 @@ internal sealed partial class ShellController
 
     private void OnSummary(SummaryResult r)
     {
-        ShowCursorHud(r.Summary);
         Frames.Next(frame =>
         {
             _log.Write("render", ("excel", r.Excel.ToInt64()), ("seq", r.Seq), ("recv", r.SignalAt), ("qs", r.QueryStart), ("qd", r.QueryDone), ("frame", frame),
