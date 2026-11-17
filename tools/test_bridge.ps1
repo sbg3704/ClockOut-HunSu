@@ -86,7 +86,7 @@ try {
     $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
     foreach ($i in 1..20) { Invoke-ComRetry { $null = $ws.Cells.Item($i, 2).Select() } }
     $b = (& $run 'CoHunsu_Query' 'bridge.stats' '{}') | ConvertFrom-Json
-    Check 'events 20' ($b.ok -and $b.data.events -eq 20) "events=$($b.data.events)"
+    Check 'events 20' ($b.ok -and $b.data.events -eq 20) "events=$($b.data.events) muted=$($b.data.muted) sent=$($b.data.sent) 활성 시트=$(Invoke-ComRetry { $xl.ActiveSheet.Name })/$($ws.Name) 선택=$(Invoke-ComRetry { $xl.Selection.Address() })"
     $mx = ($b.data.samplesUs | Measure-Object -Maximum).Maximum
     Check "이벤트 처리 최대 ${mx}µs < 5000µs" ($mx -lt 5000)
     # SpecialCells가 선택 바뀜 이벤트를 일으켜 조회가 자기 신호로 끝없이 다시 돌던 문제(일#305)
