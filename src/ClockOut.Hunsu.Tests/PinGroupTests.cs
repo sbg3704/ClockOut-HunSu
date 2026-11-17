@@ -42,7 +42,7 @@ public class PinGroupTests
     public void Sidebar_SettingsAreNormalized()
     {
         var d = new HunsuSettings();
-        Assert.Equal(("off", 300), (d.Sidebar, d.SidebarWidth));
+        Assert.Equal(("right", 300), (d.Sidebar, d.SidebarWidth));
         var s = HunsuSettings.FromJson("""{"sidebar":" RIGHT ","sidebarWidth":420}""");
         Assert.Equal(("right", 420), (s.Sidebar, s.SidebarWidth));
         var bad = HunsuSettings.FromJson("""{"sidebar":"top","sidebarWidth":5000}""");

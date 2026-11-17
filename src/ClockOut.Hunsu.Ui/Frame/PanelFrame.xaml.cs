@@ -137,8 +137,30 @@ public partial class PanelFrame : UserControl
     }
 
     /// <summary>도크의 내용 높이 제한을 다시 건다(설정이 바뀌었을 때). 핀 창이면 제한을 두지 않는다.</summary>
-    public void ApplyBodyLimit(bool pinned) =>
+    public void ApplyBodyLimit(bool pinned)
+    {
+        BodyScroll.ClearValue(HeightProperty); // 사이드바에서 정한 높이는 사이드바에 있을 때만
         BodyScroll.MaxHeight = pinned ? double.PositiveInfinity : Math.Max(40, MaxBodyHeight);
+    }
+
+    /// <summary>사이드바 스플리터가 정한 본문 높이(DIP). 0 이하면 내용만큼(자동). 넘치면 본문 안에서 스크롤.</summary>
+    public void SetBodyHeight(double height)
+    {
+        BodyScroll.MaxHeight = double.PositiveInfinity;
+        if (height > 0) BodyScroll.Height = height; else BodyScroll.ClearValue(HeightProperty);
+    }
+
+    /// <summary>지금 그려진 본문 높이(스플리터를 끌기 시작할 때의 값).</summary>
+    public double BodyActualHeight => BodyScroll.ActualHeight;
+
+    /// <summary>눌린 곳이 제목줄의 빈 자리(단추·막대가 아닌 곳)인가. 사이드바가 끌어 옮기기를 시작할 때 쓴다.</summary>
+    public bool IsTitleGrab(DependencyObject? source)
+    {
+        if (source == null || _sliding || !IsInside(source, TitleBar)) return false;
+        for (var n = source; n != null && !ReferenceEquals(n, TitleBar); n = ParentOf(n))
+            if (n is System.Windows.Controls.Primitives.ButtonBase) return false;
+        return true;
+    }
 
     public int OpacityLevel => _opacityLevel;
 
@@ -237,9 +259,13 @@ public partial class PanelFrame : UserControl
         TitleDragStarted?.Invoke(e);
     }
 
+    /// <summary>화면 나무의 부모(글 조각 같은 ContentElement는 논리 나무로).</summary>
+    private static DependencyObject? ParentOf(DependencyObject n) =>
+        (n is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D ? System.Windows.Media.VisualTreeHelper.GetParent(n) : null) ?? LogicalTreeHelper.GetParent(n);
+
     private static bool IsInside(DependencyObject node, DependencyObject ancestor)
     {
-        for (var n = node; n != null; n = System.Windows.Media.VisualTreeHelper.GetParent(n) ?? LogicalTreeHelper.GetParent(n))
+        for (var n = node; n != null; n = ParentOf(n))
             if (ReferenceEquals(n, ancestor)) return true;
         return false;
     }
