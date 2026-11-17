@@ -137,6 +137,9 @@ public sealed class HunsuSettings
     /// <summary>엑셀을 닫은 뒤 창 없이 남은 EXCEL.EXE 찌꺼기를 15초 뒤 자동으로 끝낸다(true, 기본). 보이던 엑셀이 창만 없어진 것만 해당하고, 처음부터 창이 없던 엑셀은 건드리지 않는다.</summary>
     public bool CleanOrphanExcel { get; init; } = true;
 
+    /// <summary>자동으로 엑셀을 못 찾거나 엉뚱한 창을 따라갈 때 사용자가 직접 고른 엑셀: "프로세스번호:시작틱"(Core/Procs/ExcelLink). 비면 자동. 있으면 그 엑셀만 따라간다.</summary>
+    public string LinkedExcel { get; init; } = "";
+
     public static readonly IReadOnlyList<string> IconProfiles = ["fluent", "lucide", "phosphor", "tabler", "material", "iconoir"];
 
     /// <summary>도크 모양 5칸(설정 창 [모양]이 바꾸는 값).</summary>
@@ -213,6 +216,7 @@ public sealed class HunsuSettings
             PencilLook = Marks.SketchLook.ByName(PencilLook).Name,
             PencilDraw = PencilDraw,
             CleanOrphanExcel = CleanOrphanExcel,
+            LinkedExcel = Procs.ExcelLink.Normalize(LinkedExcel),
             LayoutLock = (LayoutLock ?? "").Trim().ToLowerInvariant() == "free" ? "free" : "locked",
         };
     }

@@ -91,6 +91,7 @@ public partial class DockWindow : Window
     public event Action? ManagerRequested;
     public event Action? LookRequested;
     public event Action? ExcelCleanupRequested;
+    public event Action? ExcelLinkRequested;
 
     /// <summary>편집 모드에서 훈 원을 놓았다: (새 세로 위치 비율, 놓은 곳의 화면 가로 좌표).</summary>
     public event Action<double, int>? HubDropped;
@@ -312,6 +313,7 @@ public partial class DockWindow : Window
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));
+        menu.Items.Add(Item("엑셀 연결…", "", () => ExcelLinkRequested?.Invoke()));
         menu.Items.Add(Item("남은 엑셀 정리…", "", () => ExcelCleanupRequested?.Invoke()));
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("훈수꾼 끄기", "", () => QuitRequested?.Invoke()));

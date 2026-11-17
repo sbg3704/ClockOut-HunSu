@@ -55,7 +55,7 @@ internal sealed partial class ShellController
         _sidebarOff ??= new System.Windows.Threading.DispatcherTimer(TimeSpan.FromSeconds(3), System.Windows.Threading.DispatcherPriority.Background, (_, _) =>
         {
             _sidebarOff!.Stop();
-            if (_sidebar is not { Reserved: true } || Excel.ExcelWindows.FindVisibleMain() != IntPtr.Zero) return; // 엑셀이 돌아왔으면 Follow가 이미 맡았다
+            if (_sidebar is not { Reserved: true } || FindTargetExcel() != IntPtr.Zero) return; // 엑셀이 돌아왔으면 Follow가 이미 맡았다
             _sidebar.SetActive(false);
             _log.Write("sidebar_released");
             RefreshDocks();
@@ -77,6 +77,7 @@ internal sealed partial class ShellController
             case "profiles": OpenManager("profiles"); break;
             case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
             case "cleanup": OpenExcelCleanup(); break;
+            case "link": OpenExcelLink(); break;
             case "stay": ApplySetting("sidebarStay", !_settings.SidebarStay); break;
             case "fold": ApplySetting("sidebarCollapsed", !_settings.SidebarCollapsed); break;
         }
