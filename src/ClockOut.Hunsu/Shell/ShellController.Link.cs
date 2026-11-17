@@ -104,6 +104,48 @@ internal sealed partial class ShellController
         _pickTimer.Start();
     }
 
+    /// <summary>연결 창의 "이 엑셀 점검": 따라가는 엑셀을 속성으로만 읽어 사람이 읽을 줄들로 돌려준다(다리가 열려 있나, 보호된 보기, 앞 통합 문서, 입력을 받는 상태).</summary>
+    internal async Task<(string Text, bool BridgeMissing)> InspectTargetAsync()
+    {
+        if (_target == IntPtr.Zero) return ("따라가는 엑셀 창이 없습니다.", false);
+        var r = await _registry.InspectAsync(_target);
+        _log.Write("excel_inspect", ("hwnd", _target.ToInt64()), ("attached", r.Attached), ("attach", r.Attach), ("bridge", r.BridgeLoaded), ("books", r.Workbooks), ("pv", r.ProtectedViews), ("ready", r.Ready), ("err", r.Error));
+        if (!r.Attached) return ("이 엑셀에 붙지 못했습니다(" + r.Error + "). 다른 권한(관리자)으로 켠 엑셀이면 훈수꾼도 같은 권한으로 켜야 해요.", false);
+        var lines = new List<string>
+        {
+            r.BridgeLoaded ? "다리: 열려 있음" : "다리: 이 엑셀에 안 열려 있음 (그래서 패널이 비어요)",
+            $"열린 통합 문서 {r.Workbooks}개 · 앞의 문서: {(r.ActiveBook.Length > 0 ? r.ActiveBook : "없음")}{(r.ActiveReadOnly ? " (읽기 전용)" : "")}",
+            r.ProtectedViews > 0 ? $"보호된 보기 창 {r.ProtectedViews}개: 거기서 「편집 사용」을 눌러야 읽을 수 있어요" : "보호된 보기: 없음",
+            r.Ready ? "엑셀 상태: 입력 받는 중" : "엑셀 상태: 바쁨 또는 대화 상자가 떠 있음 (링크 업데이트 확인 창 등을 닫아 보세요)",
+        };
+        if (r.Error.Length > 0) lines.Add("읽다가 막힘: " + r.Error);
+        return (string.Join("\n", lines), !r.BridgeLoaded);
+    }
+
+    /// <summary>다리 파일 위치: 엑셀 추가기능 폴더에 깔린 것, 없으면 묶음에 든 것(co build 시험 폴더). 없으면 null.</summary>
+    private static string? BridgeFilePath()
+    {
+        string installed = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "AddIns", ExcelLocator.BridgeFile);
+        if (System.IO.File.Exists(installed)) return installed;
+        string bundled = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "..", ExcelLocator.BridgeFile));
+        return System.IO.File.Exists(bundled) ? bundled : null;
+    }
+
+    /// <summary>"브리지 열기": 따라가는 엑셀에 다리가 없을 때, 사용자가 확인하면 그 엑셀에서 다리 파일을 연다. 조용히 하지 않는다. 사용자 엑셀을 건드리는 일이라 확인 대화 상자를 거친다.</summary>
+    internal async Task<string> OpenBridgeInTargetAsync()
+    {
+        if (_target == IntPtr.Zero) return "따라가는 엑셀 창이 없습니다.";
+        string? path = BridgeFilePath();
+        if (path == null) return "다리 파일을 찾지 못했습니다. 칼퇴 왼쪽 레일에서 훈수꾼을 설치하세요.";
+        var ok = WriteDialog.Ask("이 엑셀에서 다리 열기",
+            "이 엑셀 창에는 훈수꾼 다리(clockout-hunsu.xlam)가 안 열려 있어 내용을 못 읽어요. 이 엑셀에서 다리 파일을 한 번 열까요?\n\n- 엑셀 설정과 열려 있는 통합 문서는 바뀌지 않아요.\n- 이 엑셀을 닫으면 다시 안 열려 있어요(영구 설치 아님).\n- 파일: " + path,
+            "열기", "취소", null, "warn");
+        if (ok != WriteDialog.Choice.Ok) return "취소했습니다.";
+        string err = await _registry.OpenBridgeAsync(_target, path);
+        _log.Write("bridge_open", ("hwnd", _target.ToInt64()), ("err", err));
+        return err.Length == 0 ? "다리를 열었습니다. 칸을 눌러 패널이 바뀌는지 보세요." : "다리를 열지 못했습니다: " + err;
+    }
+
     /// <summary>엑셀 프로세스는 있는데 따라갈 창을 못 찾은 채 20초가 지나면, 직접 연결하는 길을 풍선으로 한 번 알린다(훈 원도 숨어 있으니 알림 아이콘 메뉴를 알려 준다).</summary>
     private void NoteNoExcelWindow()
     {

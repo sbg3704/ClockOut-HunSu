@@ -23,6 +23,8 @@ public class MiscTests
         Assert.True(HResultNames.IsBusy(HResultNames.RpcServerCallRetryLater));
         Assert.True(HResultNames.IsGone(HResultNames.RpcServerUnavailable));
         Assert.Equal("excel_busy", HResultNames.ToErrorCode(HResultNames.ExcelVbaIgnore));
+        Assert.Equal("bridge_missing", HResultNames.ToErrorCode(HResultNames.ExcelRunFailed)); // 이 엑셀 창에 다리가 없음(매크로를 못 찾음)
+        Assert.Equal("EXCEL_1004", HResultNames.Name(HResultNames.ExcelRunFailed));
         Assert.Equal("0x80004005", HResultNames.Name(unchecked((int)0x80004005)));
     }
 

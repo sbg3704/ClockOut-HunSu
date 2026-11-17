@@ -37,7 +37,7 @@ internal sealed class ExcelLinkWindow : Window
         root.Children.Add(new TextBlock { Text = "엑셀 연결", FontSize = (double)FindResource("Hunsu.FontTitleSize"), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 4) });
         root.Children.Add(new TextBlock
         {
-            Text = "훈수꾼이 엑셀을 자동으로 못 찾거나 엉뚱한 창을 따라갈 때, 따라갈 엑셀을 직접 고르세요. 연결하면 다른 엑셀 창이 앞에 나와도 그 엑셀만 따라가고, 기억해 둡니다.",
+            Text = "훈수꾼이 엑셀을 자동으로 못 찾거나 엉뚱한 창을 따라갈 때, 따라갈 엑셀을 직접 고르세요. 연결하면 다른 엑셀 창이 앞에 나와도 그 엑셀만 따라가고, 기억해 둡니다. 패널이 비어 있으면 「이 엑셀 점검」으로 이유를 보세요(다리가 안 열려 있으면 「브리지 열기」).",
             TextWrapping = TextWrapping.Wrap,
             Foreground = (Brush)FindResource(ThemeKeys.Muted),
             FontSize = (double)FindResource("Hunsu.FontSmall"),
@@ -46,6 +46,8 @@ internal sealed class ExcelLinkWindow : Window
         root.Children.Add(_now);
         root.Children.Add(new ScrollViewer { Content = _list, MaxHeight = 300, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+        buttons.Children.Add(ManagerParts.Chip(this, "이 엑셀 점검", false, Inspect));
+        buttons.Children.Add(ManagerParts.Chip(this, "브리지 열기…", false, OpenBridge));
         buttons.Children.Add(ManagerParts.Chip(this, "새로고침", false, Rebuild));
         buttons.Children.Add(ManagerParts.Chip(this, "창 눌러 고르기", false, PickWindow));
         buttons.Children.Add(ManagerParts.Chip(this, "자동으로 되돌리기", false, () => { _shell.UnlinkExcel(); _status.Text = "자동 찾기로 되돌렸습니다."; Rebuild(); }));
@@ -58,6 +60,15 @@ internal sealed class ExcelLinkWindow : Window
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
         Rebuild();
     }
+
+    private async void Inspect()
+    {
+        _status.Text = "점검 중…";
+        var (text, _) = await _shell.InspectTargetAsync();
+        _status.Text = text;
+    }
+
+    private async void OpenBridge() => _status.Text = await _shell.OpenBridgeInTargetAsync();
 
     private void PickWindow()
     {
