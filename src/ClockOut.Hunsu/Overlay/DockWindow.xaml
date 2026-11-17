@@ -1,4 +1,4 @@
-<!-- 기능: 가장자리 도크 창(왼쪽 또는 오른쪽). 바탕은 완전 투명(알파 0)이라 패널·아이콘이 없는 곳은 클릭이 엑셀로 지나간다. -->
+<!-- 기능: 가장자리 도크 창. 왼쪽 창은 런처(훈 원과 아이콘)만, 오른쪽 창은 패널만 둔다(기본). 바탕은 완전 투명(알파 0)이라 패널·아이콘이 없는 곳은 클릭이 엑셀로 지나간다. -->
 <!-- 사용법: DockWindow.xaml.cs. 가장자리 쪽에 모듈 아이콘 런처(훈 원 + 초승달 등, docs/09 2장), 그 안쪽에 열린 패널이 위에서부터 쌓인다. 색과 크기는 Theme에서. -->
 <Window x:Class="ClockOut.Hunsu.Overlay.DockWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -14,6 +14,9 @@
       <!-- 세로로 쌓다가 높이가 모자라면 오른쪽 칸으로 넘어간다(왼쪽 도크). 오른쪽 도크는 높이 제한을 두지 않아 한 줄로 쌓인다. -->
       <WrapPanel x:Name="Items" Orientation="Vertical" />
     </StackPanel>
-    <frame:LauncherView x:Name="Launcher" />
+    <!-- 왼쪽 도크는 훈 원이 창 가장자리에 반쯤 걸려 숨어 있다가 마우스를 대면 튀어나온다(LauncherHost를 옆으로 밀어 창 밖으로 잘림). -->
+    <Grid x:Name="LauncherHost">
+      <frame:LauncherView x:Name="Launcher" />
+    </Grid>
   </Grid>
 </Window>

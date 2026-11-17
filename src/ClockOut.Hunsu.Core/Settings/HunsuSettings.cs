@@ -83,6 +83,9 @@ public sealed class HunsuSettings
     /// <summary>패널에 마우스를 올리면 투명도와 상관없이 선명해진다(true, 기본). false면 정한 투명도를 올려도 그대로 둔다.</summary>
     public bool HoverSharpen { get; init; } = true;
 
+    /// <summary>도크의 패널들을 틈 없이 한 창처럼 이어 붙여 보인다(칸 사이는 얇은 선). false(기본)면 카드가 따로 떠 있다. 허브 우클릭 메뉴·설정 창에서 켜고 끈다.</summary>
+    public bool PanelJoin { get; init; }
+
     /// <summary>쓰기 명령(실험 기능) 공지를 확인한 공지 판. 현재 공지 판(WritePolicy.NoticeVersion)과 다르면 쓰기 전에 공지를 다시 보인다(docs/11 2장).</summary>
     public string WriteAck { get; init; } = "";
 
@@ -167,6 +170,7 @@ public sealed class HunsuSettings
             IdleOpacity = IdleOpacity is >= 0.15 and <= 1 ? IdleOpacity : d.IdleOpacity,
             WriteAck = WriteAck ?? "",
             HoverSharpen = HoverSharpen,
+            PanelJoin = PanelJoin,
             Profile = Profile ?? "",
             QuickBar = QuickBar,
             CursorHud = CursorHud,

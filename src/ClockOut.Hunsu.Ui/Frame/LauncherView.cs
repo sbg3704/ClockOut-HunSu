@@ -68,11 +68,14 @@ public sealed class LauncherView : Canvas
 
     public bool Awake { get; private set; }
 
+    /// <summary>깨어남·잠듦이 바뀌었다(왼쪽 도크가 가장자리에서 반쯤 숨었다 나오는 움직임에 쓴다).</summary>
+    public event Action<bool>? AwakeChanged;
+
     /// <summary>미리보기용(설정 창): 커서와 관계없이 깨어 있거나(true) 잠든(false) 모습으로 멈춘다. null이면 평소처럼 커서를 따른다.</summary>
     public bool? Hold
     {
         get => _hold;
-        set { _hold = value; _sleep.Stop(); if (value is bool b) { Awake = b; if (!b) Collapse(); ApplyAwake(animate: false); } }
+        set { _hold = value; _sleep.Stop(); if (value is bool b) { Awake = b; if (!b) Collapse(); ApplyAwake(animate: false); AwakeChanged?.Invoke(b); } }
     }
     private bool? _hold;
     public string? ExpandedGroup { get; private set; }
@@ -195,6 +198,7 @@ public sealed class LauncherView : Canvas
         Awake = awake;
         if (!awake) Collapse();
         ApplyAwake(animate: true);
+        AwakeChanged?.Invoke(awake);
     }
 
     /// <summary>깨어남·잠듦: 투명도와 이동만 움직인다(fast, docs/03 6장). 잠든 아이콘은 클릭을 받지 않게 숨긴다(흐린 모양 제외).</summary>

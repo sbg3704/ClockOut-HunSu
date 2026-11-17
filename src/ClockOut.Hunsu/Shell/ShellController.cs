@@ -92,6 +92,7 @@ internal sealed partial class ShellController : IDisposable
             d.SummonRequested += ToggleSummon;
             d.HideAllRequested += ToggleHideAll;
             d.HubExtras = HubToggles;
+            d.JoinToggleRequested += () => ApplySetting("panelJoin", !_settings.PanelJoin);
             d.QuitRequested += Quit;
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
@@ -99,6 +100,7 @@ internal sealed partial class ShellController : IDisposable
             var side = d.Side;
             d.SetCenterRatio(_store.State.DockRatio(side));
             d.HubDropped += (ratio, x) => OnHubDropped(side, ratio, x);
+            d.LauncherRefreshNeeded += () => { _left.RefreshLauncher(); _right.RefreshLauncher(); };
             d.LayoutTraced += t => _log.Write("dock_layout", ("side", side), ("plan", t.Replace(" ", "_")));
         }
     }
