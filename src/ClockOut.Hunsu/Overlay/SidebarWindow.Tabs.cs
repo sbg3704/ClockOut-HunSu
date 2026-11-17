@@ -43,9 +43,20 @@ internal sealed partial class SidebarWindow
         _profile = profile;
         _tabList = tabs;
         _heightOf = heightOf;
+        // 같은 내용이면 다시 짓지 않는다(엑셀 창을 오갈 때 사이드바가 매번 새로 그려져 늦던 것, 2026-11-17 사용자 지적).
+        string sig = Signature();
+        if (sig == _lastSig && !_renderPending) return;
         if (_dragging) { _renderPending = true; return; } // 끄는 중이면 놓은 뒤에
         Render();
     }
+
+    private string _lastSig = "";
+
+    /// <summary>화면을 정하는 값을 한 줄로: 보기 방식, 아이콘 세트, 고른 탭, 탭 구성, 모듈마다 펼침·접힘·높이.</summary>
+    private string Signature() =>
+        string.Join("|", new[] { _tabs ? "t" : "s", _profile, _activeKey ?? "" }
+            .Concat(_tabList.Select(t => t.Key + ":" + t.Name + ":" + t.Icon + ":" + string.Join(",", t.Members)))
+            .Concat(_panels.Select(m => $"{m.Id}:{m.ShowsPanel}:{m.Frame.Folded}:{_heightOf(m.Id)}:{m.Slot.Parent != null}")));
 
     private ModuleView? ViewOf(string id) => _panels.FirstOrDefault(m => m.Id == id);
 
@@ -58,6 +69,7 @@ internal sealed partial class SidebarWindow
     private void Render()
     {
         CancelDrag();
+        _renderPending = false;
         var byId = _panels.ToDictionary(m => m.Id, StringComparer.Ordinal);
         var tabs = _tabList.Select(t => t with { Members = t.Members.Where(byId.ContainsKey).ToList() }).Where(t => t.Members.Count > 0).ToList();
         if (tabs.All(t => t.Key != _activeKey)) _activeKey = (tabs.FirstOrDefault(t => t.Members.Any(id => byId[id].ShowsPanel)) ?? tabs.FirstOrDefault())?.Key;
@@ -78,6 +90,7 @@ internal sealed partial class SidebarWindow
             foreach (var id in tab.Members) AddSection(byId[id]);
         }
         _bar.Children.Add(_newZone); // 모듈을 여기 놓으면 새 묶음(끄는 동안만 보임)
+        _lastSig = Signature();
     }
 
     private void AddSection(ModuleView m)

@@ -51,9 +51,20 @@ internal sealed partial class ShellController
     private void UpdateSidebarOffNoTarget()
     {
         if (_sidebar is not { Reserved: true }) return;
-        _sidebar.SetActive(false);
-        RefreshDocks();
+        // 바로 풀지 않고 3초 기다린다: 엑셀 창이 잠깐 사라졌다 돌아오는 일(창 바꾸기, 통합 문서 닫기)에 예약을 풀었다 다시 하면 엑셀이 커졌다 작아졌다 한다.
+        _sidebarOff ??= new System.Windows.Threading.DispatcherTimer(TimeSpan.FromSeconds(3), System.Windows.Threading.DispatcherPriority.Background, (_, _) =>
+        {
+            _sidebarOff!.Stop();
+            if (_sidebar is not { Reserved: true } || Excel.ExcelWindows.FindVisibleMain() != IntPtr.Zero) return; // 엑셀이 돌아왔으면 Follow가 이미 맡았다
+            _sidebar.SetActive(false);
+            _log.Write("sidebar_released");
+            RefreshDocks();
+        }, System.Windows.Application.Current.Dispatcher);
+        _sidebarOff.Stop();
+        _sidebarOff.Start();
     }
+
+    private System.Windows.Threading.DispatcherTimer? _sidebarOff;
 
     /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 탭↔쌓기, 엑셀 정리, 사이드바 접기·펴기.</summary>
     private void OnSidebarFooter(string key)
@@ -66,18 +77,21 @@ internal sealed partial class ShellController
             case "profiles": OpenManager("profiles"); break;
             case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
             case "cleanup": OpenExcelCleanup(); break;
+            case "stay": ApplySetting("sidebarStay", !_settings.SidebarStay); break;
             case "fold": ApplySetting("sidebarCollapsed", !_settings.SidebarCollapsed); break;
         }
     }
 
     /// <summary>설정과 엑셀 유무에 맞춰 사이드바를 켜거나 끄고, 패널을 사이드바나 도크에 다시 놓는다.</summary>
-    private void UpdateSidebar()
+    private void UpdateSidebar(bool refresh = true)
     {
         if (_sidebar == null) return;
+        bool was = _sidebar.Reserved;
+        if (_target != IntPtr.Zero) _sidebarOff?.Stop(); // 엑셀이 돌아왔다: 풀기 예약 취소
         bool want = _settings.Sidebar != "off" && !_hiddenAll && _target != IntPtr.Zero;
-        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs, _settings.SidebarCollapsed);
+        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs, _settings.SidebarCollapsed, _settings.SidebarStay);
         _sidebar.SetActive(want, _target);
         _log.Write("sidebar", ("side", _settings.Sidebar), ("width", _settings.SidebarWidth), ("active", _sidebar.Reserved));
-        RefreshDocks();
+        if (refresh || was != _sidebar.Reserved) RefreshDocks(); // 창만 바뀐 것(Follow)이면 패널을 다시 놓지 않는다
     }
 }

@@ -173,7 +173,7 @@ internal sealed partial class ShellController : IDisposable
         UpdateDockVisibility();
         UpdateQuickBar();
         ApplyDefaultForms();
-        UpdateSidebar();
+        UpdateSidebar(refresh: false); // 엑셀 창만 바뀌었다: 사이드바 자리만 옮기고 다시 그리지 않는다
     }
 
     private void OnTargetGone()

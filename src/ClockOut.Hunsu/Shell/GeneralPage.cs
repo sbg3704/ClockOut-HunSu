@@ -34,6 +34,7 @@ internal sealed class GeneralPage : ScrollViewer
         Section("사이드바 (창 밖)", "VS Code처럼 화면 가장자리에 붙는 전체 높이 줄. 켜면 엑셀 창이 남은 곳으로 줄어들고(최대화일 때) 패널이 구역으로 쌓입니다. 가장자리를 끌어 폭을 바꿉니다");
         Choices("sidebar", s.Sidebar, [("right", "오른쪽 (기본)"), ("left", "왼쪽"), ("off", "끔 (엑셀 안 도크)")]);
         _root.Children.Add(Row(ManagerParts.Switch(this, s.SidebarTabs, () => _shell.ApplySetting("sidebarTabs", !s.SidebarTabs)), "사이드바 탭 보기 (아이콘을 누른 묶음만 보임, 끄면 모든 묶음이 쌓임)"));
+        _root.Children.Add(Row(ManagerParts.Switch(this, s.SidebarStay, () => _shell.ApplySetting("sidebarStay", !s.SidebarStay)), "사이드바 자리 고정 (엑셀 창을 바꿔도 처음 창 옆에 그대로, 내용만 지금 창. 두 창을 나란히 비교할 때)"));
 
         Section("화면 테마", "바로 반영. 위 룩이 '기본 (손그림 없음)'일 때만 쓰입니다");
         Choices("theme", s.Theme, [("dark", "어둡게"), ("light", "밝게"), ("auto", "Windows 따라")]);
