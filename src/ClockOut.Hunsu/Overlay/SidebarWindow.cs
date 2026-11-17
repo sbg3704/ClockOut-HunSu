@@ -1,4 +1,4 @@
-// 기능: 창 밖 사이드바(VS Code·비주얼 스튜디오·오토캐드의 속성 패널처럼). 윈도우 앱 바로 화면 왼쪽/오른쪽 가장자리를 예약해 엑셀(최대화일 때)이 남은 영역으로 저절로 줄어든다. 안쪽: 아이콘 막대(활동 막대) + 모듈 구역들(위에서 아래, 구역마다 ▾로 접기)·세로 스크롤.
+// 기능: 창 밖 사이드바(VS Code·비주얼 스튜디오·오토캐드의 속성 패널처럼). 엑셀이 최대화면 윈도우 앱 바로 화면 가장자리를 예약해 엑셀이 남은 영역으로 줄어든다. 최대화가 아니면 앱 바를 쓰지 않고 엑셀 창의 높이에 맞춰 옆구리(바깥)에 붙어 창을 따라 움직이고 크기를 맞춘다(바깥 자리가 모자라면 안쪽 가장자리). 안쪽: 아이콘 막대(활동 막대) + 모듈 구역들(위에서 아래, 구역마다 ▾로 접기)·세로 스크롤.
 //       안쪽 가장자리를 끌어 폭을 바꾼다(저장은 WidthChanged로 앱이). 끄면 예약을 풀어 엑셀이 원래 크기로 돌아온다.
 // 사용법: var s = new SidebarWindow(); s.Configure("right", 300); s.SetActive(true); s.SetModules(panelModules, iconModules); s.ModuleClicked += id => ...; s.WidthChanged += w => 저장;
 // 의존: Native/AppBar, Native/User32, Ui/Frame/PanelFrame(ModuleView의 Slot), Ui/Icons/IconFactory, Theme 이름. 화면(WPF) 일이라 시험은 못 하고 설정 값 정리만 시험한다. 엑셀 창을 직접 옮기지 않는다(앱 바가 일을 한다).
@@ -24,12 +24,16 @@ internal sealed class SidebarWindow : Window
     private readonly Thumb _grip = new();
     private readonly uint _callbackMsg = AppBar.RegisterWindowMessage("ClockOutHunsuSidebar");
     private HwndSource? _source;
-    private bool _registered, _left;
+    private bool _active, _appBar, _left;
+    private readonly User32.WinEventProc _proc;
+    private readonly List<IntPtr> _hooks = [];
+    private IntPtr _hooked;
     private int _widthDip = 300;
     private IntPtr _anchor; // 어느 모니터에 붙일지 정하는 엑셀 창
 
     public SidebarWindow()
     {
+        _proc = OnWinEvent;
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
@@ -72,7 +76,7 @@ internal sealed class SidebarWindow : Window
     }
 
     public IntPtr Handle { get; private set; }
-    public bool Reserved => _registered;
+    public bool Reserved => _active;
 
     /// <summary>폭을 끌어 바꾼 뒤(DIP).</summary>
     public event Action<int>? WidthChanged;
@@ -97,7 +101,7 @@ internal sealed class SidebarWindow : Window
         _left = left;
         _widthDip = Math.Clamp(widthDip, 200, 700);
         if (sideChanged) Build();
-        if (_registered) Reposition();
+        if (_active) Reposition();
     }
 
     /// <summary>안쪽 배치: [활동 막대 | 구역 목록 | 끄는 손잡이] (왼쪽 사이드바), 오른쪽 사이드바는 손잡이가 맨 왼쪽.</summary>
@@ -115,11 +119,15 @@ internal sealed class SidebarWindow : Window
         }
     }
 
-    /// <summary>엑셀이 있을 때만 켠다: 앱 바 등록(가장자리 예약)과 보이기. 끄면 예약을 풀어 엑셀 창이 원래 크기로 돌아온다. anchor = 붙일 모니터를 정하는 엑셀 창.</summary>
+    /// <summary>엑셀이 있을 때만 켠다: 보이기, 최대화면 앱 바 등록(가장자리 예약), 아니면 엑셀 옆에 붙이기. 끄면 예약을 풀어 엑셀 창이 원래 크기로 돌아온다. anchor = 붙을 엑셀 창.</summary>
     public void SetActive(bool on, IntPtr anchor = default)
     {
-        if (anchor != IntPtr.Zero) _anchor = anchor;
-        if (on == _registered)
+        if (anchor != IntPtr.Zero && anchor != _anchor)
+        {
+            _anchor = anchor;
+            Unhook();
+        }
+        if (on == _active)
         {
             if (on) Reposition();
             return;
@@ -128,30 +136,90 @@ internal sealed class SidebarWindow : Window
         {
             if (!IsVisible) { Show(); } // 핸들을 만든다
             if (Handle == IntPtr.Zero) return;
-            _registered = AppBar.Register(Handle, _callbackMsg);
-            if (_registered) Reposition();
-            else Hide(); // 앱 바를 못 쓰면(드문 일) 숨어 있는다
+            _active = true;
+            Hook();
+            Reposition();
         }
         else
         {
-            if (Handle != IntPtr.Zero) AppBar.Remove(Handle);
-            _registered = false;
+            if (_appBar && Handle != IntPtr.Zero) AppBar.Remove(Handle);
+            _appBar = false;
+            _active = false;
+            Unhook();
+            if (Handle != IntPtr.Zero) User32.SetWindowLongPtr(Handle, User32.GWLP_HWNDPARENT, IntPtr.Zero);
             Hide();
         }
     }
 
+    private bool Maximized => _anchor == IntPtr.Zero || User32.IsZoomed(_anchor);
+
     private void Reposition()
     {
-        if (!_registered || Handle == IntPtr.Zero) return;
+        if (!_active || Handle == IntPtr.Zero) return;
         var screen = _anchor != IntPtr.Zero ? System.Windows.Forms.Screen.FromHandle(_anchor) : System.Windows.Forms.Screen.PrimaryScreen ?? System.Windows.Forms.Screen.AllScreens[0];
         int px = (int)Math.Round(_widthDip * Scale());
-        var rc = AppBar.Place(Handle, _left, screen.Bounds, screen.WorkingArea, px);
-        User32.SetWindowPos(Handle, User32.HWND_TOP, rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top, User32.SWP_NOACTIVATE | User32.SWP_SHOWWINDOW);
+        if (Maximized)
+        {
+            // 최대화: 앱 바로 가장자리를 예약한다(엑셀이 남은 영역으로 줄어든다).
+            if (!_appBar)
+            {
+                User32.SetWindowLongPtr(Handle, User32.GWLP_HWNDPARENT, IntPtr.Zero);
+                _appBar = AppBar.Register(Handle, _callbackMsg);
+                if (!_appBar) { _active = false; Unhook(); Hide(); return; } // 앱 바를 못 쓰면(드문 일) 숨어 있는다
+            }
+            var rc = AppBar.Place(Handle, _left, screen.Bounds, screen.WorkingArea, px);
+            User32.SetWindowPos(Handle, User32.HWND_TOP, rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top, User32.SWP_NOACTIVATE | User32.SWP_SHOWWINDOW);
+            return;
+        }
+        // 최대화가 아님: 앱 바를 풀고(엑셀은 제 크기 그대로), 엑셀 창의 높이에 맞춰 옆에 붙인다. 엑셀의 소유 창이라 늘 엑셀 위에 있고 엑셀이 최소화되면 함께 숨는다.
+        if (_appBar)
+        {
+            AppBar.Remove(Handle);
+            _appBar = false;
+        }
+        if (User32.IsIconic(_anchor)) return;
+        User32.SetWindowLongPtr(Handle, User32.GWLP_HWNDPARENT, _anchor);
+        var ex = User32.VisibleBounds(_anchor);
+        if (ex.IsEmpty) return;
+        var work = screen.WorkingArea;
+        int x = _left ? ex.X - px : ex.Right;
+        if (_left && x < work.Left) x = ex.X; // 바깥 자리가 없으면 엑셀 안쪽 가장자리에 겹친다
+        if (!_left && x + px > work.Right) x = ex.Right - px;
+        User32.SetWindowPos(Handle, User32.HWND_TOP, x, ex.Y, px, ex.Height, User32.SWP_NOACTIVATE | User32.SWP_SHOWWINDOW);
+    }
+
+    private void Hook()
+    {
+        if (_anchor == IntPtr.Zero || _hooked == _anchor) return;
+        Unhook();
+        uint tid = User32.GetWindowThreadProcessId(_anchor, out uint pid);
+        const uint flags = User32.WINEVENT_OUTOFCONTEXT | User32.WINEVENT_SKIPOWNPROCESS;
+        foreach (var (lo, hi) in new[] { (User32.EVENT_OBJECT_LOCATIONCHANGE, User32.EVENT_OBJECT_LOCATIONCHANGE), (User32.EVENT_SYSTEM_MINIMIZESTART, User32.EVENT_SYSTEM_MINIMIZEEND) })
+        {
+            var h = User32.SetWinEventHook(lo, hi, IntPtr.Zero, _proc, pid, tid, flags);
+            if (h != IntPtr.Zero) _hooks.Add(h);
+        }
+        _hooked = _anchor;
+    }
+
+    private void Unhook()
+    {
+        foreach (var h in _hooks) User32.UnhookWinEvent(h);
+        _hooks.Clear();
+        _hooked = IntPtr.Zero;
+    }
+
+    /// <summary>엑셀 창이 움직이거나 크기가 바뀌거나 최소화·복원되면 따라간다. 최대화 상태에서는 앱 바가 이미 일하므로 건드리지 않는다(다시 예약하면 엑셀 크기가 흔들린다).</summary>
+    private void OnWinEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
+    {
+        if (!_active || hwnd != _anchor || idObject != User32.OBJID_WINDOW || idChild != 0) return;
+        if (Maximized && _appBar && evt == User32.EVENT_OBJECT_LOCATIONCHANGE) return;
+        Reposition();
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if ((uint)msg == _callbackMsg && wParam.ToInt32() == AppBar.ABN_POSCHANGED) Reposition();
+        if ((uint)msg == _callbackMsg && wParam.ToInt32() == AppBar.ABN_POSCHANGED && _appBar) Reposition();
         return IntPtr.Zero;
     }
 
@@ -196,8 +264,10 @@ internal sealed class SidebarWindow : Window
     /// <summary>앱 바를 풀고 닫는다(프로그램 끝).</summary>
     public void Shutdown()
     {
-        if (_registered && Handle != IntPtr.Zero) AppBar.Remove(Handle);
-        _registered = false;
+        if (_appBar && Handle != IntPtr.Zero) AppBar.Remove(Handle);
+        _appBar = false;
+        _active = false;
+        Unhook();
         Close();
     }
 }
