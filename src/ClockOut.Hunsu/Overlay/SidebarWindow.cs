@@ -22,6 +22,7 @@ internal sealed partial class SidebarWindow : Window
     private readonly StackPanel _footer = new();
     private readonly DockPanel _barHost = new();
     private bool _tabs = true;
+    private bool _stay; // 자리 고정: 엑셀 창을 바꿔도 처음 붙은 창 옆에 그대로(내용만 지금 창)
     private bool _collapsed; // 접힘: 활동 막대만 남기고 폭을 줄인다(엑셀이 그만큼 넓어짐)
     private readonly StackPanel _items = new();
     private readonly ScrollViewer _scroll = new();
@@ -110,8 +111,9 @@ internal sealed partial class SidebarWindow : Window
     private double Scale() => PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
 
     /// <summary>왼쪽/오른쪽과 폭(DIP). 이미 켜져 있으면 바로 다시 자리를 잡는다.</summary>
-    public void Configure(string side, int widthDip, bool tabs = true, bool collapsed = false)
+    public void Configure(string side, int widthDip, bool tabs = true, bool collapsed = false, bool stay = false)
     {
+        if (stay != _stay) { _stay = stay; BuildFooter(); }
         _tabs = tabs;
         bool left = side == "left";
         bool changed = left != _left || collapsed != _collapsed;
@@ -148,7 +150,9 @@ internal sealed partial class SidebarWindow : Window
     /// <summary>엑셀이 있을 때만 켠다: 보이기, 최대화면 앱 바 등록(가장자리 예약), 아니면 엑셀 옆에 붙이기. 끄면 예약을 풀어 엑셀 창이 원래 크기로 돌아온다. anchor = 붙을 엑셀 창.</summary>
     public void SetActive(bool on, IntPtr anchor = default)
     {
-        if (anchor != IntPtr.Zero && anchor != _anchor)
+        // 자리 고정이면 붙어 있던 엑셀 창이 살아 있고 보이는 동안 다른 창으로 옮기지 않는다(두 창을 나란히 두고 비교할 때).
+        bool keep = _stay && _anchor != IntPtr.Zero && User32.IsWindow(_anchor) && !User32.IsIconic(_anchor);
+        if (anchor != IntPtr.Zero && anchor != _anchor && !keep)
         {
             _anchor = anchor;
             Unhook();
@@ -262,6 +266,7 @@ internal sealed partial class SidebarWindow : Window
             ("view", _tabs ? "≣" : "▤", _tabs ? "쌓아 보기로 바꾸기" : "탭 보기로 바꾸기"),
             ("cleanup", "🧹", "남은 엑셀 정리"),
             // 끄기 대신 접기·펴기(2026-11-17 사용자 요청). 끄기는 설정 창·훈 원 메뉴에 남아 있다.
+            ("stay", _stay ? "📌" : "📍", _stay ? "자리 고정 중: 엑셀 창을 바꿔도 여기 그대로 (누르면 따라가기)" : "따라가는 중: 앞에 나온 엑셀 창 옆으로 옮김 (누르면 자리 고정)"),
             ("fold", _collapsed == _left ? "»" : "«", _collapsed ? "사이드바 펴기" : "사이드바 접기 (아이콘 막대만)"),
         ];
         foreach (var (key, glyph, tip) in items)

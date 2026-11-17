@@ -66,18 +66,20 @@ internal sealed partial class ShellController
             case "profiles": OpenManager("profiles"); break;
             case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
             case "cleanup": OpenExcelCleanup(); break;
+            case "stay": ApplySetting("sidebarStay", !_settings.SidebarStay); break;
             case "fold": ApplySetting("sidebarCollapsed", !_settings.SidebarCollapsed); break;
         }
     }
 
     /// <summary>설정과 엑셀 유무에 맞춰 사이드바를 켜거나 끄고, 패널을 사이드바나 도크에 다시 놓는다.</summary>
-    private void UpdateSidebar()
+    private void UpdateSidebar(bool refresh = true)
     {
         if (_sidebar == null) return;
+        bool was = _sidebar.Reserved;
         bool want = _settings.Sidebar != "off" && !_hiddenAll && _target != IntPtr.Zero;
-        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs, _settings.SidebarCollapsed);
+        _sidebar.Configure(_settings.Sidebar, _settings.SidebarWidth, _settings.SidebarTabs, _settings.SidebarCollapsed, _settings.SidebarStay);
         _sidebar.SetActive(want, _target);
         _log.Write("sidebar", ("side", _settings.Sidebar), ("width", _settings.SidebarWidth), ("active", _sidebar.Reserved));
-        RefreshDocks();
+        if (refresh || was != _sidebar.Reserved) RefreshDocks(); // 창만 바뀐 것(Follow)이면 패널을 다시 놓지 않는다
     }
 }
