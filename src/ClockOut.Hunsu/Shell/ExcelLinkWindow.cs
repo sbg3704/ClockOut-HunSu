@@ -22,10 +22,10 @@ internal sealed class ExcelLinkWindow : Window
     {
         _shell = shell;
         Title = "훈수꾼 · 엑셀 연결";
-        Width = 520;
+        Width = 560;
         SizeToContent = SizeToContent.Height;
         MaxHeight = 560;
-        ResizeMode = ResizeMode.NoResize;
+        ResizeMode = ResizeMode.CanResize; MinWidth = 420; MinHeight = 260;
         Topmost = true;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         SetResourceReference(BackgroundProperty, "Hunsu.Surface");
@@ -44,16 +44,19 @@ internal sealed class ExcelLinkWindow : Window
             FontSize = (double)FindResource("Hunsu.FontSmall"),
             Margin = new Thickness(0, 0, 0, 10),
         });
+        // 점검 단추는 맨 위에 크게(사용자가 아래 줄에서 못 찾았다): 연결이 안 될 때 가장 먼저 눌러 볼 단추.
+        var top = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+        top.Children.Add(ManagerParts.Chip(this, "🔍 이 엑셀 점검 (안 붙을 때 먼저 누르세요)", true, Inspect));
+        root.Children.Add(top);
         root.Children.Add(_now);
         root.Children.Add(new ScrollViewer { Content = _list, MaxHeight = 300, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
-        buttons.Children.Add(ManagerParts.Chip(this, "이 엑셀 점검", false, Inspect));
+        var buttons = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         buttons.Children.Add(ManagerParts.Chip(this, "브리지 열기…", false, OpenBridge));
         buttons.Children.Add(ManagerParts.Chip(this, "결과 복사", false, CopyStatus));
         buttons.Children.Add(ManagerParts.Chip(this, "새로고침", false, Rebuild));
         buttons.Children.Add(ManagerParts.Chip(this, "창 눌러 고르기", false, PickWindow));
         buttons.Children.Add(ManagerParts.Chip(this, "자동으로 되돌리기", false, () => { _shell.UnlinkExcel(); _status.Text = "자동 찾기로 되돌렸습니다."; Rebuild(); }));
-        buttons.Children.Add(ManagerParts.Chip(this, "닫기", true, Close));
+        buttons.Children.Add(ManagerParts.Chip(this, "닫기", false, Close));
         root.Children.Add(buttons);
         _status.FontSize = (double)FindResource("Hunsu.FontSmall");
         _status.Foreground = (Brush)FindResource(ThemeKeys.Muted);

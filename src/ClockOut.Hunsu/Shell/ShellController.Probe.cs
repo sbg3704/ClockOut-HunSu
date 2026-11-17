@@ -14,6 +14,7 @@ internal sealed partial class ShellController
     private DispatcherTimer? _probeTimer;
     private bool _probing;
     private readonly HashSet<IntPtr> _toldNoAttach = [];
+    private readonly HashSet<IntPtr> _toldNoBooks = [];
 
     /// <summary>따라가는 엑셀에 hello를 불러 본다. 곧바로 한 번(엑셀이 막 켜졌을 수 있어 0.6초 뒤), 안 되면 5초마다.</summary>
     private void StartProbe()
@@ -56,6 +57,7 @@ internal sealed partial class ShellController
                 _probeTimer?.Stop();
                 _log.Write("probe_ok", ("excel", hwnd.ToInt64()), ("recovered", wasDown), ("ms", Math.Round(call.Ms, 1)));
                 _registry.Refresh(hwnd, AllEnabledTopics()); // 신호를 기다리지 않고 지금 값을 채운다
+                _ = CheckOpenBooksAsync(hwnd);
                 return;
             }
             string code = call.ErrorCode;
@@ -69,6 +71,22 @@ internal sealed partial class ShellController
         {
             _probing = false;
         }
+    }
+
+    /// <summary>다리는 되는데 패널이 비는 흔한 이유: 열린 통합 문서가 없거나, 파일이 「보호된 보기」로 열려 있다(그때 ActiveWorkbook이 비어 다리가 "열린 통합 문서가 없음"을 돌려준다, 2026-11-17 VM 재현). 이유를 기록하고 풍선으로 한 번 알린다.</summary>
+    private async Task CheckOpenBooksAsync(IntPtr hwnd)
+    {
+        try
+        {
+            var r = await _registry.InspectAsync(hwnd);
+            _log.Write("books_check", ("excel", hwnd.ToInt64()), ("books", r.Workbooks), ("pv", r.ProtectedViews), ("active", r.ActiveBook));
+            if (!r.Attached || r.Workbooks > 0) return;
+            if (!_toldNoBooks.Add(hwnd)) return;
+            _tray.Balloon(r.ProtectedViews > 0
+                ? "이 엑셀의 파일이 「보호된 보기」로 열려 있어 훈수꾼이 읽지 못해요. 엑셀 위쪽 노란 막대의 「편집 사용」을 눌러 주세요."
+                : "이 엑셀에는 열린 통합 문서가 없어요. 파일을 열면 훈수꾼이 채워져요.");
+        }
+        catch (Exception ex) { _log.Write("books_check_exception", ("type", ex.GetType().Name), ("msg", ex.Message)); }
     }
 
     /// <summary>조회가 한 번이라도 성공했다: 더 두드려 볼 필요가 없다.</summary>

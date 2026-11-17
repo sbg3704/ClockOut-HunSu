@@ -355,6 +355,12 @@
 ## 2026-11-17 새 기능 후보 목록 시작
 - 사용자 아이디어 "참조 전용 팝업 창"(다른 시트를 팝업에 띄워 클릭으로 수식 참조)을 검토만 하고 사용자 지시로 보류. `docs/20_새_기능_후보.md`에 방식 A(엑셀 새 창 자동 배치, 추천)·B(직접 그리기)와 제약을 적음. 코드 변경 없음.
 
+## 0.0.213 연결 창 레이아웃과 "열린 통합 문서가 없습니다" 원인 (2026-11-17)
+- 사용자: 연결 창 단추가 잘림, 점검 단추가 안 보임, 창 크기 고정, 연결이 안 되고 "열린 통합 문서가 없습니다"만 뜸. VM(C:\CO\hunsu-main worktree, COM, 화면 조작 없음)에서 0.0.212를 재현: 엑셀 창 감지(숨김·보임 모두)·AccessibleObjectFromWindow·다리 호출·응답 파싱 전부 정상(probe_ok, render ok). 다리 없음이면 probe_failed bridge_missing이 5초마다. 연결 끊김은 재현 안 됨.
+- "열린 통합 문서가 없습니다"는 hunsu-sheets의 빈 문구이고, 다리는 ActiveWorkbook이 Nothing이면 range_bad "열린 통합 문서가 없음"을 돌려준다. 통합 문서가 없거나 파일이 **보호된 보기**일 때 그렇다(보호된 보기 창만 있으면 Workbooks.Count 0). 보호된 보기 자체는 VM에서 끝까지 못 열어 봄(ProtectedViewWindows.Open 0x800A03EC). 사용자 PC에서 확정 못 함 → 사용자의 「이 엑셀 점검」 결과(books·pv)와 로그 books_check 줄로 가른다.
+- 고침: probe_ok 직후 CheckOpenBooksAsync가 점검해 books_check를 기록하고 통합 문서 0개면 풍선(보호된 보기/문서 없음). 연결 창은 WrapPanel, 점검 단추 맨 위, ResizeMode=CanResize(+MinWidth) — ExcelLinkWindow, ExcelCleanupWindow, WriteDialog.
+- 남은 일: 확인용 엑셀이 다운로드 표시(MOTW)를 달고 가 보호된 보기로 열리는지 사용자 PC에서 확인. 맞으면 co build가 xlsx를 복사할 때 표시를 지운다(Unblock-File).
+
 ## 0.0.212 0.0.211 강제 종료 고침 (2026-11-17)
 - 사용자: 0.0.211이 엑셀이 있으면 켜자마자 오류로 꺼짐. **원인(코드로 확정, 내가 낸 버그):** ShellController.Probe의 StartProbe가 `new DispatcherTimer(간격, 우선순위, null!, dispatcher)`로 콜백에 null을 넘겨 ArgumentNullException. Follow()가 StartProbe를 부르므로 엑셀을 따라가는 순간(시작 때 엑셀이 있으면 OnReady) 그대로 터졌다. 데모만의 문제가 아니었다(엑셀이 있으면 모두). 데모에서만 터지는 것처럼 보인 건 사용자가 데모를 열어 시험했기 때문.
 - 고침: 타이머를 콜백 없이 만들고 Tick에 따로 붙임. 방어: ExcelStaWorker의 모든 작업 스레드 일을 Run()으로 감싸 예상 밖 예외가 스레드·프로세스를 죽이지 못하게 하고(실패 값 반환, COM 참조 놓기), InstanceRegistry의 async void(Request, RefreshIfViewMoved), ProbeOnce, 연결 창 async void에 try/catch와 기록(query_exception, probe_exception 등).
