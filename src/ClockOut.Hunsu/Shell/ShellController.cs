@@ -200,14 +200,15 @@ internal sealed partial class ShellController : IDisposable
         Follow(fg);
     }
 
-    /// <summary>모듈이 없는 도크는 창을 숨겨 둔다(빈 투명 창과 훈 원도 보이지 않게). 기본은 왼쪽 도크 하나이고, 오른쪽 도크는 사용자가 모듈을 옮겨 놓았을 때만 나타난다. _followers[0]=오른쪽, [1]=왼쪽.</summary>
+    /// <summary>모듈이 없는 도크는 창을 숨겨 둔다(빈 투명 창과 훈 원도 보이지 않게). 왼쪽 도크는 비어도 훈 원이 남고, 오른쪽 도크는 사용자가 모듈을 옮겨 놓았을 때만 나타난다. _followers[0]=오른쪽, [1]=왼쪽.</summary>
     private void UpdateDockVisibility()
     {
         if (_followers.Count < 2) return;
         (WindowFollower f, DockWindow dock)[] docks = [(_followers[0], _right), (_followers[1], _left)];
         foreach (var (f, dock) in docks)
         {
-            bool any = dock.Modules.Count > 0;
+            // 왼쪽 도크(훈 원)는 모듈이 하나도 없어도 늘 보인다: 훈수꾼이 켜져 있다는 표시이고, 우클릭 메뉴(모듈 관리)로 가는 길이다(2026-11-17 "안 보여" 신고).
+            bool any = dock.Modules.Count > 0 || dock == _left;
             f.Suspended = _hiddenAll || !any;
             f.Sync(any ? "show" : "empty");
         }
