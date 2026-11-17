@@ -165,10 +165,13 @@ internal sealed class LookPage : ScrollViewer
 
     private FrameworkElement Row(FrameworkElement control, string text)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        // 설명 글은 남은 폭에서 줄바꿈한다(좁은 창에서 오른쪽 끝이 잘리지 않게).
+        var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2), LastChildFill = true };
         control.Margin = new Thickness(0, 0, 12, 0);
+        control.VerticalAlignment = VerticalAlignment.Center;
+        DockPanel.SetDock(control, Dock.Left);
         row.Children.Add(control);
-        row.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, Foreground = (Brush)FindResource(ThemeKeys.Muted), FontSize = (double)FindResource("Hunsu.FontSmall") });
+        row.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Foreground = (Brush)FindResource(ThemeKeys.Muted), FontSize = (double)FindResource("Hunsu.FontSmall") });
         return row;
     }
 
