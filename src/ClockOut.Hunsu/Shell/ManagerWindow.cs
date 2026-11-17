@@ -37,14 +37,15 @@ internal sealed class ManagerWindow : Window
         MinWidth = 480;
         MinHeight = 360;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Background = (Brush)FindResource("Hunsu.Surface");
-        Foreground = (Brush)FindResource(ThemeKeys.Text);
-        FontFamily = (FontFamily)FindResource("Hunsu.Font");
+        SetResourceReference(BackgroundProperty, "Hunsu.Surface"); // 룩·테마를 바꾸면 따라간다
+        SetResourceReference(ForegroundProperty, ThemeKeys.Text);
+        SetResourceReference(FontFamilyProperty, "Hunsu.Font");
         FontSize = (double)FindResource("Hunsu.FontBody");
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         Content = BuildLayout();
         _shell.ModulesChanged += Rebuild;
-        Closed += (_, _) => _shell.ModulesChanged -= Rebuild;
+        ThemePicker.SkinChanged += OnSkinChanged;
+        Closed += (_, _) => { _shell.ModulesChanged -= Rebuild; ThemePicker.SkinChanged -= OnSkinChanged; };
         Rebuild();
         ShowPage(page);
     }
@@ -84,6 +85,30 @@ internal sealed class ManagerWindow : Window
         _tabs.Children.Add(ManagerParts.Chip(this, "옵션", _page == "options", () => ShowPage("options")));
         _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
         _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
+    }
+
+    /// <summary>룩·테마가 바뀌면 창 안을 새 색으로 다시 짓는다. 부품들이 만들 때 색을 한 번 읽으므로(FindResource) 옛 색이 남아
+    /// 밝은 바탕에 밝은 글씨처럼 안 읽히던 문제를 막는다(2026-11-17 사용자 신고).</summary>
+    private void OnSkinChanged()
+    {
+        // 단추를 누른 처리 중에 불릴 수 있어 그 처리가 끝난 뒤 다시 짓는다.
+        Dispatcher.BeginInvoke(RebuildForTheme);
+    }
+
+    private void RebuildForTheme()
+    {
+        // 다시 쓰는 부품을 옛 부모에서 떼어 낸다(한 부품은 부모가 하나뿐).
+        foreach (var e in new UIElement[] { _tabs, _body, _summary })
+            if (e is FrameworkElement { Parent: Panel p }) p.Children.Remove(e);
+        if (_modulesView != null) _modulesView.Content = null;
+        _look = null;
+        _general = null;
+        _profiles = null;
+        _options = null;
+        _body.Child = null;
+        Content = BuildLayout();
+        Rebuild();
+        ShowPage(_page);
     }
 
     private UIElement BuildLayout()
