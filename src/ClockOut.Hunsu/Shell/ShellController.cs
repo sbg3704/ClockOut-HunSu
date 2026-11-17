@@ -247,7 +247,14 @@ internal sealed partial class ShellController : IDisposable
     private void Quit()
     {
         _log.Write("quit");
-        Application.Current.Shutdown();
+        try { Application.Current.Shutdown(); }
+        catch (Exception ex)
+        {
+            // 종료 중 어셈블리를 못 찾는 따위로 실패해도 앱이 오류로 죽지 않고 조용히 끝나게 한다.
+            ErrorLog.Caught("Quit", ex);
+            try { Dispose(); } catch (Exception ex2) { ErrorLog.Caught("Quit.Dispose", ex2); }
+            Environment.Exit(0);
+        }
     }
 
     private void Snap(string name, FrameworkElement root)
@@ -257,8 +264,12 @@ internal sealed partial class ShellController : IDisposable
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { _log.Write("snapshot_failed", ("name", name)); }
     }
 
+    private bool _disposed;
+
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
         _cleanupTimer?.Stop();
         _store.Flush();
         _log.Write("exit");

@@ -38,6 +38,17 @@ internal sealed class ExcelStaWorker : IDisposable
 
     public IntPtr ExcelHwnd { get; }
 
+    /// <summary>작업 스레드에서 한 일을 돌린다. 예상 밖 예외(COM 아닌 것)가 나도 스레드가 죽어 훈수꾼이 꺼지지 않게 막고, 기다리는 쪽에는 실패 값을 돌려준다.</summary>
+    private void Run<T>(TaskCompletionSource<T> tcs, Func<T> work, Func<Exception, T> failed)
+    {
+        try { tcs.SetResult(work()); }
+        catch (Exception ex)
+        {
+            Release(); // 이상한 상태일 수 있으니 COM 참조를 놓고 다음에 다시 붙는다
+            tcs.TrySetResult(failed(ex));
+        }
+    }
+
     private void Loop()
     {
         OleMessageFilter.Register(_filter);
@@ -58,7 +69,7 @@ internal sealed class ExcelStaWorker : IDisposable
         var tcs = new TaskCompletionSource<BridgeCall>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            _queue.Add(() => tcs.SetResult(CallOnThread(proc, args)));
+            _queue.Add(() => Run(tcs, () => CallOnThread(proc, args), ex => new BridgeCall(false, null, ex.HResult, 0, 0, 0, "exception:" + ex.GetType().Name)));
         }
         catch (InvalidOperationException)
         {
@@ -73,7 +84,7 @@ internal sealed class ExcelStaWorker : IDisposable
         var tcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            _queue.Add(() => tcs.SetResult(ViewKeyOnThread()));
+            _queue.Add(() => Run(tcs, ViewKeyOnThread, _ => null));
         }
         catch (InvalidOperationException)
         {
@@ -117,7 +128,7 @@ internal sealed class ExcelStaWorker : IDisposable
     public Task<ExcelInspect> InspectAsync()
     {
         var tcs = new TaskCompletionSource<ExcelInspect>(TaskCreationOptions.RunContinuationsAsynchronously);
-        try { _queue.Add(() => tcs.SetResult(InspectOnThread())); }
+        try { _queue.Add(() => Run(tcs, InspectOnThread, ex => new ExcelInspect(false, _attach, false, 0, 0, "", false, false, ex.GetType().Name + ": " + ex.Message))); }
         catch (InvalidOperationException) { tcs.SetResult(new ExcelInspect(false, "closed", false, 0, 0, "", false, false, "작업 스레드가 닫혔습니다")); }
         return tcs.Task;
     }
@@ -168,7 +179,7 @@ internal sealed class ExcelStaWorker : IDisposable
     public Task<string> OpenBridgeAsync(string path)
     {
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-        try { _queue.Add(() => tcs.SetResult(OpenBridgeOnThread(path))); }
+        try { _queue.Add(() => Run(tcs, () => OpenBridgeOnThread(path), ex => ex.GetType().Name + ": " + ex.Message)); }
         catch (InvalidOperationException) { tcs.SetResult("작업 스레드가 닫혔습니다"); }
         return tcs.Task;
     }

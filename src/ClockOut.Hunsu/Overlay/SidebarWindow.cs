@@ -249,6 +249,12 @@ internal sealed partial class SidebarWindow : Window
     /// <summary>엑셀 창이 움직이거나 크기가 바뀌거나 최소화·복원되면 따라간다. 최대화 상태에서는 앱 바가 이미 일하므로 건드리지 않는다(다시 예약하면 엑셀 크기가 흔들린다).</summary>
     private void OnWinEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
     {
+        try { OnWinEventCore(evt, hwnd, idObject, idChild); }
+        catch (Exception ex) { Diagnostics.ErrorLog.Caught("Sidebar.WinEvent", ex); }
+    }
+
+    private void OnWinEventCore(uint evt, IntPtr hwnd, int idObject, int idChild)
+    {
         if (!_active || hwnd != _anchor || idObject != User32.OBJID_WINDOW || idChild != 0) return;
         if (Maximized && _appBar && evt == User32.EVENT_OBJECT_LOCATIONCHANGE) return;
         Reposition();

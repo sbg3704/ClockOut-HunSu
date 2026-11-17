@@ -66,8 +66,12 @@ internal sealed class ExcelLinkWindow : Window
     private async void Inspect()
     {
         _status.Text = "점검 중…";
-        var (text, _) = await _shell.InspectTargetAsync();
-        _status.Text = text;
+        try
+        {
+            var (text, _) = await _shell.InspectTargetAsync();
+            _status.Text = text;
+        }
+        catch (Exception ex) { _status.Text = "점검하다 막혔습니다: " + ex.GetType().Name + " " + ex.Message; }
     }
 
     private void CopyStatus()
@@ -76,7 +80,11 @@ internal sealed class ExcelLinkWindow : Window
         catch (System.Runtime.InteropServices.ExternalException) { _status.Text += "\n(복사하지 못했습니다. 글을 끌어 선택해 Ctrl+C로 복사하세요)"; }
     }
 
-    private async void OpenBridge() => _status.Text = await _shell.OpenBridgeInTargetAsync();
+    private async void OpenBridge()
+    {
+        try { _status.Text = await _shell.OpenBridgeInTargetAsync(); }
+        catch (Exception ex) { _status.Text = "다리를 열다 막혔습니다: " + ex.GetType().Name + " " + ex.Message; }
+    }
 
     private void PickWindow()
     {

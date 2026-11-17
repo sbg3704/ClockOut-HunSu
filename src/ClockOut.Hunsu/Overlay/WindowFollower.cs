@@ -61,6 +61,12 @@ internal sealed class WindowFollower : IDisposable
 
     private void OnWinEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
     {
+        try { OnWinEventCore(evt, hwnd, idObject, idChild); }
+        catch (Exception ex) { Diagnostics.ErrorLog.Caught("Follower.WinEvent", ex); }
+    }
+
+    private void OnWinEventCore(uint evt, IntPtr hwnd, int idObject, int idChild)
+    {
         if (hwnd != _target || idObject != User32.OBJID_WINDOW || idChild != 0) return;
         if (evt == User32.EVENT_OBJECT_DESTROY)
         {
