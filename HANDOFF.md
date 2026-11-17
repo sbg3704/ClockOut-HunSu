@@ -291,3 +291,9 @@
 
 ## 0.0.161 사이드바: 최대화가 아닐 때 엑셀 옆에 붙기 (2026-11-17)
 - SidebarWindow: 엑셀 최대화면 앱 바, 아니면 엑셀 높이에 맞춰 바깥 옆구리에 붙고 창을 따라감(SetWinEventHook). docs/18 끝 절. 빌드 0 오류, 화면 시험은 못 함(사용자 확인 필요: 복원 상태에서 옆 붙기, 최대화 전환).
+
+## 안내문 규칙 적용 (판 0.0.162, 2026-11-17)
+- 칼퇴 소개 화면용 묶음 규칙(claude-workspace `docs/하위프로그램_안내문_규칙.md`)을 적용했다. `hunsu.app.json`의 version은 `pack_app.ps1 -Version`(= Directory.Build.props)에서 오므로 판을 올리면 자동으로 따라온다.
+- 사용법·패치노트 원본은 `assets/guide/hunsu.guide.md`, `hunsu.changes.md`(zip 맨 위로 복사). **판을 올리는 PR은 패치노트 맨 위에 `## v<판> (날짜)` 항목을 더한다**(안 하면 포장이 실패).
+- `tools/check_guide.ps1`(pwsh 7, 파이썬 없음)가 zip을 만든 직후 검사한다: UTF-8, 256KB, HTML·표·링크·중첩 글머리 금지, 판 일치.
+- 확인한 범위: 두 md가 규칙에 맞는지만 다른 방법으로 확인. 검사 스크립트와 포장은 pwsh가 없는 클라우드에서 돌리지 못했다(PC에서 `co build hunsu main` 필요, 실패하면 메시지대로 고치면 됨). 칼퇴 개발자 모드 zip 설치 후 소개 화면 눈 확인도 아직이다.

@@ -4,7 +4,9 @@
         hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
         addins\clockout-hunsu.zip      다리 추가기능 패키지(clockout-hunsu.xlam + clockout-hunsu.clockout.json). 칼퇴가 기존 추가기능 흐름으로 설치
+        hunsu.guide.md, hunsu.changes.md   칼퇴 소개 화면의 사용법·패치노트(assets\guide에서 복사, 규칙은 claude-workspace docs/하위프로그램_안내문_규칙.md)
         LICENSE.txt, README.txt
+      zip을 만든 직후 tools\check_guide.ps1이 안내문 규칙을 검사하고, 어기면 포장이 실패한다.
       끝나면 SHA-256과 크기, 카탈로그 apps 항목 예시를 출력한다(out\pack\hunsu.zip, .sha256, catalog-entry.json).
 사용법: pwsh -File tools\pack_app.ps1 -Version 0.1.000 [-SkipBridge]
         -SkipBridge: 엑셀 없이(이미 만든 out\clockout-hunsu.xlam을 그대로 씀)
@@ -49,6 +51,11 @@ $manifest = [ordered]@{
 }
 $utf8 = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 3), $utf8)
+foreach ($g in 'hunsu.guide.md', 'hunsu.changes.md') {
+    $src = Join-Path $repo "assets\guide\$g"
+    if (-not (Test-Path $src)) { Write-Host "[중단] $src 가 없습니다(칼퇴 안내문 규칙)." -ForegroundColor Red; exit 1 }
+    Copy-Item $src (Join-Path $stage $g)
+}
 Copy-Item (Join-Path $repo 'LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
 [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), "훈수꾼 $Version`r`n칼퇴 좌측 레일에서 설치·켜기·끄기를 합니다. 직접 실행: app\ClockOut.Hunsu.exe`r`n.NET 런타임을 따로 설치하지 않아도 됩니다(self-contained).`r`n", $utf8)
 
@@ -64,6 +71,8 @@ try {
         [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zs, $f.FullName, $entryName, [IO.Compression.CompressionLevel]::Optimal)
     }
 } finally { $zs.Dispose() }
+pwsh -NoProfile -File (Join-Path $repo 'tools\check_guide.ps1') -Zip $zip -Version $Version
+if ($LASTEXITCODE -ne 0) { Remove-Item $zip -ErrorAction SilentlyContinue; Write-Host '[중단] 안내문 검사 실패: 패치노트 맨 위 항목과 hunsu.guide.md를 고치세요(assets\guide).' -ForegroundColor Red; exit 1 }
 $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $size = (Get-Item $zip).Length
 "$sha  hunsu.zip" | Set-Content -Encoding ascii (Join-Path $out 'hunsu.zip.sha256')
