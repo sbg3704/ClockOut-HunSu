@@ -196,6 +196,12 @@ internal sealed class InstanceRegistry : IDisposable
     /// <summary>hello를 불러 거절·재시도 결과를 본다(측정 도구와 연결 확인용).</summary>
     public Task<BridgeCall> ProbeAsync(IntPtr hwnd) => Get(hwnd).Worker.CallAsync("CoHunsu_Hello");
 
+    /// <summary>이 엑셀을 읽기만 해서 다리가 열려 있는지 등을 본다(엑셀 연결 창의 점검).</summary>
+    public Task<ExcelInspect> InspectAsync(IntPtr hwnd) => Get(hwnd).Worker.InspectAsync();
+
+    /// <summary>다리 파일을 이 엑셀에서 연다(사용자 확인 뒤에만). 돌려주는 글이 비면 성공.</summary>
+    public Task<string> OpenBridgeAsync(IntPtr hwnd, string path) => Get(hwnd).Worker.OpenBridgeAsync(path);
+
     /// <summary>엑셀 창이 없어진 인스턴스의 COM 참조를 놓는다. 참조를 쥐고 있으면 사용자가 엑셀을 닫아도 EXCEL.EXE가 창 없이 남기 때문이다(작업 관리자에 계속 보임).</summary>
     public int ReleaseGone()
     {

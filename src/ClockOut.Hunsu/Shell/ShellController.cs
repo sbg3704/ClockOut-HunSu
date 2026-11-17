@@ -85,6 +85,7 @@ internal sealed partial class ShellController : IDisposable
         _tray.ManagerClicked += () => OpenManager();
         _tray.LookClicked += () => OpenManager("look");
         _tray.ExcelCleanupClicked += OpenExcelCleanup;
+        _tray.ExcelLinkClicked += OpenExcelLink;
         foreach (var d in new[] { _right, _left })
         {
             d.ModuleIconClicked += OnModuleIcon;
@@ -99,6 +100,7 @@ internal sealed partial class ShellController : IDisposable
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
             d.ExcelCleanupRequested += OpenExcelCleanup;
+            d.ExcelLinkRequested += OpenExcelLink;
             var side = d.Side;
             d.SetCenterRatio(_store.State.DockRatio(side));
             d.HubDropped += (ratio, x) => OnHubDropped(side, ratio, x);
@@ -124,7 +126,7 @@ internal sealed partial class ShellController : IDisposable
 
     private void OnReady()
     {
-        IntPtr target = _options.FollowHwnd != 0 ? new IntPtr(_options.FollowHwnd) : ExcelWindows.FindVisibleMain();
+        IntPtr target = _options.FollowHwnd != 0 ? new IntPtr(_options.FollowHwnd) : FindTargetExcel();
         if (target != IntPtr.Zero) Follow(target);
         PlaceAll(); // 핀 창은 엑셀 창(소유 창)을 안 뒤에 놓는다
         if (target == IntPtr.Zero) HideDocksAndWait();
@@ -193,9 +195,10 @@ internal sealed partial class ShellController : IDisposable
         UpdateSidebarOffNoTarget();
         _finder ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) =>
         {
-            var hwnd = ExcelWindows.FindVisibleMain();
-            if (hwnd == IntPtr.Zero) return;
+            var hwnd = FindTargetExcel();
+            if (hwnd == IntPtr.Zero) { NoteNoExcelWindow(); return; }
             _finder!.Stop();
+            _noExcelTicks = 0;
             Follow(hwnd);
             if (!_hiddenAll) foreach (var p in ActivePins()) p.Reappear();
         }, Application.Current.Dispatcher);
@@ -207,6 +210,8 @@ internal sealed partial class ShellController : IDisposable
     {
         if (!isExcel) HideHuds();
         if (!isExcel || _options.FollowHwnd != 0 || fg == _target) return;
+        var linked = LinkedMain();
+        if (linked != IntPtr.Zero && fg != linked) return; // 직접 연결한 엑셀만 따라간다
         _log.Write("retarget", ("from", _target.ToInt64()), ("to", fg.ToInt64()));
         Follow(fg);
     }

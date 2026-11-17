@@ -9,6 +9,9 @@ using ClockOut.Hunsu.Core;
 
 namespace ClockOut.Hunsu.Excel;
 
+/// <summary>엑셀 인스턴스의 겉모습 점검 결과(읽기만 한 것). Attached=COM으로 붙었나, BridgeLoaded=다리 통합 문서가 열려 있나, ProtectedViews=보호된 보기 창 수(0이 아니면 다리가 그 파일을 못 봄), ActiveBook·ActiveReadOnly=지금 앞의 통합 문서, Ready=엑셀이 입력을 받을 수 있나, Error=읽다가 막힌 이유.</summary>
+internal sealed record ExcelInspect(bool Attached, string Attach, bool BridgeLoaded, int Workbooks, int ProtectedViews, string ActiveBook, bool ActiveReadOnly, bool Ready, string Error);
+
 /// <summary>다리 호출 한 번의 결과. Json은 다리가 돌려준 글(호출 자체가 실패하면 null).</summary>
 internal sealed record BridgeCall(bool Ok, string? Json, int HResult, int Retries, int RejectType, double Ms, string Attach)
 {
@@ -107,6 +110,84 @@ internal sealed class ExcelStaWorker : IDisposable
         {
             if (sheet != null && Marshal.IsComObject(sheet)) Marshal.ReleaseComObject(sheet);
             if (win != null && Marshal.IsComObject(win)) Marshal.ReleaseComObject(win);
+        }
+    }
+
+    /// <summary>이 엑셀을 속성으로만 읽어 다리가 열려 있는지 등을 본다(매크로를 돌리지 않고 아무것도 바꾸지 않는다).</summary>
+    public Task<ExcelInspect> InspectAsync()
+    {
+        var tcs = new TaskCompletionSource<ExcelInspect>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try { _queue.Add(() => tcs.SetResult(InspectOnThread())); }
+        catch (InvalidOperationException) { tcs.SetResult(new ExcelInspect(false, "closed", false, 0, 0, "", false, false, "작업 스레드가 닫혔습니다")); }
+        return tcs.Task;
+    }
+
+    private ExcelInspect InspectOnThread()
+    {
+        _app ??= ExcelLocator.Find(ExcelHwnd, out _attach);
+        if (_app == null) return new ExcelInspect(false, _attach, false, 0, 0, "", false, false, "이 창의 엑셀에 COM으로 붙지 못했습니다");
+        bool bridge = false, ro = false, ready = false;
+        int books = 0, pv = 0;
+        string active = "", error = "";
+        try
+        {
+            var wbs = Com.Get(_app, "Workbooks")!;
+            books = Convert.ToInt32(Com.Get(wbs, "Count"), System.Globalization.CultureInfo.InvariantCulture);
+            for (int i = 1; i <= books && !bridge; i++)
+            {
+                var wb = Com.Call(wbs, "Item", i);
+                if (wb == null) continue;
+                try { bridge = string.Equals(Com.Get(wb, "Name") as string, ExcelLocator.BridgeFile, StringComparison.OrdinalIgnoreCase); }
+                finally { Marshal.ReleaseComObject(wb); }
+            }
+            Marshal.ReleaseComObject(wbs);
+            ready = Com.Get(_app, "Ready") is true;
+            try
+            {
+                var pvs = Com.Get(_app, "ProtectedViewWindows");
+                if (pvs != null) { pv = Convert.ToInt32(Com.Get(pvs, "Count"), System.Globalization.CultureInfo.InvariantCulture); Marshal.ReleaseComObject(pvs); }
+            }
+            catch (COMException) { /* 오래된 엑셀엔 보호된 보기 목록이 없다 */ }
+            var ab = Com.Get(_app, "ActiveWorkbook");
+            if (ab != null)
+            {
+                active = Com.Get(ab, "Name") as string ?? "";
+                ro = Com.Get(ab, "ReadOnly") is true;
+                Marshal.ReleaseComObject(ab);
+            }
+        }
+        catch (COMException ex)
+        {
+            error = HResultNames.Name(ex.HResult);
+            if (HResultNames.IsGone(ex.HResult)) Release();
+        }
+        return new ExcelInspect(true, _attach, bridge, books, pv, active, ro, ready, error);
+    }
+
+    /// <summary>다리 파일을 이 엑셀에서 연다(추가기능 파일을 통합 문서로 여는 것뿐, 엑셀 설정과 다른 파일은 안 건드린다). 사용자가 확인한 뒤에만 부른다. 돌려주는 글이 비면 성공.</summary>
+    public Task<string> OpenBridgeAsync(string path)
+    {
+        var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try { _queue.Add(() => tcs.SetResult(OpenBridgeOnThread(path))); }
+        catch (InvalidOperationException) { tcs.SetResult("작업 스레드가 닫혔습니다"); }
+        return tcs.Task;
+    }
+
+    private string OpenBridgeOnThread(string path)
+    {
+        _app ??= ExcelLocator.Find(ExcelHwnd, out _attach);
+        if (_app == null) return "이 창의 엑셀에 COM으로 붙지 못했습니다";
+        try
+        {
+            var wbs = Com.Get(_app, "Workbooks")!;
+            var wb = Com.Call(wbs, "Open", path);
+            if (wb != null) Marshal.ReleaseComObject(wb);
+            Marshal.ReleaseComObject(wbs);
+            return "";
+        }
+        catch (COMException ex)
+        {
+            return HResultNames.Name(ex.HResult);
         }
     }
 

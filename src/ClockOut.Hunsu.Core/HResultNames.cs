@@ -12,6 +12,8 @@ public static class HResultNames
     public const int RpcDisconnected = unchecked((int)0x80010108);
     public const int ExcelVbaIgnore = unchecked((int)0x800AC472);
     public const int DispException = unchecked((int)0x80020009);
+    /// <summary>엑셀 1004(0x800A03EC). Application.Run이 다리 매크로를 찾지 못하거나 매크로가 막혔을 때 나온다(다리 함수는 안에서 오류를 다 잡아 JSON으로 돌려주므로 여기까지 오면 다리를 부르지 못한 것).</summary>
+    public const int ExcelRunFailed = unchecked((int)0x800A03EC);
 
     public static string Name(int hr) => hr switch
     {
@@ -22,6 +24,7 @@ public static class HResultNames
         RpcDisconnected => "RPC_E_DISCONNECTED",
         ExcelVbaIgnore => "VBA_E_IGNORE",
         DispException => "DISP_E_EXCEPTION",
+        ExcelRunFailed => "EXCEL_1004",
         0 => "S_OK",
         _ => "0x" + hr.ToString("X8"),
     };
@@ -33,5 +36,5 @@ public static class HResultNames
     public static bool IsGone(int hr) => hr is RpcServerUnavailable or RpcCallFailed or RpcDisconnected;
 
     /// <summary>틀이 보고하는 고정 오류 코드(docs/01 7.4장).</summary>
-    public static string ToErrorCode(int hr) => IsBusy(hr) ? "excel_busy" : IsGone(hr) ? "excel_missing" : "query_failed";
+    public static string ToErrorCode(int hr) => IsBusy(hr) ? "excel_busy" : IsGone(hr) ? "excel_missing" : hr == ExcelRunFailed ? "bridge_missing" : "query_failed";
 }
