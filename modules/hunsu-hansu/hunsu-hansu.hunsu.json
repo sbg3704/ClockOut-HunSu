@@ -1,0 +1,23 @@
+{
+  "spec": 0,
+  "id": "hunsu-hansu",
+  "name": "한 수",
+  "version": "0.1.000",
+  "host": "excel",
+  "category": "수식",
+  "author": "ClockOut",
+  "description": "수식 짜기를 돕는 함수도우미입니다. 하고 싶은 일(예: 조건 합, ㅈㄱㅎ)로 함수를 찾고, 빈칸을 누른 뒤 엑셀에서 범위를 끌어 채우면 수식을 완성해 고른 칸에 넣어 줍니다. 넣기 전에 값을 미리 보여 주고 바로 되돌릴 수 있습니다.",
+  "dependencies": [
+    {"id": "clockout-hunsu", "min_version": "0.0.021", "reason": "선택 요약으로 고른 범위를 알고, write.formula.set으로 수식을 넣습니다"}
+  ],
+  "shapes": ["tab", "panel", "window"],
+  "place": "edge-left",
+  "order": 430,
+  "icon": "edit",
+  "data": [
+    {"topic": "selection.summary", "on": ["sel"], "weight": "light"}
+  ],
+  "commands": ["app.hansu.open", "write.formula.set", "write.formula.undo"],
+  "scope": "selection",
+  "params": []
+}
