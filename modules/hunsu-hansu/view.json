@@ -1,0 +1,8 @@
+{
+  "tab": { "title": "한 수", "tone": "info" },
+  "panel": [
+    { "type": "text", "text": "넣을 칸: {selection.summary.sheet} ! {selection.summary.addr}", "tone": "muted" },
+    { "type": "text", "text": "하고 싶은 일로 함수를 찾고, 빈칸을 누른 뒤 엑셀에서 범위를 끌면 수식이 짜여요." },
+    { "type": "button", "text": "한 수 두기 (함수 찾기)", "command": "app.hansu.open" }
+  ]
+}

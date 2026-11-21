@@ -82,6 +82,17 @@ try {
     $g = (& $run 'CoHunsu_Do' 'goto' '{}') | ConvertFrom-Json
     Check 'goto 주소 없음 → command_failed' ($g.ok -eq $false -and $g.code -eq 'command_failed')
 
+    Write-Host "write.formula.set (한 수, 다리 0.0.021)"
+    $fa = '{"sheet":"' + $ws.Name + '","addr":"Z99","formula":"=1+2"}'
+    $fp = (& $run 'CoHunsu_Do' 'write.formula.set' $fa) | ConvertFrom-Json
+    Check '계획만: phase plan, 값 3 미리 계산, 칸은 그대로' ($fp.ok -and $fp.data.phase -eq 'plan' -and $fp.data.summary -match '3' -and $null -eq (Invoke-ComRetry { $ws.Range('Z99').Value2 })) ($fp | ConvertTo-Json -Compress)
+    $fx = (& $run 'CoHunsu_Do' 'write.formula.set' ($fa.TrimEnd('}') + ',"confirm":"1"}')) | ConvertFrom-Json
+    Check '실행: Z99 = 3' ($fx.ok -and $fx.data.phase -eq 'apply' -and (Invoke-ComRetry { $ws.Range('Z99').Value2 }) -eq 3) ($fx | ConvertTo-Json -Compress)
+    $fu = (& $run 'CoHunsu_Do' 'write.formula.undo' '{"confirm":"1"}') | ConvertFrom-Json
+    Check '되돌리기: Z99 다시 빈 칸' ($fu.ok -and $null -eq (Invoke-ComRetry { $ws.Range('Z99').Value2 })) ($fu | ConvertTo-Json -Compress)
+    $fb = (& $run 'CoHunsu_Do' 'write.formula.set' '{"addr":"Z99","formula":"1+2"}') | ConvertFrom-Json
+    Check '=로 시작하지 않으면 command_failed' ($fb.ok -eq $false -and $fb.code -eq 'command_failed')
+
     Write-Host "bridge.stats (틀 창이 없으면 신호를 보내지 않고 시간만 잰다)"
     $null = (& $run 'CoHunsu_Query' 'bridge.stats' '{"reset":true}')
     foreach ($i in 1..20) { Invoke-ComRetry { $null = $ws.Cells.Item($i, 2).Select() } }
