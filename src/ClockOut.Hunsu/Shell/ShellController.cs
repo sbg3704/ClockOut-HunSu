@@ -121,7 +121,8 @@ internal sealed partial class ShellController : IDisposable
     {
         var gate = ModuleGateFile.Load(_log);
         var roots = new[] { Path.Combine(AppContext.BaseDirectory, "modules") };
-        foreach (var lm in ModuleCatalog.Load(roots, _log, gate.Allows, _skippedModules)) _modules.Add(CreateView(lm));
+        var sources = ModuleCatalog.Sources(roots, ModuleCatalog.DownloadedRoot(), _log); // 칼퇴가 받아 둔 모듈도(CLOCKOUT_MODULES_DIR)
+        foreach (var lm in ModuleCatalog.Load(sources, _log, gate.Allows, _skippedModules)) _modules.Add(CreateView(lm));
         if (_settingsOnly) { OpenSettingsOnly(); return; }
         StartOverlay();
     }
@@ -148,11 +149,29 @@ internal sealed partial class ShellController : IDisposable
         PlaceAll(); // 핀 창은 엑셀 창(소유 창)을 안 뒤에 놓는다
         if (target == IntPtr.Zero) HideDocksAndWait();
         var size = User32.WindowBounds(_right.Handle);
+        LogLoad();
         _log.Write("ready", ("overlay", _right.Handle.ToInt64()), ("left", _left.Handle.ToInt64()), ("signal", _signal.Handle.ToInt64()), ("zone", _right.ZoneRect()),
             ("size", $"{size.Width},{size.Height}"), ("target", target.ToInt64()), ("modules", _modules.Count), ("hotkeys", _hotkeys.Registered));
         foreach (var m in _modules) LogPlacement(m);
         Snap("dock_idle.png", _right.Root);
         if (_log.Enabled) MeasureFrameBaseline();
+    }
+
+    /// <summary>칼퇴 계기판용 실측(2026-11-22, 칼퇴 docs/10 3장): 프로세스 시작부터 준비까지 걸린 ms와 작업 집합 메모리 MB를 기록한다.
+    /// 값은 assets\load.json에 옮겨 적으면 pack_app이 선언(memoryMb·startMs)에 넣는다. 숫자를 지어내지 않으려고 잰 값만 쓴다.</summary>
+    private void LogLoad()
+    {
+        try
+        {
+            using var me = System.Diagnostics.Process.GetCurrentProcess();
+            int startMs = (int)(DateTime.Now - me.StartTime).TotalMilliseconds;
+            double memoryMb = Math.Round(me.WorkingSet64 / 1048576.0, 1);
+            _log.Write("load", ("startMs", startMs), ("memoryMb", memoryMb), ("modules", _modules.Count), ("skipped", _skippedModules.Count));
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
+        {
+            _log.Write("load", ("why", ex.GetType().Name));
+        }
     }
 
     /// <summary>측정용: 아무것도 움직이지 않을 때 1초 동안 프레임 간격(이 PC에서 WPF가 내는 기본 프레임 속도).</summary>

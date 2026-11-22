@@ -1,7 +1,7 @@
 ﻿<#
 기능: 칼퇴 레일로 나눠 줄 훈수꾼 묶음(hunsu.zip)을 만든다. 칼퇴의 "apps 전용 설치 길"(칼퇴 docs/03 apps, 2026-11-12) 규격을 따른다.
       묶음 구성(zip 맨 위 기준):
-        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs, modules)
+        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs, modules, memoryMb·startMs는 assets\load.json이 있을 때만)
                                        modules = 칼퇴 [모듈 관리]에서 켜고 끄는 하위 모듈 목록(칼퇴 docs/10 1장). modules\<id>\<id>.hunsu.json에서 만든다:
                                        id = 모듈 id, name = 이름, summary = 설명의 첫 문장, default = true(훈수꾼 안의 보이기·숨기기와 따로)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
@@ -66,6 +66,22 @@ $subs = foreach ($d in Get-ChildItem (Join-Path $repo 'modules') -Directory) {
 $subs = @($subs | Sort-Object order | ForEach-Object { $_.entry })
 if ($subs.Count -gt 64) { Write-Host "[중단] 하위 모듈이 64개를 넘습니다(칼퇴 규격): $($subs.Count)" -ForegroundColor Red; exit 1 }
 $manifest.modules = $subs
+# 칼퇴 계기판 값(memoryMb·startMs, 칼퇴 docs/10 3장): 지어내지 않고 잰 값만. assets\load.json이 있을 때만 넣는다.
+# 값은 훈수꾼 기록(--log)의 load 줄(startMs, memoryMb)을 PC에서 몇 번 재 보고 큰 쪽으로 적는다(docs/22 5장).
+$loadFile = Join-Path $repo 'assets\load.json'
+if (Test-Path $loadFile) {
+    $load = Get-Content $loadFile -Raw -Encoding utf8 | ConvertFrom-Json
+    if ($null -ne $load.memoryMb) {
+        $mb = [double]$load.memoryMb
+        if ($mb -lt 0 -or $mb -gt 100000) { Write-Host "[중단] load.json memoryMb 값이 칼퇴 범위(0~100000)를 벗어납니다: $mb" -ForegroundColor Red; exit 1 }
+        $manifest.memoryMb = $mb
+    }
+    if ($null -ne $load.startMs) {
+        $ms = [int]$load.startMs
+        if ($ms -lt 0 -or $ms -gt 3600000) { Write-Host "[중단] load.json startMs 값이 칼퇴 범위(0~3600000)를 벗어납니다: $ms" -ForegroundColor Red; exit 1 }
+        $manifest.startMs = $ms
+    }
+}
 $utf8 = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 5), $utf8)
 foreach ($g in 'hunsu.guide.md', 'hunsu.changes.md') {
