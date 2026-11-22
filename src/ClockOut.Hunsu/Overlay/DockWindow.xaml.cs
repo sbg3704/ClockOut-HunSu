@@ -90,6 +90,7 @@ public partial class DockWindow : Window
     public event Action<string>? SidebarRequested;
     public event Action? ManagerRequested;
     public event Action? LookRequested;
+    public event Action? WizardRequested;
     public event Action? ExcelCleanupRequested;
     public event Action? ExcelLinkRequested;
 
@@ -313,6 +314,7 @@ public partial class DockWindow : Window
         menu.Items.Add(Item("전부 숨기기", "Ctrl+Alt+Shift+H", () => HideAllRequested?.Invoke()));
         menu.Items.Add(Item("모듈 관리…", "", () => ManagerRequested?.Invoke()));
         menu.Items.Add(Item("모양 바꾸기…", "", () => LookRequested?.Invoke()));
+        menu.Items.Add(Item("설정 마법사…", "", () => WizardRequested?.Invoke()));
         menu.Items.Add(Item("엑셀 연결…", "", () => ExcelLinkRequested?.Invoke()));
         menu.Items.Add(Item("남은 엑셀 정리…", "", () => ExcelCleanupRequested?.Invoke()));
         menu.Items.Add(new Separator());
