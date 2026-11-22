@@ -48,8 +48,8 @@ internal sealed partial class ShellController
                     ("code", call.ErrorCode), ("retries", call.Retries), ("reject", call.RejectType), ("ms", Math.Round(call.Ms, 2)), ("attach", call.Attach));
                 break;
             case AppMessages.Settings:
-                _log.Write("settings_request", ("recv", at));
-                OpenManager("general");
+                _log.Write("settings_request", ("recv", at), ("page", SettingsPages.Name(wParam.ToInt64())));
+                OpenManager(SettingsPages.Name(wParam.ToInt64())); // 0 = general(옛 칼퇴), 칼퇴 버튼 탭은 쪽 번호를 싣는다
                 break;
             case AppMessages.Start:
                 LeaveSettingsOnly("clockout"); // 설정만 띄워 둔 사이 칼퇴 [켜기]

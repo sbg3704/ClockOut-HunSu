@@ -1,5 +1,10 @@
 # 인수인계 (2026-11-22 갱신)
 
+## 2026-11-22 칼퇴 소개 화면 [훈수꾼 설정] 탭 (판 0.0.277)
+- 칼퇴 쪽지 `bridge/inbox-hunsu/2026-11-22-005-clockout-layout.md`(workspace PR#27, 칼퇴 PR#65 v0.1.319, docs/11 4·5장). pack_app 선언에 contract_version 2, commands.actions 6개, layout.tabs. 앱은 `--settings <쪽>`과 메시지 wParam 쪽 번호(Core/SettingsPages). docs/22 12장.
+- 확인: 클라우드 빌드·시험. 못 본 것: 칼퇴 화면에서 탭·단추 모양, 꺼진 상태에서 마법사만 뜨고 닫으면 끝나는지, pack_app 실행.
+- 디자인 토큰은 안 씀(docs/22 12장). 칼퇴와 색을 맞출지는 사용자 후보.
+
 ## 2026-11-22 칼퇴 모듈 계약 규격 맞춤 (판 0.0.267)
 - 칼퇴 쪽지 `bridge/inbox-hunsu/2026-11-22-004-clockout-contract.md`(workspace PR#22, 칼퇴 docs/11). pack_app 선언에 `contract_version: 1`·`commands.settings` 추가(`settingsArgs`는 옛 칼퇴용으로 남김). 읽는 쪽은 이미 모르는 칸을 무시해 시험만 더함. docs/22 11장.
 - 확인: 클라우드 빌드·시험. 못 본 것: pack_app 실행(pwsh), 칼퇴 docs/11 원문(칼퇴 main에 아직 없음, 쪽지 기준으로 맞춤).

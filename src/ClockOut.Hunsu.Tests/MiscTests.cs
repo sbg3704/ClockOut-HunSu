@@ -65,6 +65,31 @@ public class MiscTests
         Assert.False(o.OpenSettings);
     }
 
+    // 칼퇴 버튼 탭(칼퇴 docs/11 4장): --settings 뒤에 쪽 이름을 붙이면 그 쪽을 연다. 모르는 낱말은 쪽으로 먹지 않는다.
+    [Fact]
+    public void AppOptions_SettingsPage()
+    {
+        Assert.Equal("general", AppOptions.Parse(["--settings"]).SettingsPage);
+        var look = AppOptions.Parse(["--settings", "look"]);
+        Assert.True(look.OpenSettings);
+        Assert.Equal("look", look.SettingsPage);
+        Assert.Empty(look.Errors);
+        var bad = AppOptions.Parse(["--settings", "nope"]);
+        Assert.Equal("general", bad.SettingsPage);
+        Assert.Equal(["nope"], bad.Errors);
+        Assert.Equal("wizard", AppOptions.Parse(["--settings", "wizard", "--log", "a.log"]).SettingsPage);
+    }
+
+    [Fact]
+    public void SettingsPages_CodeRoundTrip_ZeroIsGeneral()
+    {
+        Assert.Equal("general", SettingsPages.Name(0)); // 옛 칼퇴는 wParam 0으로 보낸다
+        Assert.Equal("general", SettingsPages.Name(99));
+        Assert.Equal("general", SettingsPages.Name(-1));
+        Assert.Equal(0, SettingsPages.Code("모름"));
+        foreach (var p in SettingsPages.All) Assert.Equal(p, SettingsPages.Name(SettingsPages.Code(p)));
+    }
+
     [Fact]
     public void AppOptions_Settings_IsNormalLaunch()
     {

@@ -1,7 +1,7 @@
 ﻿<#
 기능: 칼퇴 레일로 나눠 줄 훈수꾼 묶음(hunsu.zip)을 만든다. 칼퇴의 "apps 전용 설치 길"(칼퇴 docs/03 apps, 2026-11-12) 규격을 따른다.
       묶음 구성(zip 맨 위 기준):
-        hunsu.app.json                 묶음 선언(contract_version 1, id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs·commands.settings, modules, memoryMb·startMs는 assets\load.json이 있을 때만)
+        hunsu.app.json                 묶음 선언(contract_version 2, commands.actions·layout 탭, id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs·commands.settings, modules, memoryMb·startMs는 assets\load.json이 있을 때만)
                                        modules = 칼퇴 [모듈 관리]에서 켜고 끄는 하위 모듈 목록(칼퇴 docs/10 1장). modules\<id>\<id>.hunsu.json에서 만든다:
                                        id = 모듈 id, name = 이름, summary = 설명의 첫 문장, default = true(훈수꾼 안의 보이기·숨기기와 따로)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
@@ -49,11 +49,35 @@ try {
 
 Write-Host "== 3) 묶음 선언, 라이선스, 안내"
 $manifest = [ordered]@{
-    spec = 0; contract_version = 1; id = 'hunsu'; version = $Version; name = '훈수꾼'   # 계약 판(칼퇴 docs/11, 2026-11-22)
+    spec = 0; contract_version = 2; id = 'hunsu'; version = $Version; name = '훈수꾼'   # 계약 판(칼퇴 docs/11, 2026-11-22)
     exe = 'app/ClockOut.Hunsu.exe'; addins = @('addins/clockout-hunsu.zip')
     runtime = 'self-contained'; quitMessage = 'ClockOut.App.Quit'
     settingsMessage = 'ClockOut.App.Settings'; settingsArgs = @('--settings')   # 칼퇴 레일 [설정](2026-11-22, Core/AppMessages). 옛 칼퇴용으로 남김
-    commands = [ordered]@{ settings = @('--settings') }                            # 새 계약(칼퇴 docs/11): 둘 다 있으면 commands 우선
+    commands = [ordered]@{ settings = @('--settings')                              # 새 계약(칼퇴 docs/11): 둘 다 있으면 commands 우선
+        # 칼퇴 [훈수꾼 설정] 탭 버튼이 부르는 명령(계약 2). 쪽 이름은 Core/SettingsPages와 같아야 한다(docs/22 12장).
+        actions = [ordered]@{
+            'wizard' = @('--settings', 'wizard'); 'settings.modules' = @('--settings', 'modules')
+            'settings.look' = @('--settings', 'look'); 'settings.options' = @('--settings', 'options')
+            'settings.profiles' = @('--settings', 'profiles'); 'settings.general' = @('--settings', 'general')
+        }
+    }
+    # 칼퇴 소개 화면 탭(계약 2, 칼퇴 docs/11 4장): 모양은 칼퇴가 그리고 훈수꾼은 무엇을 어떤 순서로만 정한다.
+    layout = [ordered]@{ tabs = @(
+        [ordered]@{ id = 'modules' }
+        [ordered]@{ id = 'hunsu'; title = '훈수꾼 설정'; kind = 'buttons'; summary = '훈수꾼 설정 창의 원하는 쪽을 바로 열어요. 꺼져 있으면 설정 창만 떠요.'
+            groups = @(
+                [ordered]@{ title = '처음이라면'; buttons = @(
+                    [ordered]@{ id = 'wizard'; label = '설정 마법사'; tip = '하는 일·자리·모양을 1분 안에 맞춰요'; emphasis = 'primary'; action = 'wizard' }) }
+                [ordered]@{ title = '바로 가기'; buttons = @(
+                    [ordered]@{ id = 'modules'; label = '모듈 보이기·순서'; tip = '훈수꾼 안에서 모듈을 보이고 숨기고 묶어요'; action = 'settings.modules' }
+                    [ordered]@{ id = 'look'; label = '모양 바꾸기'; tip = '패널 룩·테마·아이콘'; action = 'settings.look' }
+                    [ordered]@{ id = 'options'; label = '모듈 옵션'; tip = '모듈마다 세부 옵션'; action = 'settings.options' }
+                    [ordered]@{ id = 'profiles'; label = '프로필'; tip = '정산·검수 같은 일에 맞는 모듈만 켜요'; action = 'settings.profiles' }
+                    [ordered]@{ id = 'general'; label = '일반 설정'; tip = '테마·패널 너비·배치 잠금·시작 동작'; action = 'settings.general' }) }
+            ) }
+        [ordered]@{ id = 'guide' }
+        [ordered]@{ id = 'changes' }
+    ) }
 }
 # 하위 모듈 목록: 모듈 선언 하나가 출처다(이름·설명을 두 번 적지 않음). 설명이 길어 첫 문장만 한 줄 설명으로 쓴다.
 $subs = foreach ($d in Get-ChildItem (Join-Path $repo 'modules') -Directory) {
@@ -85,7 +109,7 @@ if (Test-Path $loadFile) {
     }
 }
 $utf8 = New-Object Text.UTF8Encoding($false)
-[IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 5), $utf8)
+[IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 12), $utf8)
 foreach ($g in 'hunsu.guide.md', 'hunsu.changes.md') {
     $src = Join-Path $repo "assets\guide\$g"
     if (-not (Test-Path $src)) { Write-Host "[중단] $src 가 없습니다(칼퇴 안내문 규칙)." -ForegroundColor Red; exit 1 }
