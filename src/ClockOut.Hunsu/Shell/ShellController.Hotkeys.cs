@@ -37,7 +37,7 @@ internal sealed partial class ShellController
 
     private void OnModuleHotkey(int index)
     {
-        if (index < 0 || index >= _moduleHotkeys.Count) return;
+        if (_settingsOnly || index < 0 || index >= _moduleHotkeys.Count) return;
         ToggleQuick(_moduleHotkeys[index].Key);
     }
 

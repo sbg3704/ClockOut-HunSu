@@ -27,6 +27,7 @@ internal sealed class ManagerWindow : Window
     private ProfilesPage? _profiles;
     private OptionsPage? _options;
     private string _page = "modules";
+    private FrameworkElement? _startChip; // 설정만 모드에서만 보이는 [훈수꾼 켜기]
 
     public ManagerWindow(ShellController shell, string page = "modules")
     {
@@ -168,6 +169,9 @@ internal sealed class ManagerWindow : Window
 
         var footer = new StackPanel { Margin = new Thickness(22, 10, 22, 14) };
         var buttons = new WrapPanel();
+        _startChip = ManagerParts.Chip(this, "훈수꾼 켜기", true, () => _shell.LeaveSettingsOnly("button"));
+        _startChip.Visibility = _shell.SettingsOnly ? Visibility.Visible : Visibility.Collapsed;
+        buttons.Children.Add(_startChip);
         buttons.Children.Add(ManagerParts.Chip(this, "배치 처음으로", false, ConfirmReset));
         buttons.Children.Add(ManagerParts.Chip(this, "모듈 폴더 열기", false, () => Open(Path.Combine(AppContext.BaseDirectory, "modules"))));
         footer.Children.Add(buttons);
@@ -212,7 +216,10 @@ internal sealed class ManagerWindow : Window
         _cards.Children.Clear();
         var list = _shell.Modules.OrderBy(m => m.Placement.Order).ToList();
         int on = list.Count(m => !m.Placement.Hidden);
-        _summary.Text = $"설치된 모듈 {list.Count}개 · 켜짐 {on}개 · 묶음 제목을 누르면 접힘";
+        int skipped = _shell.SkippedModules.Count;
+        _summary.Text = $"설치된 모듈 {list.Count}개 · 켜짐 {on}개" + (skipped > 0 ? $" · 칼퇴에서 끈 {skipped}개는 불러오지 않음" : "") + " · 묶음 제목을 누르면 접힘"
+            + (_shell.SettingsOnly ? "\n훈수꾼이 꺼진 채 설정만 열었어요. 바꾼 값은 켤 때 그대로 쓰입니다." : "");
+        if (_startChip != null) _startChip.Visibility = _shell.SettingsOnly ? Visibility.Visible : Visibility.Collapsed;
         var bulk = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 4, 0, 4) };
         bulk.Children.Add(ManagerParts.Chip(this, "모두 켜기", false, () => _shell.SetAllEnabled(true)));
         bulk.Children.Add(ManagerParts.Chip(this, "모두 끄기", false, () => _shell.SetAllEnabled(false)));

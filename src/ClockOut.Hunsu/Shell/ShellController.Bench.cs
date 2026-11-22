@@ -1,4 +1,4 @@
-﻿// 기능: 측정 도구 메시지 처리(ShellController의 일부). 패널 펼치기·접기, 도크 ↔ 핀 창, hello 호출, 끝내기. 키보드·마우스 대신 쓴다.
+﻿// 기능: 측정 도구 메시지 처리(ShellController의 일부). 패널 펼치기·접기, 도크 ↔ 핀 창, hello 호출, 끝내기. 칼퇴 [설정](AppMessages.Settings)도 여기서 받는다. 키보드·마우스 대신 쓴다.
 // 사용법: SignalWindow.Bench 이벤트로 불린다. 기록 줄: panel(sent recv first done), pin/unpin(sent recv done maxGap skipped frames), probe.
 // 의존: Core/BenchMessages, Diagnostics/Frames. 보통 사용 때는 아무도 이 메시지를 보내지 않는다.
 using ClockOut.Hunsu.Core;
@@ -46,6 +46,13 @@ internal sealed partial class ShellController
                 var call = await _registry.ProbeAsync(wParam);
                 _log.Write("probe", ("excel", wParam.ToInt64()), ("sent", lParam.ToInt64()), ("recv", at), ("ok", call.Ok), ("hr", HResultNames.Name(call.HResult)),
                     ("code", call.ErrorCode), ("retries", call.Retries), ("reject", call.RejectType), ("ms", Math.Round(call.Ms, 2)), ("attach", call.Attach));
+                break;
+            case AppMessages.Settings:
+                _log.Write("settings_request", ("recv", at));
+                OpenManager("general");
+                break;
+            case AppMessages.Start:
+                LeaveSettingsOnly("clockout"); // 설정만 띄워 둔 사이 칼퇴 [켜기]
                 break;
             case BenchMessages.Quit:
             case AppMessages.Quit:

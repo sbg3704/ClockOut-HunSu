@@ -2,7 +2,7 @@
 //       모양(패널 룩 4종, 아이콘 세트 6종, 크기), 쓰는 법(단축키·우클릭·켜고 끄는 도움), 끝(고른 것 요약).
 //       고르면 설정 창과 같은 길(ApplyProfile, ApplySetting, ApplyLook)로 바로 반영·저장된다. 창(SetupWizardWindow)이 바뀐 값을 받아 다시 짓는다.
 // 사용법: new SetupWizardPages(shell, window).Build("work") → 그 쪽 내용 부품
-// 의존: Core/Setup/SetupWizard, Core/Layout/Profiles, Core/Settings(SkinChoice, DockLook), Shell/ManagerParts, Ui/Icons/IconFactory, Ui Theme.
+// 의존: Shell/ShellController(SkippedModules: 칼퇴에서 끈 모듈), Core/Setup/SetupWizard, Core/Layout/Profiles, Core/Settings(SkinChoice, DockLook), Shell/ManagerParts, Ui/Icons/IconFactory, Ui Theme.
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -83,7 +83,13 @@ internal sealed class SetupWizardPages
             wrap.Children.Add(Card(p.Name, p.Description, list, S.Profile == p.Id, () => _shell.ApplyProfile(p.Id)));
         }
         wrap.Children.Add(Card("직접 고를게요", "지금 켜진 모듈을 그대로 둡니다. 설정 창 [모듈]에서 하나씩 켜고 끕니다.", "", S.Profile == "", () => _shell.ApplySetting("profile", "")));
-        return wrap;
+        int skipped = _shell.SkippedModules.Count;
+        if (skipped == 0) return wrap;
+        // 칼퇴에서 끈 모듈은 불러오지 않아 프로필에 있어도 켜지지 않는다(docs/22). 어디서 켜는지 알려 준다.
+        var box = new StackPanel();
+        box.Children.Add(wrap);
+        box.Children.Add(Note($"칼퇴에서 끈 모듈 {skipped}개는 여기서 켜지 않아요. 쓰려면 칼퇴 [모듈 관리]에서 켠 뒤 훈수꾼을 껐다 켜세요."));
+        return box;
     }
 
     // ---- 자리 ----

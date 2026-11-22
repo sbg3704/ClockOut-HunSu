@@ -1,6 +1,8 @@
 // 기능: 훈수꾼 틀의 연결부. 도크 창(왼·오), 핀 창, 모듈, 배치 저장, 신호·조회, 단축키, 알림 영역 아이콘을 서로 잇는다.
 //       따라갈 엑셀 창을 정하고(보통: 보이는 XLMAIN, 앞으로 나온 엑셀로 바꿈 / 측정: --follow), 부르기·전부 숨김 상태를 맡는다.
 // 사용법: App.OnStartup에서 new ShellController(options).Start();  끝낼 때 Dispose()
+//   --settings로 켜면 "설정만" 모드: 설정 창 하나만 띄우고 엑셀을 따라가지 않는다(ShellController.SettingsOnly.cs). 창을 닫으면 끝난다.
+//   시작할 때 칼퇴가 켜 둔 하위 모듈만 불러온다(Shell/ModuleGateFile, CLOCKOUT_MODULES_FILE, 2026-11-22).
 // 의존: Overlay/*, Shell/*, Excel/InstanceRegistry, Signal/SignalWindow, Diagnostics/*. 모듈 동작은 ShellController.Modules.cs, 최근 이동은 .History.cs, 셀 위 표시층은 .Marks.cs, 측정 메시지는 ShellController.Bench.cs.
 using System.IO;
 using System.Windows;
@@ -42,10 +44,12 @@ internal sealed partial class ShellController : IDisposable
     private IntPtr _target;
     private bool _summoned;
     private bool _hiddenAll;
+    private readonly List<string> _skippedModules = []; // 칼퇴에서 꺼서 불러오지 않은 모듈 id
 
     public ShellController(AppOptions options)
     {
         _options = options;
+        _settingsOnly = options.OpenSettings;
         _log = new RunLog(options.LogPath);
         _log.Write("start", ("pid", Environment.ProcessId), ("badArgs", options.Errors.Count));
         _store = new LayoutStore(options.LayoutPath, _log);
@@ -70,6 +74,7 @@ internal sealed partial class ShellController : IDisposable
         _signal.Signal += (hwnd, code, seq, at) =>
         {
             _log.Write("signal", ("excel", hwnd.ToInt64()), ("code", SignalCodec.NameOf(code)), ("seq", seq), ("recv", at));
+            if (_settingsOnly) return; // 설정만 모드는 엑셀에 묻지 않는다
             _registry.OnSignal(hwnd, code, seq, at);
         };
         _signal.Bench += OnBench;
@@ -79,7 +84,7 @@ internal sealed partial class ShellController : IDisposable
         _hotkeys.HideAll += ToggleHideAll;
         _hotkeys.ModuleHotkey += OnModuleHotkey;
         _hotkeys.ForegroundChanged += OnForeground;
-        _tray = new TrayIcon();
+        _tray = new TrayIcon { Visible = !_settingsOnly };
         _tray.SummonClicked += ToggleSummon;
         _tray.HideAllClicked += ToggleHideAll;
         _tray.QuitClicked += Quit;
@@ -114,18 +119,26 @@ internal sealed partial class ShellController : IDisposable
 
     public void Start()
     {
+        var gate = ModuleGateFile.Load(_log);
+        var roots = new[] { Path.Combine(AppContext.BaseDirectory, "modules") };
+        foreach (var lm in ModuleCatalog.Load(roots, _log, gate.Allows, _skippedModules)) _modules.Add(CreateView(lm));
+        if (_settingsOnly) { OpenSettingsOnly(); return; }
+        StartOverlay();
+    }
+
+    /// <summary>도크·핀 창을 띄우고 엑셀을 따라가기 시작한다(보통 시작, 또는 설정만 모드에서 켜기).</summary>
+    private void StartOverlay()
+    {
         // 이미 깔린 다리가 이 묶음의 다리보다 낮으면 스스로 바꾼다(엑셀이 잡고 있으면 놓을 때까지 기다림).
         _bridgeUpdater = new BridgeUpdater(_log, text => Application.Current.Dispatcher.BeginInvoke(() => _tray.Balloon(text)));
         _bridgeUpdater.Start();
-        var roots = new[] { Path.Combine(AppContext.BaseDirectory, "modules") };
-        foreach (var lm in ModuleCatalog.Load(roots, _log)) _modules.Add(CreateView(lm));
         foreach (var mv in _modules.Where(m => m.Module.Manifest.Shapes.Contains("window") || m.Module.Manifest.Shapes.Contains("panel"))) PinWindowFor(mv);
         _right.Show();
         _left.Show();
         StartExcelCleanup();
         _right.ContentRendered += (_, _) => OnReady();
         if (SetupWizard.ShouldShowOnStart(_settings)) OpenWizard(); // 처음 쓰는 사람은 마법사부터(끝내거나 닫으면 다시 안 뜸)
-        else if (_settings.ManagerOnStart) OpenManager();
+        else if (_settings.ManagerOnStart && _manager is not { IsLoaded: true }) OpenManager();
     }
 
     private void OnReady()
@@ -213,6 +226,7 @@ internal sealed partial class ShellController : IDisposable
     /// <summary>다른 엑셀 창이 앞으로 나오면 그 창을 따라간다(보통 모드만).</summary>
     private void OnForeground(IntPtr fg, bool isExcel)
     {
+        if (_settingsOnly) return;
         if (!isExcel) HideHuds();
         if (!isExcel || _options.FollowHwnd != 0 || fg == _target) return;
         var linked = LinkedMain();
@@ -237,6 +251,7 @@ internal sealed partial class ShellController : IDisposable
 
     public void ToggleHideAll()
     {
+        if (_settingsOnly) return;
         _hiddenAll = !_hiddenAll;
         foreach (var f in _followers) f.Suspended = _hiddenAll;
         UpdateSidebar();

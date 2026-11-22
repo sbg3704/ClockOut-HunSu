@@ -62,5 +62,15 @@ public class MiscTests
         Assert.Equal("a.log", o.LogPath);
         Assert.Equal(["--bogus"], o.Errors);
         Assert.Equal(0, AppOptions.Parse([]).FollowHwnd);
+        Assert.False(o.OpenSettings);
+    }
+
+    [Fact]
+    public void AppOptions_Settings_IsNormalLaunch()
+    {
+        var o = AppOptions.Parse([AppMessages.SettingsArg]);
+        Assert.True(o.OpenSettings);
+        Assert.Empty(o.Errors);
+        Assert.True(SingleInstance.IsNormalLaunch(o)); // 설정으로 켜도 단일 실행 잠금을 탄다
     }
 }

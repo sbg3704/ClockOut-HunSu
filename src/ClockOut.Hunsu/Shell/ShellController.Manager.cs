@@ -94,6 +94,7 @@ internal sealed partial class ShellController
     internal void SetEnabled(ModuleView mv, bool enabled)
     {
         Save(mv, p => p with { Enabled = enabled });
+        if (_settingsOnly) { _log.Write("module_enabled", ("id", mv.Id), ("on", enabled)); ModulesChanged?.Invoke(); return; } // 창은 켤 때 놓인다
         _pins.TryGetValue(mv.Id, out var pinWindow);
         if (enabled)
         {
@@ -159,6 +160,7 @@ internal sealed partial class ShellController
     /// <summary>관리자의 [왼쪽][오른쪽][떼기]: 도크로 옮기거나 핀 창으로 뗀다.</summary>
     internal void PlaceFromManager(ModuleView mv, string place)
     {
+        if (_settingsOnly) { Save(mv, p => p with { Place = place }); ModulesChanged?.Invoke(); return; } // 자리만 적어 두고 켤 때 그 자리에 놓는다
         if (place == Places.Pin) { if (mv.InDock) Pin(mv, null); }
         else MoveToDock(mv, place);
         RefreshDocks();

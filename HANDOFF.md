@@ -1,10 +1,29 @@
 # 인수인계 (2026-11-22 갱신)
 
-## 2026-11-22 설정 마법사 (판 0.0.230)
-- 사용자 요청: 처음에 하는 일·모양을 고르게 안내하고, 기능을 알려 주고, 설정을 도와주는 마법사. 설명은 `docs/22_설정_마법사.md`.
+## 2026-11-22 설정 마법사 (판 0.0.246, PR#81 위에 쌓음)
+- 사용자 요청: 처음에 하는 일·모양을 고르게 안내하고, 기능을 알려 주고, 설정을 도와주는 마법사. 설명은 `docs/23_설정_마법사.md`.
 - 만든 것: `Core/Setup/SetupWizard`(순수 계산, 시험 5개), `Shell/SetupWizardWindow`·`SetupWizardPages`(6단계). 설정 `setupSeen`이 1보다 작으면 처음 켤 때 한 번 뜬다. 다시 열기: 설정 창 머리글, 훈 원·알림 영역 메뉴, 사이드바 ✦, `OpenManager("wizard")`.
 - 확인한 범위: 클라우드에서 WPF 컴파일 0경고·0오류, 시험 전부 통과. **화면은 못 봄**(PC 빌드로 룩마다 카드 색·좁은 창 줄바꿈 확인 필요).
-- 다음: 사용자 화면 피드백 반영, 칼퇴 [설정] 스레드(0.0.226, `--settings`)와 머지 순서에 따라 `ShellController.Start()` 마지막 줄을 합친다(마법사가 먼저, 아니면 `--settings`면 [일반], 아니면 managerOnStart).
+- 2026-11-22 사용자가 한때 보류했다가("칼퇴 개편 먼저") 같은 날 풀어 PR#81(칼퇴 새 레일, 0.0.236) 위에 다시 맞췄다. 칼퇴에서 끈 모듈은 아예 안 읽히므로 마법사 [하는 일]의 프로필은 불러온 모듈만 켜고 끈다(칼퇴 목록은 안 바꿈). 끈 모듈 수는 그 쪽에 안내.
+- 처음 실행 마법사는 보통 시작(StartOverlay)에서만 뜬다. `--settings` 설정만 모드에서는 안 뜨고, 설정 창 머리글 단추로는 열 수 있다.
+- 다음: PC 화면 피드백(룩마다 카드 색, 좁은 창 줄바꿈)은 버그 패치로.
+
+## 2026-11-22 칼퇴 새 레일 구조에 맞추기 (판 0.0.236, PR#79 위에 쌓음)
+- 칼퇴 쪽지(claude-workspace `bridge/inbox-hunsu/2026-11-22-001-rail-restructure-todo.md`)와 칼퇴 `docs/10` 1장대로. 결정과 근거는 `docs/22`.
+- 하위 모듈 = 훈수꾼 모듈 26개 그대로(id `hunsu-…`). `pack_app.ps1`이 모듈 선언에서 `hunsu.app.json`의 `modules`(name, 설명 첫 문장, default true)를 만든다.
+- 시작 때 `CLOCKOUT_MODULES_FILE`(modules.enabled.json)을 읽어 없는 모듈은 선언도 안 읽고 건너뜀(`Core/Manifest/ModuleGate`, `Shell/ModuleGateFile`, 기록 module_gate·module_skip). 없거나 깨지면 선언 default, 선언도 없으면 모두.
+- 반영 시점 결정(Claude): 껐다 켜면 반영. 파일 감시 안 함.
+- `--settings`로 꺼진 훈수꾼을 켜면 "설정만" 모드(`ShellController.SettingsOnly.cs`): 설정 창만, 닫으면 끝. 그 사이 칼퇴 [켜기]는 `ClockOut.App.Start`를 넘겨 이어서 켬(창의 「훈수꾼 켜기」, Ctrl+Alt+H도). 창을 건드리는 곳(RefreshDocks, UpdateQuickBar, UpdateSidebar, SetEnabled, PlaceFromManager, OnForeground, 신호)은 `_settingsOnly`면 멈춘다.
+- SHA 장부 `releases/hunsu_sha256.md`(0.0.045·201·202 카탈로그에서 옮김), pack_app이 `release-record.json`을 만들고 같은 판 다른 SHA면 실패. docs/21 4-1장.
+- 확인: 클라우드 dotnet 10으로 WPF 포함 빌드 0 경고·0 오류, 시험 332개 통과(새 ModuleGateTests). 못 본 것: 설정만 모드 화면(다른 창이 안 뜨는지), 칼퇴가 넘긴 파일로 켜기, pack_app(pwsh·엑셀).
+- 다음: PR#79 → 이 PR 머지, PC에서 묶음 만들어 칼퇴 v0.1.185 이상에서 모듈 스위치 확인. 설정 마법사(0.0.230)·PR#78(0.0.225)은 머지 때 판을 0.0.236보다 올려야 함.
+
+## 2026-11-22 칼퇴에서 훈수꾼 설정 열기 (판 0.0.226)
+- 사용자 요청: "훈수꾼 설정이 칼퇴에서 켜지면 좋겠어". 칼퇴 소개 화면 [설정](ClockOut v0.1.175)이 훈수꾼 설정 창([일반] 쪽)을 연다.
+- 훈수꾼: 등록 창 메시지 `AppMessages.Settings`("ClockOut.App.Settings")를 SignalWindow가 받아 `OpenManager("general")`(ShellController.Bench.cs). 실행 인자 `--settings`(`AppOptions.OpenSettings`, 보통 모드로 쳐서 단일 실행 잠금 대상)면 켜자마자 설정 창. 잠금에 걸리면 `Signal/SettingsForward`가 켜진 쪽 신호 창에 메시지를 넘기고 끝난다. `pack_app.ps1`이 선언에 `settingsMessage`·`settingsArgs`를 넣는다.
+- 결정(Claude가 정함): 꺼져 있을 때 [설정]을 누르면 켜면서 연다.
+- 확인: 클라우드 dotnet 10으로 WPF 포함 빌드 0 경고·0 오류, 시험 320개 통과(새 1개). 못 본 것: PC에서 실제로 창이 앞으로 뜨는지(포커스 뺏기 규칙), 꺼진 상태에서 켜며 열기.
+- 설정 마법사 스레드(0.0.230 예정)와 겹치는 곳: ShellController.cs Start() 끝 한 줄.
 
 ## 2026-11-17 확인용 엑셀에서만 패널이 비어 있음 (판 0.0.203)
 - 신고: 다른 엑셀에서는 잘 되는데 확인용 엑셀(`훈수꾼_확인용.xlsx`, 원본 `tools/scenarios/훈수꾼_시나리오.xlsx`)에서만 패널이 비고 칸을 골라도 안 바뀜(스크린샷: "표가 없습니다", "아직 다녀간 칸이 없습니다", "메모 -개").
