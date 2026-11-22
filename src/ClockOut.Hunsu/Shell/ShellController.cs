@@ -11,6 +11,7 @@ using ClockOut.Hunsu.Core;
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Core.Settings;
+using ClockOut.Hunsu.Core.Setup;
 using ClockOut.Hunsu.Ui.Controls;
 using ClockOut.Hunsu.Ui.Theme;
 using ClockOut.Hunsu.Diagnostics;
@@ -89,6 +90,7 @@ internal sealed partial class ShellController : IDisposable
         _tray.QuitClicked += Quit;
         _tray.ManagerClicked += () => OpenManager();
         _tray.LookClicked += () => OpenManager("look");
+        _tray.WizardClicked += OpenWizard;
         _tray.ExcelCleanupClicked += OpenExcelCleanup;
         _tray.ExcelLinkClicked += OpenExcelLink;
         foreach (var d in new[] { _right, _left })
@@ -104,6 +106,7 @@ internal sealed partial class ShellController : IDisposable
             d.QuitRequested += Quit;
             d.ManagerRequested += () => OpenManager();
             d.LookRequested += () => OpenManager("look");
+            d.WizardRequested += OpenWizard;
             d.ExcelCleanupRequested += OpenExcelCleanup;
             d.ExcelLinkRequested += OpenExcelLink;
             var side = d.Side;
@@ -134,7 +137,8 @@ internal sealed partial class ShellController : IDisposable
         _left.Show();
         StartExcelCleanup();
         _right.ContentRendered += (_, _) => OnReady();
-        if (_settings.ManagerOnStart && _manager is not { IsLoaded: true }) OpenManager();
+        if (SetupWizard.ShouldShowOnStart(_settings)) OpenWizard(); // 처음 쓰는 사람은 마법사부터(끝내거나 닫으면 다시 안 뜸)
+        else if (_settings.ManagerOnStart && _manager is not { IsLoaded: true }) OpenManager();
     }
 
     private void OnReady()
