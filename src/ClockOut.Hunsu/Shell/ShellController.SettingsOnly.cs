@@ -17,9 +17,19 @@ internal sealed partial class ShellController
 
     private void OpenSettingsOnly()
     {
-        _log.Write("settings_only", ("modules", _modules.Count), ("skipped", _skippedModules.Count));
-        OpenManager("general");
-        _manager!.Closed += (_, _) => { if (_settingsOnly) Quit(); };
+        string page = _options.SettingsPage;
+        _log.Write("settings_only", ("modules", _modules.Count), ("skipped", _skippedModules.Count), ("page", page));
+        OpenManager(page);
+        // 마지막으로 열린 창(설정 창이나 마법사)이 닫히면 끝낸다. 마법사만 연 경우에도 남지 않게.
+        if (_manager != null) _manager.Closed += (_, _) => QuitIfSettingsOnlyIdle();
+        if (_wizard != null) _wizard.Closed += (_, _) => QuitIfSettingsOnlyIdle();
+    }
+
+    private void QuitIfSettingsOnlyIdle()
+    {
+        if (!_settingsOnly) return;
+        if (_manager is { IsLoaded: true } || _wizard is { IsLoaded: true }) return;
+        Quit();
     }
 
     /// <summary>설정만 띄운 채로 있다가 훈수꾼을 켠다: 도크를 띄우고 엑셀을 따라가기 시작한다. 설정 창은 열린 채 둔다.</summary>

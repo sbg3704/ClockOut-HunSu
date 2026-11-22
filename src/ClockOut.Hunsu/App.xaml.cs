@@ -24,7 +24,8 @@ public partial class App : Application
         if (_single is null)
         {
             // --settings면 켜진 쪽이 설정 창을 열고, 보통 실행이면 켜진 쪽이 "설정만" 모드일 때 이어서 켠다. 못 찾으면(막 끝나는 중) 그냥 끝낸다.
-            Signal.SettingsForward.Send(options.OpenSettings ? AppMessages.Settings : AppMessages.Start);
+            if (options.OpenSettings) Signal.SettingsForward.Send(AppMessages.Settings, SettingsPages.Code(options.SettingsPage));
+            else Signal.SettingsForward.Send(AppMessages.Start);
             Shutdown(0);
             return;
         }
