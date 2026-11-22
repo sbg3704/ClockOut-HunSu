@@ -1,4 +1,11 @@
-# 인수인계 (2026-11-17 갱신)
+# 인수인계 (2026-11-22 갱신)
+
+## 2026-11-22 칼퇴에서 훈수꾼 설정 열기 (판 0.0.226)
+- 사용자 요청: "훈수꾼 설정이 칼퇴에서 켜지면 좋겠어". 칼퇴 소개 화면 [설정](ClockOut v0.1.175)이 훈수꾼 설정 창([일반] 쪽)을 연다.
+- 훈수꾼: 등록 창 메시지 `AppMessages.Settings`("ClockOut.App.Settings")를 SignalWindow가 받아 `OpenManager("general")`(ShellController.Bench.cs). 실행 인자 `--settings`(`AppOptions.OpenSettings`, 보통 모드로 쳐서 단일 실행 잠금 대상)면 켜자마자 설정 창. 잠금에 걸리면 `Signal/SettingsForward`가 켜진 쪽 신호 창에 메시지를 넘기고 끝난다. `pack_app.ps1`이 선언에 `settingsMessage`·`settingsArgs`를 넣는다.
+- 결정(Claude가 정함): 꺼져 있을 때 [설정]을 누르면 켜면서 연다.
+- 확인: 클라우드 dotnet 10으로 WPF 포함 빌드 0 경고·0 오류, 시험 320개 통과(새 1개). 못 본 것: PC에서 실제로 창이 앞으로 뜨는지(포커스 뺏기 규칙), 꺼진 상태에서 켜며 열기.
+- 설정 마법사 스레드(0.0.230 예정)와 겹치는 곳: ShellController.cs Start() 끝 한 줄.
 
 ## 2026-11-17 확인용 엑셀에서만 패널이 비어 있음 (판 0.0.203)
 - 신고: 다른 엑셀에서는 잘 되는데 확인용 엑셀(`훈수꾼_확인용.xlsx`, 원본 `tools/scenarios/훈수꾼_시나리오.xlsx`)에서만 패널이 비고 칸을 골라도 안 바뀜(스크린샷: "표가 없습니다", "아직 다녀간 칸이 없습니다", "메모 -개").

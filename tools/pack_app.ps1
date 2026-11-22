@@ -1,7 +1,7 @@
 ﻿<#
 기능: 칼퇴 레일로 나눠 줄 훈수꾼 묶음(hunsu.zip)을 만든다. 칼퇴의 "apps 전용 설치 길"(칼퇴 docs/03 apps, 2026-11-12) 규격을 따른다.
       묶음 구성(zip 맨 위 기준):
-        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage)
+        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
         addins\clockout-hunsu.zip      다리 추가기능 패키지(clockout-hunsu.xlam + clockout-hunsu.clockout.json). 칼퇴가 기존 추가기능 흐름으로 설치
         hunsu.guide.md, hunsu.changes.md   칼퇴 소개 화면의 사용법·패치노트(assets\guide에서 복사, 규칙은 claude-workspace docs/하위프로그램_안내문_규칙.md)
@@ -48,6 +48,7 @@ $manifest = [ordered]@{
     spec = 0; id = 'hunsu'; version = $Version; name = '훈수꾼'
     exe = 'app/ClockOut.Hunsu.exe'; addins = @('addins/clockout-hunsu.zip')
     runtime = 'self-contained'; quitMessage = 'ClockOut.App.Quit'
+    settingsMessage = 'ClockOut.App.Settings'; settingsArgs = @('--settings')   # 칼퇴 레일 [설정](2026-11-22, Core/AppMessages)
 }
 $utf8 = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 3), $utf8)

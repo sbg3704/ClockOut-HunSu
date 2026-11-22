@@ -121,7 +121,8 @@ internal sealed partial class ShellController : IDisposable
         _left.Show();
         StartExcelCleanup();
         _right.ContentRendered += (_, _) => OnReady();
-        if (_settings.ManagerOnStart) OpenManager();
+        if (_options.OpenSettings) OpenManager("general"); // 칼퇴 레일 [설정]으로 켜졌을 때
+        else if (_settings.ManagerOnStart) OpenManager();
     }
 
     private void OnReady()
