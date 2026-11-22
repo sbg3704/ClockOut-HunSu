@@ -86,7 +86,7 @@ internal sealed partial class ShellController
     /// <summary>설정과 엑셀 유무에 맞춰 사이드바를 켜거나 끄고, 패널을 사이드바나 도크에 다시 놓는다.</summary>
     private void UpdateSidebar(bool refresh = true)
     {
-        if (_sidebar == null) return;
+        if (_sidebar == null || _settingsOnly) return;
         bool was = _sidebar.Reserved;
         if (_target != IntPtr.Zero) _sidebarOff?.Stop(); // 엑셀이 돌아왔다: 풀기 예약 취소
         bool want = _settings.Sidebar != "off" && !_hiddenAll && _target != IntPtr.Zero;

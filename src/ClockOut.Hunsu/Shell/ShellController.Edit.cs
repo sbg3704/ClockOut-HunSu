@@ -16,6 +16,7 @@ internal sealed partial class ShellController
     /// <summary>편집 모드를 켜고 끈다. 끌 때는 지금 배치를 저장한다.</summary>
     public void ToggleSummon()
     {
+        if (_settingsOnly) { LeaveSettingsOnly("summon"); return; } // 설정만 띄운 채 Ctrl+Alt+H: 훈수꾼을 켠다
         if (_summoned) ExitEdit(save: true);
         else EnterEdit();
     }

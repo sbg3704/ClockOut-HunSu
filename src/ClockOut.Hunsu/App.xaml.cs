@@ -1,6 +1,7 @@
 // 기능: 훈수꾼 시작과 끝. 인자를 읽고 Shell/ShellController에 맡긴다.
 // 사용법: ClockOut.Hunsu.exe                 보이는 엑셀 창(XLMAIN)을 찾아 따라간다(엑셀 COM에는 신호가 올 때만 붙는다)
-//         ClockOut.Hunsu.exe --settings      켜면서 설정 창을 연다. 이미 켜져 있으면 켜진 쪽에 설정 창을 열라고 넘기고 끝난다(칼퇴 레일 [설정])
+//         ClockOut.Hunsu.exe --settings      설정 창만 띄운다(도크·엑셀 따라가기 없음, 닫으면 끝남). 이미 켜져 있으면 켜진 쪽에 설정 창을 열라고 넘기고 끝난다(칼퇴 [설정창 열기])
+//         환경변수 CLOCKOUT_MODULES_FILE: 칼퇴가 켜 둔 하위 모듈 목록. 없는 모듈은 불러오지 않는다(Shell/ModuleGateFile)
 //         ClockOut.Hunsu.exe --follow <hwnd> --log <파일> --snapshot <폴더> --layout <파일>   측정 도구가 쓰는 방식(Core/AppOptions)
 // 의존: Shell/ShellController, Core/AppOptions, Core/SingleInstance(보통 모드는 하나만 켜짐), Signal/SettingsForward
 using System.Windows;
@@ -22,7 +23,8 @@ public partial class App : Application
         _single = SingleInstance.TryAcquire(options);
         if (_single is null)
         {
-            if (options.OpenSettings) Signal.SettingsForward.Send(); // 켜진 쪽이 설정 창을 연다. 못 찾으면(막 끝나는 중) 그냥 끝낸다
+            // --settings면 켜진 쪽이 설정 창을 열고, 보통 실행이면 켜진 쪽이 "설정만" 모드일 때 이어서 켠다. 못 찾으면(막 끝나는 중) 그냥 끝낸다.
+            Signal.SettingsForward.Send(options.OpenSettings ? AppMessages.Settings : AppMessages.Start);
             Shutdown(0);
             return;
         }

@@ -1,5 +1,15 @@
 # 인수인계 (2026-11-22 갱신)
 
+## 2026-11-22 칼퇴 새 레일 구조에 맞추기 (판 0.0.236, PR#79 위에 쌓음)
+- 칼퇴 쪽지(claude-workspace `bridge/inbox-hunsu/2026-11-22-001-rail-restructure-todo.md`)와 칼퇴 `docs/10` 1장대로. 결정과 근거는 `docs/22`.
+- 하위 모듈 = 훈수꾼 모듈 26개 그대로(id `hunsu-…`). `pack_app.ps1`이 모듈 선언에서 `hunsu.app.json`의 `modules`(name, 설명 첫 문장, default true)를 만든다.
+- 시작 때 `CLOCKOUT_MODULES_FILE`(modules.enabled.json)을 읽어 없는 모듈은 선언도 안 읽고 건너뜀(`Core/Manifest/ModuleGate`, `Shell/ModuleGateFile`, 기록 module_gate·module_skip). 없거나 깨지면 선언 default, 선언도 없으면 모두.
+- 반영 시점 결정(Claude): 껐다 켜면 반영. 파일 감시 안 함.
+- `--settings`로 꺼진 훈수꾼을 켜면 "설정만" 모드(`ShellController.SettingsOnly.cs`): 설정 창만, 닫으면 끝. 그 사이 칼퇴 [켜기]는 `ClockOut.App.Start`를 넘겨 이어서 켬(창의 「훈수꾼 켜기」, Ctrl+Alt+H도). 창을 건드리는 곳(RefreshDocks, UpdateQuickBar, UpdateSidebar, SetEnabled, PlaceFromManager, OnForeground, 신호)은 `_settingsOnly`면 멈춘다.
+- SHA 장부 `releases/hunsu_sha256.md`(0.0.045·201·202 카탈로그에서 옮김), pack_app이 `release-record.json`을 만들고 같은 판 다른 SHA면 실패. docs/21 4-1장.
+- 확인: 클라우드 dotnet 10으로 WPF 포함 빌드 0 경고·0 오류, 시험 332개 통과(새 ModuleGateTests). 못 본 것: 설정만 모드 화면(다른 창이 안 뜨는지), 칼퇴가 넘긴 파일로 켜기, pack_app(pwsh·엑셀).
+- 다음: PR#79 → 이 PR 머지, PC에서 묶음 만들어 칼퇴 v0.1.185 이상에서 모듈 스위치 확인. 설정 마법사(0.0.230)·PR#78(0.0.225)은 머지 때 판을 0.0.236보다 올려야 함.
+
 ## 2026-11-22 칼퇴에서 훈수꾼 설정 열기 (판 0.0.226)
 - 사용자 요청: "훈수꾼 설정이 칼퇴에서 켜지면 좋겠어". 칼퇴 소개 화면 [설정](ClockOut v0.1.175)이 훈수꾼 설정 창([일반] 쪽)을 연다.
 - 훈수꾼: 등록 창 메시지 `AppMessages.Settings`("ClockOut.App.Settings")를 SignalWindow가 받아 `OpenManager("general")`(ShellController.Bench.cs). 실행 인자 `--settings`(`AppOptions.OpenSettings`, 보통 모드로 쳐서 단일 실행 잠금 대상)면 켜자마자 설정 창. 잠금에 걸리면 `Signal/SettingsForward`가 켜진 쪽 신호 창에 메시지를 넘기고 끝난다. `pack_app.ps1`이 선언에 `settingsMessage`·`settingsArgs`를 넣는다.

@@ -1,5 +1,5 @@
 // 기능: 모듈 폴더(실행 파일 옆 modules\<id>\)에서 선언(<id>.hunsu.json)과 화면 선언(view.json)을 읽는다. 틀린 모듈은 건너뛰고 이유를 기록한다(manifest_bad, view_failed).
-// 사용법: var mods = ModuleCatalog.Load(dirs, log);
+// 사용법: var mods = ModuleCatalog.Load(dirs, log);  ModuleCatalog.Load(dirs, log, gate.Allows, skipped)  // allow가 false인 모듈은 선언도 읽지 않는다(칼퇴에서 끈 모듈, 2026-11-22)
 // 의존: Core/Manifest, Core/View, Diagnostics/RunLog. 모듈은 선언만 있고 코드를 실행하지 않는다. 선언 파일 크기는 64KB까지(docs/04 8장).
 using System.IO;
 using ClockOut.Hunsu.Core.Manifest;
@@ -14,7 +14,7 @@ internal static class ModuleCatalog
 {
     private const long MaxDeclBytes = 64 * 1024;
 
-    public static IReadOnlyList<LoadedModule> Load(IEnumerable<string> roots, RunLog log)
+    public static IReadOnlyList<LoadedModule> Load(IEnumerable<string> roots, RunLog log, Func<string, bool>? allow = null, ICollection<string>? skipped = null)
     {
         var found = new Dictionary<string, LoadedModule>(StringComparer.Ordinal);
         foreach (var root in roots.Where(Directory.Exists))
@@ -22,6 +22,12 @@ internal static class ModuleCatalog
             foreach (var dir in Directory.EnumerateDirectories(root))
             {
                 string id = Path.GetFileName(dir);
+                if (allow != null && !allow(id))
+                {
+                    if (skipped != null && !skipped.Contains(id)) skipped.Add(id);
+                    log.Write("module_skip", ("id", id), ("why", "칼퇴에서_꺼짐"));
+                    continue;
+                }
                 var m = TryLoad(dir, id, log);
                 if (m != null && found.TryAdd(m.Manifest.Id, m)) log.Write("module_load", ("id", m.Manifest.Id), ("version", m.Manifest.Version));
             }
