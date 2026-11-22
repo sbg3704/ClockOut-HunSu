@@ -1,0 +1,1222 @@
+{
+ "_note": "한 수(hunsu-hansu) 함수 사전. 함수를 더하려면 덩어리 하나를 더한다. 형식은 docs/23 2장, 읽는 코드는 Core/Formula/FunctionCatalog.",
+ "functions": [
+  {
+   "name": "SUM",
+   "group": "더하기·세기",
+   "say": "범위의 숫자를 모두 더합니다",
+   "words": [
+    "합계",
+    "더하기",
+    "총합",
+    "합"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "더할 범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=SUM(D2:D20)",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "SUMIFS",
+   "group": "더하기·세기",
+   "say": "조건에 맞는 칸만 골라 더합니다",
+   "words": [
+    "조건 합",
+    "조건부 합계",
+    "골라서 더하기",
+    "sumif",
+    "조건 더하기"
+   ],
+   "args": [
+    {
+     "key": "sum",
+     "label": "더할 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "cr",
+     "label": "조건 범위",
+     "kind": "range",
+     "repeat": "c",
+     "hint": "sameSize"
+    },
+    {
+     "key": "c",
+     "label": "조건",
+     "kind": "criteria",
+     "repeat": "c"
+    }
+   ],
+   "example": "=SUMIFS(D:D,B:B,\"서울\")",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "COUNT",
+   "group": "더하기·세기",
+   "say": "숫자가 든 칸을 셉니다",
+   "words": [
+    "숫자 개수",
+    "개수"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "셀 범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=COUNT(D2:D20)",
+   "needs": "2007"
+  },
+  {
+   "name": "COUNTA",
+   "group": "더하기·세기",
+   "say": "비어 있지 않은 칸을 셉니다",
+   "words": [
+    "개수",
+    "빈칸 아닌 개수",
+    "채워진 칸 수"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "셀 범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=COUNTA(A2:A20)",
+   "needs": "2007"
+  },
+  {
+   "name": "COUNTBLANK",
+   "group": "더하기·세기",
+   "say": "빈 칸을 셉니다",
+   "words": [
+    "빈칸 개수",
+    "빈 칸 세기"
+   ],
+   "args": [
+    {
+     "key": "r",
+     "label": "셀 범위",
+     "kind": "range"
+    }
+   ],
+   "example": "=COUNTBLANK(A2:A20)",
+   "needs": "2007"
+  },
+  {
+   "name": "COUNTIFS",
+   "group": "더하기·세기",
+   "say": "조건에 맞는 칸의 개수를 셉니다",
+   "words": [
+    "조건 개수",
+    "조건 세기",
+    "countif",
+    "몇 개",
+    "건수"
+   ],
+   "args": [
+    {
+     "key": "cr",
+     "label": "조건 범위",
+     "kind": "range",
+     "repeat": "c",
+     "hint": "sameSize"
+    },
+    {
+     "key": "c",
+     "label": "조건",
+     "kind": "criteria",
+     "repeat": "c"
+    }
+   ],
+   "example": "=COUNTIFS(B:B,\"서울\")",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "AVERAGE",
+   "group": "더하기·세기",
+   "say": "숫자들의 평균을 냅니다",
+   "words": [
+    "평균"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=AVERAGE(D2:D20)",
+   "needs": "2007"
+  },
+  {
+   "name": "AVERAGEIFS",
+   "group": "더하기·세기",
+   "say": "조건에 맞는 칸만 골라 평균을 냅니다",
+   "words": [
+    "조건 평균",
+    "조건부 평균",
+    "averageif"
+   ],
+   "args": [
+    {
+     "key": "avg",
+     "label": "평균 낼 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "cr",
+     "label": "조건 범위",
+     "kind": "range",
+     "repeat": "c",
+     "hint": "sameSize"
+    },
+    {
+     "key": "c",
+     "label": "조건",
+     "kind": "criteria",
+     "repeat": "c"
+    }
+   ],
+   "example": "=AVERAGEIFS(D:D,B:B,\"서울\")",
+   "needs": "2007"
+  },
+  {
+   "name": "MAXIFS",
+   "group": "더하기·세기",
+   "say": "조건에 맞는 칸 중 가장 큰 값",
+   "words": [
+    "조건 최대",
+    "조건 최댓값"
+   ],
+   "args": [
+    {
+     "key": "max",
+     "label": "최댓값 찾을 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "cr",
+     "label": "조건 범위",
+     "kind": "range",
+     "repeat": "c",
+     "hint": "sameSize"
+    },
+    {
+     "key": "c",
+     "label": "조건",
+     "kind": "criteria",
+     "repeat": "c"
+    }
+   ],
+   "example": "=MAXIFS(D:D,B:B,\"서울\")",
+   "needs": "2019"
+  },
+  {
+   "name": "MINIFS",
+   "group": "더하기·세기",
+   "say": "조건에 맞는 칸 중 가장 작은 값",
+   "words": [
+    "조건 최소",
+    "조건 최솟값"
+   ],
+   "args": [
+    {
+     "key": "min",
+     "label": "최솟값 찾을 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "cr",
+     "label": "조건 범위",
+     "kind": "range",
+     "repeat": "c",
+     "hint": "sameSize"
+    },
+    {
+     "key": "c",
+     "label": "조건",
+     "kind": "criteria",
+     "repeat": "c"
+    }
+   ],
+   "example": "=MINIFS(D:D,B:B,\"서울\")",
+   "needs": "2019"
+  },
+  {
+   "name": "MAX",
+   "group": "더하기·세기",
+   "say": "가장 큰 값",
+   "words": [
+    "최대",
+    "최댓값",
+    "제일 큰"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=MAX(D2:D20)",
+   "needs": "2007"
+  },
+  {
+   "name": "MIN",
+   "group": "더하기·세기",
+   "say": "가장 작은 값",
+   "words": [
+    "최소",
+    "최솟값",
+    "제일 작은"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "범위",
+     "kind": "range",
+     "repeat": "n"
+    }
+   ],
+   "example": "=MIN(D2:D20)",
+   "needs": "2007"
+  },
+  {
+   "name": "SUMPRODUCT",
+   "group": "더하기·세기",
+   "say": "같은 자리끼리 곱해서 모두 더합니다",
+   "words": [
+    "곱해서 더하기",
+    "곱의 합",
+    "단가 수량 합"
+   ],
+   "args": [
+    {
+     "key": "a",
+     "label": "범위",
+     "kind": "range",
+     "repeat": "a",
+     "hint": "sameSize"
+    }
+   ],
+   "example": "=SUMPRODUCT(C2:C9,D2:D9)",
+   "needs": "2007"
+  },
+  {
+   "name": "SUBTOTAL",
+   "group": "더하기·세기",
+   "say": "필터로 보이는 칸만 계산합니다",
+   "words": [
+    "부분합",
+    "필터 합계",
+    "보이는 것만"
+   ],
+   "args": [
+    {
+     "key": "fn",
+     "label": "계산 방법 번호 (9 합계, 1 평균, 3 개수, 109 숨긴 행도 뺀 합계)",
+     "kind": "value"
+    },
+    {
+     "key": "r",
+     "label": "범위",
+     "kind": "range"
+    }
+   ],
+   "example": "=SUBTOTAL(9,D2:D20)",
+   "needs": "2007"
+  },
+  {
+   "name": "IF",
+   "group": "조건",
+   "say": "조건이 맞으면 이것, 아니면 저것",
+   "words": [
+    "만약",
+    "조건",
+    "이면",
+    "분기",
+    "~이면"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "조건 (예: D2>=100)",
+     "kind": "any"
+    },
+    {
+     "key": "y",
+     "label": "맞을 때 값",
+     "kind": "any"
+    },
+    {
+     "key": "n",
+     "label": "아닐 때 값",
+     "kind": "any",
+     "optional": true
+    }
+   ],
+   "example": "=IF(D2>=100,\"많음\",\"적음\")",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "IFS",
+   "group": "조건",
+   "say": "여러 조건을 차례로 보고 처음 맞는 값을 냅니다",
+   "words": [
+    "여러 조건",
+    "다중 조건",
+    "등급 매기기"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "조건",
+     "kind": "any",
+     "repeat": "p"
+    },
+    {
+     "key": "v",
+     "label": "그때 값",
+     "kind": "any",
+     "repeat": "p"
+    }
+   ],
+   "example": "=IFS(D2>=90,\"A\",D2>=80,\"B\",TRUE,\"C\")",
+   "needs": "2019"
+  },
+  {
+   "name": "IFERROR",
+   "group": "조건",
+   "say": "오류가 나면 대신 보일 값을 정합니다",
+   "words": [
+    "오류 감추기",
+    "에러 처리",
+    "오류면",
+    "#N/A 없애기"
+   ],
+   "args": [
+    {
+     "key": "v",
+     "label": "계산식",
+     "kind": "any"
+    },
+    {
+     "key": "e",
+     "label": "오류일 때 값",
+     "kind": "any"
+    }
+   ],
+   "example": "=IFERROR(VLOOKUP(A2,표,2,FALSE),\"\")",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "AND",
+   "group": "조건",
+   "say": "조건이 모두 맞는지",
+   "words": [
+    "그리고",
+    "모두"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "조건",
+     "kind": "any",
+     "repeat": "t"
+    }
+   ],
+   "example": "=AND(D2>0,E2>0)",
+   "needs": "2007"
+  },
+  {
+   "name": "OR",
+   "group": "조건",
+   "say": "조건 중 하나라도 맞는지",
+   "words": [
+    "또는",
+    "하나라도"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "조건",
+     "kind": "any",
+     "repeat": "t"
+    }
+   ],
+   "example": "=OR(B2=\"서울\",B2=\"부산\")",
+   "needs": "2007"
+  },
+  {
+   "name": "SWITCH",
+   "group": "조건",
+   "say": "값에 따라 정해 둔 결과를 고릅니다",
+   "words": [
+    "바꾸기 표",
+    "값별 결과",
+    "케이스"
+   ],
+   "args": [
+    {
+     "key": "x",
+     "label": "볼 값",
+     "kind": "any"
+    },
+    {
+     "key": "k",
+     "label": "이 값이면",
+     "kind": "any",
+     "repeat": "p"
+    },
+    {
+     "key": "v",
+     "label": "이 결과",
+     "kind": "any",
+     "repeat": "p"
+    }
+   ],
+   "example": "=SWITCH(A2,1,\"월\",2,\"화\",\"그 밖\")",
+   "needs": "2019"
+  },
+  {
+   "name": "VLOOKUP",
+   "group": "찾기",
+   "say": "표의 첫 열에서 찾아 같은 줄의 다른 열 값을 가져옵니다",
+   "words": [
+    "찾아서 가져오기",
+    "찾기",
+    "브이룩업",
+    "조회",
+    "매칭"
+   ],
+   "args": [
+    {
+     "key": "k",
+     "label": "찾을 값",
+     "kind": "any"
+    },
+    {
+     "key": "t",
+     "label": "표 범위",
+     "kind": "range"
+    },
+    {
+     "key": "c",
+     "label": "가져올 열 번호",
+     "kind": "value"
+    },
+    {
+     "key": "m",
+     "label": "정확히 일치 (거짓=정확히)",
+     "kind": "bool",
+     "optional": true
+    }
+   ],
+   "example": "=VLOOKUP(A2,$F$2:$H$50,2,FALSE)",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "XLOOKUP",
+   "group": "찾기",
+   "say": "찾을 범위에서 찾아 같은 자리의 값을 가져옵니다",
+   "words": [
+    "찾아서 가져오기",
+    "찾기",
+    "엑스룩업",
+    "조회"
+   ],
+   "args": [
+    {
+     "key": "k",
+     "label": "찾을 값",
+     "kind": "any"
+    },
+    {
+     "key": "l",
+     "label": "찾을 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "r",
+     "label": "가져올 범위",
+     "kind": "range",
+     "hint": "sameSize"
+    },
+    {
+     "key": "nf",
+     "label": "못 찾으면 보일 값",
+     "kind": "any",
+     "optional": true
+    }
+   ],
+   "example": "=XLOOKUP(A2,F:F,H:H,\"없음\")",
+   "needs": "365",
+   "popular": true
+  },
+  {
+   "name": "INDEX",
+   "group": "찾기",
+   "say": "범위에서 몇 번째 줄·열의 값을 가져옵니다",
+   "words": [
+    "몇 번째",
+    "위치 값",
+    "인덱스"
+   ],
+   "args": [
+    {
+     "key": "r",
+     "label": "범위",
+     "kind": "range"
+    },
+    {
+     "key": "row",
+     "label": "줄 번호",
+     "kind": "value"
+    },
+    {
+     "key": "col",
+     "label": "열 번호",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=INDEX(H2:H50,MATCH(A2,F2:F50,0))",
+   "needs": "2007"
+  },
+  {
+   "name": "MATCH",
+   "group": "찾기",
+   "say": "값이 범위에서 몇 번째에 있는지",
+   "words": [
+    "위치 찾기",
+    "몇 번째",
+    "순서"
+   ],
+   "args": [
+    {
+     "key": "k",
+     "label": "찾을 값",
+     "kind": "any"
+    },
+    {
+     "key": "r",
+     "label": "찾을 범위",
+     "kind": "range"
+    },
+    {
+     "key": "t",
+     "label": "찾는 방법 (0 정확히)",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=MATCH(A2,F2:F50,0)",
+   "needs": "2007"
+  },
+  {
+   "name": "XMATCH",
+   "group": "찾기",
+   "say": "값이 범위에서 몇 번째에 있는지(새 방식)",
+   "words": [
+    "위치 찾기",
+    "몇 번째"
+   ],
+   "args": [
+    {
+     "key": "k",
+     "label": "찾을 값",
+     "kind": "any"
+    },
+    {
+     "key": "r",
+     "label": "찾을 범위",
+     "kind": "range"
+    }
+   ],
+   "example": "=XMATCH(A2,F2:F50)",
+   "needs": "365"
+  },
+  {
+   "name": "ROUND",
+   "group": "숫자",
+   "say": "자릿수에 맞춰 반올림합니다",
+   "words": [
+    "반올림",
+    "사사오입"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "숫자",
+     "kind": "any"
+    },
+    {
+     "key": "d",
+     "label": "자릿수 (0 정수, -3 천 단위)",
+     "kind": "value"
+    }
+   ],
+   "example": "=ROUND(D2,0)",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "ROUNDUP",
+   "group": "숫자",
+   "say": "자릿수에 맞춰 올립니다",
+   "words": [
+    "올림"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "숫자",
+     "kind": "any"
+    },
+    {
+     "key": "d",
+     "label": "자릿수",
+     "kind": "value"
+    }
+   ],
+   "example": "=ROUNDUP(D2,-3)",
+   "needs": "2007"
+  },
+  {
+   "name": "ROUNDDOWN",
+   "group": "숫자",
+   "say": "자릿수에 맞춰 버립니다",
+   "words": [
+    "내림",
+    "절사",
+    "버림"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "숫자",
+     "kind": "any"
+    },
+    {
+     "key": "d",
+     "label": "자릿수",
+     "kind": "value"
+    }
+   ],
+   "example": "=ROUNDDOWN(D2,-3)",
+   "needs": "2007"
+  },
+  {
+   "name": "ABS",
+   "group": "숫자",
+   "say": "부호를 뗀 크기",
+   "words": [
+    "절댓값"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "숫자",
+     "kind": "any"
+    }
+   ],
+   "example": "=ABS(D2)",
+   "needs": "2007"
+  },
+  {
+   "name": "MOD",
+   "group": "숫자",
+   "say": "나눈 나머지",
+   "words": [
+    "나머지"
+   ],
+   "args": [
+    {
+     "key": "n",
+     "label": "숫자",
+     "kind": "any"
+    },
+    {
+     "key": "d",
+     "label": "나눌 수",
+     "kind": "any"
+    }
+   ],
+   "example": "=MOD(A2,2)",
+   "needs": "2007"
+  },
+  {
+   "name": "TODAY",
+   "group": "날짜",
+   "say": "오늘 날짜",
+   "words": [
+    "오늘"
+   ],
+   "args": [],
+   "example": "=TODAY()",
+   "needs": "2007"
+  },
+  {
+   "name": "DATE",
+   "group": "날짜",
+   "say": "연·월·일로 날짜를 만듭니다",
+   "words": [
+    "날짜 만들기",
+    "날짜"
+   ],
+   "args": [
+    {
+     "key": "y",
+     "label": "연",
+     "kind": "any"
+    },
+    {
+     "key": "m",
+     "label": "월",
+     "kind": "any"
+    },
+    {
+     "key": "d",
+     "label": "일",
+     "kind": "any"
+    }
+   ],
+   "example": "=DATE(2026,11,20)",
+   "needs": "2007"
+  },
+  {
+   "name": "EDATE",
+   "group": "날짜",
+   "say": "몇 달 앞뒤의 같은 날",
+   "words": [
+    "몇 달 뒤",
+    "개월 후",
+    "만기일"
+   ],
+   "args": [
+    {
+     "key": "s",
+     "label": "시작 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "m",
+     "label": "달 수 (앞은 음수)",
+     "kind": "value"
+    }
+   ],
+   "example": "=EDATE(A2,3)",
+   "needs": "2007"
+  },
+  {
+   "name": "EOMONTH",
+   "group": "날짜",
+   "say": "몇 달 앞뒤 달의 말일",
+   "words": [
+    "월말",
+    "말일",
+    "달 마지막 날"
+   ],
+   "args": [
+    {
+     "key": "s",
+     "label": "시작 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "m",
+     "label": "달 수 (0 이번 달)",
+     "kind": "value"
+    }
+   ],
+   "example": "=EOMONTH(A2,0)",
+   "needs": "2007"
+  },
+  {
+   "name": "DATEDIF",
+   "group": "날짜",
+   "say": "두 날짜 사이의 햇수·달수·날수",
+   "words": [
+    "기간",
+    "근속",
+    "나이",
+    "날짜 차이",
+    "경과"
+   ],
+   "args": [
+    {
+     "key": "s",
+     "label": "시작 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "e",
+     "label": "끝 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "u",
+     "label": "단위 (Y 해, M 달, D 날)",
+     "kind": "text"
+    }
+   ],
+   "example": "=DATEDIF(A2,TODAY(),\"Y\")",
+   "needs": "2007"
+  },
+  {
+   "name": "NETWORKDAYS",
+   "group": "날짜",
+   "say": "주말(과 휴일)을 뺀 일하는 날 수",
+   "words": [
+    "근무일",
+    "영업일",
+    "평일 수"
+   ],
+   "args": [
+    {
+     "key": "s",
+     "label": "시작 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "e",
+     "label": "끝 날짜",
+     "kind": "any"
+    },
+    {
+     "key": "h",
+     "label": "휴일 범위",
+     "kind": "range",
+     "optional": true
+    }
+   ],
+   "example": "=NETWORKDAYS(A2,B2)",
+   "needs": "2007"
+  },
+  {
+   "name": "WEEKDAY",
+   "group": "날짜",
+   "say": "요일 번호",
+   "words": [
+    "요일"
+   ],
+   "args": [
+    {
+     "key": "d",
+     "label": "날짜",
+     "kind": "any"
+    },
+    {
+     "key": "t",
+     "label": "번호 방식 (1 일요일=1, 2 월요일=1)",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=WEEKDAY(A2,2)",
+   "needs": "2007"
+  },
+  {
+   "name": "TEXT",
+   "group": "글자",
+   "say": "숫자·날짜를 원하는 모양의 글자로",
+   "words": [
+    "서식",
+    "모양 바꾸기",
+    "날짜 글자",
+    "천 단위 쉼표"
+   ],
+   "args": [
+    {
+     "key": "v",
+     "label": "값",
+     "kind": "any"
+    },
+    {
+     "key": "f",
+     "label": "모양 (예: yyyy-mm-dd, #,##0)",
+     "kind": "text"
+    }
+   ],
+   "example": "=TEXT(A2,\"yyyy-mm-dd\")",
+   "needs": "2007",
+   "popular": true
+  },
+  {
+   "name": "LEFT",
+   "group": "글자",
+   "say": "왼쪽에서 몇 글자",
+   "words": [
+    "왼쪽 글자",
+    "앞 글자"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    },
+    {
+     "key": "n",
+     "label": "글자 수",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=LEFT(A2,3)",
+   "needs": "2007"
+  },
+  {
+   "name": "RIGHT",
+   "group": "글자",
+   "say": "오른쪽에서 몇 글자",
+   "words": [
+    "오른쪽 글자",
+    "뒤 글자"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    },
+    {
+     "key": "n",
+     "label": "글자 수",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=RIGHT(A2,4)",
+   "needs": "2007"
+  },
+  {
+   "name": "MID",
+   "group": "글자",
+   "say": "가운데에서 몇 글자",
+   "words": [
+    "가운데 글자",
+    "중간 글자",
+    "잘라내기"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    },
+    {
+     "key": "s",
+     "label": "시작 위치",
+     "kind": "value"
+    },
+    {
+     "key": "n",
+     "label": "글자 수",
+     "kind": "value"
+    }
+   ],
+   "example": "=MID(A2,3,2)",
+   "needs": "2007"
+  },
+  {
+   "name": "LEN",
+   "group": "글자",
+   "say": "글자 수",
+   "words": [
+    "길이",
+    "글자 수"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    }
+   ],
+   "example": "=LEN(A2)",
+   "needs": "2007"
+  },
+  {
+   "name": "TEXTJOIN",
+   "group": "글자",
+   "say": "여러 칸 글자를 구분자로 이어 붙입니다",
+   "words": [
+    "합치기",
+    "이어 붙이기",
+    "연결",
+    "콤마로 잇기"
+   ],
+   "args": [
+    {
+     "key": "d",
+     "label": "구분자 (예: , )",
+     "kind": "text"
+    },
+    {
+     "key": "e",
+     "label": "빈 칸 건너뛰기 (참)",
+     "kind": "bool"
+    },
+    {
+     "key": "r",
+     "label": "범위",
+     "kind": "range",
+     "repeat": "r"
+    }
+   ],
+   "example": "=TEXTJOIN(\", \",TRUE,A2:A9)",
+   "needs": "2019"
+  },
+  {
+   "name": "SUBSTITUTE",
+   "group": "글자",
+   "say": "글자 안의 일부를 바꿉니다",
+   "words": [
+    "바꾸기",
+    "치환",
+    "글자 바꾸기"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    },
+    {
+     "key": "o",
+     "label": "찾을 글자",
+     "kind": "text"
+    },
+    {
+     "key": "n",
+     "label": "바꿀 글자",
+     "kind": "text"
+    }
+   ],
+   "example": "=SUBSTITUTE(A2,\"-\",\"\")",
+   "needs": "2007"
+  },
+  {
+   "name": "TRIM",
+   "group": "글자",
+   "say": "앞뒤와 겹친 빈칸을 지웁니다",
+   "words": [
+    "공백 지우기",
+    "빈칸 정리"
+   ],
+   "args": [
+    {
+     "key": "t",
+     "label": "글자",
+     "kind": "any"
+    }
+   ],
+   "example": "=TRIM(A2)",
+   "needs": "2007"
+  },
+  {
+   "name": "UNIQUE",
+   "group": "배열(365)",
+   "say": "겹치지 않는 값만 뽑습니다",
+   "words": [
+    "중복 제거",
+    "고유값",
+    "겹치지 않게"
+   ],
+   "args": [
+    {
+     "key": "r",
+     "label": "범위",
+     "kind": "range"
+    }
+   ],
+   "example": "=UNIQUE(B2:B50)",
+   "needs": "365"
+  },
+  {
+   "name": "FILTER",
+   "group": "배열(365)",
+   "say": "조건에 맞는 줄만 뽑아 냅니다",
+   "words": [
+    "필터",
+    "걸러내기",
+    "조건 뽑기"
+   ],
+   "args": [
+    {
+     "key": "r",
+     "label": "뽑을 범위",
+     "kind": "range"
+    },
+    {
+     "key": "t",
+     "label": "조건 (예: B2:B50=\"서울\")",
+     "kind": "any"
+    },
+    {
+     "key": "e",
+     "label": "없을 때 값",
+     "kind": "any",
+     "optional": true
+    }
+   ],
+   "example": "=FILTER(A2:D50,B2:B50=\"서울\",\"없음\")",
+   "needs": "365"
+  },
+  {
+   "name": "SORT",
+   "group": "배열(365)",
+   "say": "범위를 정렬해 보여 줍니다",
+   "words": [
+    "정렬",
+    "순서대로"
+   ],
+   "args": [
+    {
+     "key": "r",
+     "label": "범위",
+     "kind": "range"
+    },
+    {
+     "key": "i",
+     "label": "기준 열 번호",
+     "kind": "value",
+     "optional": true
+    },
+    {
+     "key": "o",
+     "label": "순서 (1 오름, -1 내림)",
+     "kind": "value",
+     "optional": true
+    }
+   ],
+   "example": "=SORT(A2:D50,4,-1)",
+   "needs": "365"
+  }
+ ]
+}

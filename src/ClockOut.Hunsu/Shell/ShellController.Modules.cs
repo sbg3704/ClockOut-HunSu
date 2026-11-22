@@ -300,6 +300,7 @@ internal sealed partial class ShellController
         if (r.Response.Ok) ForTopic(r.Topic, m => { m.SetData(r.Topic, r.Response.Data); m.SetStale(false); NoteActivity(m); });
         else { ForTopic(r.Topic, m => m.SetStale(true)); NoteBridgeProblem(r); }
         if (r.Response.Ok && r.Topic == TopicRouting.SelectionSummary) ObserveHistory(r);
+        if (r.Response.Ok && r.Topic == TopicRouting.SelectionSummary) FeedHansu(r);
         if (r.Response.Ok) OnTopicForMarks(r);
         if (r.Response.Ok && r.Topic == "mark" && r.Excel == _target) OnMarkForHud(r.Response.Data);
         else if (r.Response.Ok && r.Excel == _target) RefreshHuds();
@@ -321,6 +322,7 @@ internal sealed partial class ShellController
             return;
         }
         if (ClockOut.Hunsu.Core.Write.WritePolicy.IsWrite(command)) { await OnWriteCommand(mv, command, argsJson); return; } // 실험 쓰기 명령: 공지·확인 뒤에만(ShellController.Write)
+        if (IsHansuCommand(command)) { OnHansuCommand(mv, command); return; } // 한 수 창(ShellController.Hansu)
         if (TopicRouting.IsAppTopic(command)) { OnAppCommand(mv, command, argsJson); return; } // 앱이 처리(ShellController.History)
         if (_target == IntPtr.Zero) return;
         var call = await _registry.DoAsync(_target, command, argsJson);
