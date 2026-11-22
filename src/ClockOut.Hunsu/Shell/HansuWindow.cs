@@ -1,4 +1,4 @@
-// 기능: 한 수(hunsu-hansu, docs/22) 창. 하고 싶은 일로 함수를 찾고(위), 고른 함수의 빈칸을 채워(HansuWindow.Slots.cs) 수식을 완성해 넣을 칸에 넣게 한다.
+// 기능: 한 수(hunsu-hansu, docs/23) 창. 하고 싶은 일로 함수를 찾고(위), 고른 함수의 빈칸을 채워(HansuWindow.Slots.cs) 수식을 완성해 넣을 칸에 넣게 한다.
 //       독·사이드바 패널은 키보드를 받지 않는 창이라, 글을 치는 이 창만 따로 띄운다. 엑셀에서 범위를 끄는 동안에도 맨 위에 떠 있다(엑셀의 함수 인수 창처럼).
 // 사용법: var w = new HansuWindow(catalog, recent); w.SetTarget(book, sheet, addr); w.Show();
 //         선택이 바뀔 때마다 w.OnSelection(book, sheet, addr)  /  [넣기] → InsertRequested(sheet, addr, formula, 함수 이름)

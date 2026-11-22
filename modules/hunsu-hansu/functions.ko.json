@@ -1,5 +1,5 @@
 {
- "_note": "한 수(hunsu-hansu) 함수 사전. 함수를 더하려면 덩어리 하나를 더한다. 형식은 docs/22 2장, 읽는 코드는 Core/Formula/FunctionCatalog.",
+ "_note": "한 수(hunsu-hansu) 함수 사전. 함수를 더하려면 덩어리 하나를 더한다. 형식은 docs/23 2장, 읽는 코드는 Core/Formula/FunctionCatalog.",
  "functions": [
   {
    "name": "SUM",

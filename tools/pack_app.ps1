@@ -1,13 +1,16 @@
 ﻿<#
 기능: 칼퇴 레일로 나눠 줄 훈수꾼 묶음(hunsu.zip)을 만든다. 칼퇴의 "apps 전용 설치 길"(칼퇴 docs/03 apps, 2026-11-12) 규격을 따른다.
       묶음 구성(zip 맨 위 기준):
-        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage)
+        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs, modules)
+                                       modules = 칼퇴 [모듈 관리]에서 켜고 끄는 하위 모듈 목록(칼퇴 docs/10 1장). modules\<id>\<id>.hunsu.json에서 만든다:
+                                       id = 모듈 id, name = 이름, summary = 설명의 첫 문장, default = true(훈수꾼 안의 보이기·숨기기와 따로)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
         addins\clockout-hunsu.zip      다리 추가기능 패키지(clockout-hunsu.xlam + clockout-hunsu.clockout.json). 칼퇴가 기존 추가기능 흐름으로 설치
         hunsu.guide.md, hunsu.changes.md   칼퇴 소개 화면의 사용법·패치노트(assets\guide에서 복사, 규칙은 claude-workspace docs/하위프로그램_안내문_규칙.md)
         LICENSE.txt, README.txt
       zip을 만든 직후 tools\check_guide.ps1이 안내문 규칙을 검사하고, 어기면 포장이 실패한다.
-      끝나면 SHA-256과 크기, 카탈로그 apps 항목 예시를 출력한다(out\pack\hunsu.zip, .sha256, catalog-entry.json).
+      끝나면 SHA-256과 크기, 카탈로그 apps 항목 예시를 출력한다(out\pack\hunsu.zip, .sha256, catalog-entry.json, release-record.json).
+      SHA 장부(releases\hunsu_sha256.md)에 같은 판이 다른 SHA로 이미 있으면 실패한다(한 판 = 한 SHA, 서버 장부·카탈로그가 같은 값으로 판별, 2026-11-22).
 사용법: pwsh -File tools\pack_app.ps1 -Version 0.1.000 [-SkipBridge]
         -SkipBridge: 엑셀 없이(이미 만든 out\clockout-hunsu.xlam을 그대로 씀)
 의존: .NET 10 SDK, tools\build_bridge.ps1(엑셀 데스크톱판). 공개 Release·카탈로그 수정은 하지 않는다(사용자가 직접).
@@ -48,9 +51,23 @@ $manifest = [ordered]@{
     spec = 0; id = 'hunsu'; version = $Version; name = '훈수꾼'
     exe = 'app/ClockOut.Hunsu.exe'; addins = @('addins/clockout-hunsu.zip')
     runtime = 'self-contained'; quitMessage = 'ClockOut.App.Quit'
+    settingsMessage = 'ClockOut.App.Settings'; settingsArgs = @('--settings')   # 칼퇴 레일 [설정](2026-11-22, Core/AppMessages)
 }
+# 하위 모듈 목록: 모듈 선언 하나가 출처다(이름·설명을 두 번 적지 않음). 설명이 길어 첫 문장만 한 줄 설명으로 쓴다.
+$subs = foreach ($d in Get-ChildItem (Join-Path $repo 'modules') -Directory) {
+    $decl = Join-Path $d.FullName "$($d.Name).hunsu.json"
+    if (-not (Test-Path $decl)) { continue }
+    $m = Get-Content $decl -Raw -Encoding utf8 | ConvertFrom-Json
+    if ($m.id -ne $d.Name) { Write-Host "[중단] 모듈 폴더 이름과 id가 다릅니다: $($d.Name)" -ForegroundColor Red; exit 1 }
+    if ($m.id -notmatch '^[A-Za-z0-9_-]{1,64}$') { Write-Host "[중단] 칼퇴 규격에 안 맞는 모듈 id: $($m.id)" -ForegroundColor Red; exit 1 }
+    $first = ([string]$m.description -split '(?<=다\.)\s')[0].Trim()
+    [pscustomobject]@{ order = [int]$m.order; entry = [ordered]@{ id = $m.id; name = $m.name; summary = $first; default = $true } }
+}
+$subs = @($subs | Sort-Object order | ForEach-Object { $_.entry })
+if ($subs.Count -gt 64) { Write-Host "[중단] 하위 모듈이 64개를 넘습니다(칼퇴 규격): $($subs.Count)" -ForegroundColor Red; exit 1 }
+$manifest.modules = $subs
 $utf8 = New-Object Text.UTF8Encoding($false)
-[IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 3), $utf8)
+[IO.File]::WriteAllText((Join-Path $stage 'hunsu.app.json'), ($manifest | ConvertTo-Json -Depth 5), $utf8)
 foreach ($g in 'hunsu.guide.md', 'hunsu.changes.md') {
     $src = Join-Path $repo "assets\guide\$g"
     if (-not (Test-Path $src)) { Write-Host "[중단] $src 가 없습니다(칼퇴 안내문 규칙)." -ForegroundColor Red; exit 1 }
@@ -77,6 +94,22 @@ $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $size = (Get-Item $zip).Length
 "$sha  hunsu.zip" | Set-Content -Encoding ascii (Join-Path $out 'hunsu.zip.sha256')
 $files = (Get-ChildItem $stage -Recurse -File).Count
+# 한 판 = 한 SHA. 장부에 같은 판이 다른 SHA로 있으면 이미 내보낸 판이므로 판을 올려야 한다.
+$ledger = Join-Path $repo 'releases\hunsu_sha256.md'
+if (Test-Path $ledger) {
+    $row = Select-String -Path $ledger -Pattern "^\|\s*$([regex]::Escape($Version))\s*\|" | Select-Object -First 1
+    if ($row -and $row.Line -notmatch $sha) {
+        Remove-Item $zip -ErrorAction SilentlyContinue
+        Write-Host "[중단] 판 $Version 은 SHA 장부에 다른 SHA로 이미 있습니다(releases\hunsu_sha256.md). 판을 올려 다시 만드세요." -ForegroundColor Red; exit 1
+    }
+}
+$commit = (git -C $repo rev-parse --short HEAD 2>$null)
+$record = [ordered]@{
+    id = 'hunsu'; version = $Version; file = 'hunsu.zip'; sha256 = $sha; size = $size
+    tag = "app-hunsu-$Version"; built = (Get-Date).ToString('yyyy-MM-dd'); commit = "$commit"
+    ledgerRow = "| $Version | $((Get-Date).ToString('yyyy-MM-dd')) | $sha | $size | app-hunsu-$Version |"
+}
+[IO.File]::WriteAllText((Join-Path $out 'release-record.json'), ($record | ConvertTo-Json -Depth 3), $utf8)
 $entry = [ordered]@{
     id = 'hunsu'; name = '훈수꾼'; version = $Version; icon = 'hunsu'
     summary = '엑셀 창 위에 선택 요약과 점검 결과를 겹쳐 보여 줍니다.'
@@ -87,5 +120,6 @@ $entry = [ordered]@{
 Write-Host ""
 Write-Host "완료: $zip"
 Write-Host ("  크기 {0:N1} MB, 파일 {1}개, SHA-256 {2}" -f ($size / 1MB), $files, $sha)
+Write-Host "  SHA 장부 한 줄(Release를 올린 뒤 releases\hunsu_sha256.md에 더함): $($record.ledgerRow)"
 Write-Host "  카탈로그 apps 항목 예시: $(Join-Path $out 'catalog-entry.json') (Release 태그 app-hunsu-$Version, 올리기는 사용자가 직접)"
 exit 0

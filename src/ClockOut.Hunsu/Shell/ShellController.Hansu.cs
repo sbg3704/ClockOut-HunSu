@@ -1,4 +1,4 @@
-// 기능: 한 수(hunsu-hansu, docs/22) 창 열기와 잇기(ShellController의 일부). app.hansu.open → 한 수 창, 선택 요약이 올 때마다 창에 알림, [넣기] → 쓰기 흐름(write.formula.set: 공지 → 계획(값 미리 보기) → 확인 → 실행 → 되돌리기).
+// 기능: 한 수(hunsu-hansu, docs/23) 창 열기와 잇기(ShellController의 일부). app.hansu.open → 한 수 창, 선택 요약이 올 때마다 창에 알림, [넣기] → 쓰기 흐름(write.formula.set: 공지 → 계획(값 미리 보기) → 확인 → 실행 → 되돌리기).
 // 사용법: OnCommand가 "app.hansu."으로 시작하는 명령을 OnHansuCommand로, OnTopic이 selection.summary 결과를 FeedHansu로 넘긴다.
 // 의존: Shell/HansuWindow, Core/Formula/FunctionCatalog(모듈 폴더의 functions.ko.json), ShellController.Write(OnWriteCommand). 셀 값은 보지 않는다(주소와 만든 수식 글만).
 using System.IO;

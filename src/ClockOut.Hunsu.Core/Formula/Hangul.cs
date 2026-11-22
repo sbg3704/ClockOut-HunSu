@@ -1,6 +1,6 @@
 // 기능: 한글 초성 뽑기와 찾기용 글 다듬기. "조건 합" → "ㅈㄱㅎ", 초성만 친 글("ㅈㄱㅎ")인지 알아보기.
 // 사용법: Hangul.Initials("조건 합") == "ㅈㄱㅎ";  Hangul.IsInitialsOnly("ㅈㄱ") == true;  Hangul.Squash(" Sum IFS ") == "sumifs"
-// 의존: 없음(유니코드 계산만). 오픈소스를 쓸 만큼 크지 않아 직접 둔다(docs/22 3장).
+// 의존: 없음(유니코드 계산만). 오픈소스를 쓸 만큼 크지 않아 직접 둔다(docs/23 3장).
 namespace ClockOut.Hunsu.Core.Formula;
 
 public static class Hangul

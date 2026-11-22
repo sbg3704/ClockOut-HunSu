@@ -52,7 +52,7 @@ internal sealed partial class ShellController
     /// <summary>띠에 넣을 칸(켜진 도크 모듈 앞 6개)을 다시 넣고, 보일지 정한다.</summary>
     private void UpdateQuickBar()
     {
-        if (_quick == null) return;
+        if (_quick == null || _settingsOnly) return;
         var items = _modules.Where(m => m.InDock && !m.Placement.Hidden).OrderBy(m => m.Placement.Order).Take(QuickMax)
             .Select(m => new QuickItem(m.Id, m.Module.Manifest.Name, m.Module.Manifest.Icon, m.ShowsPanel, IsModuleWorking(m))).ToList();
         _quick.SetItems(items);

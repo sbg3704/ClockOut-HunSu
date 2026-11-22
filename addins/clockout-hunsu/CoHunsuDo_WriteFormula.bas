@@ -1,6 +1,6 @@
 Attribute VB_Name = "CoHunsuDo_WriteFormula"
 '==============================================================
-' 기능: 한 수(hunsu-hansu, docs/22)의 수식 넣기 쓰기 명령(실험 기능). write.formula.set(칸 하나에 수식 넣기), write.formula.undo(넣기 전 내용으로 되돌리기).
+' 기능: 한 수(hunsu-hansu, docs/23)의 수식 넣기 쓰기 명령(실험 기능). write.formula.set(칸 하나에 수식 넣기), write.formula.undo(넣기 전 내용으로 되돌리기).
 ' 사용법: CoHunsu_Do "write.formula.set", "{""sheet"":""요약"",""addr"":""D5"",""formula"":""=SUM(A1:A9)""}"  -> 계획: 엑셀이 값을 미리 계산해 summary에 담는다(엑셀은 안 바뀜)
 '         confirm "1"을 더하면 실행: Formula2(없는 판이면 Formula)로 넣고 옛 내용을 메모리에 담아 write.formula.undo로 되돌린다(마지막 한 번만).
 ' 의존: CoHunsuJson, CoHunsuDo_Write(Write_Plan, Write_Applied). 지금 통합 문서(ActiveWorkbook)의 시트만. 보호된 시트·배열 수식 칸은 거절.

@@ -38,6 +38,9 @@ internal sealed class TrayIcon : IDisposable
     public event Action? ExcelLinkClicked;
 
     /// <summary>알림 영역 풍선 안내(다리 갱신처럼 사용자가 알아야 하는 한 줄).</summary>
+    /// <summary>아이콘을 보일지(설정만 모드에서는 숨겼다가 훈수꾼을 켜면 보인다).</summary>
+    public bool Visible { get => _icon.Visible; set => _icon.Visible = value; }
+
     public void Balloon(string text) => _icon.ShowBalloonTip(8000, "훈수꾼", text, System.Windows.Forms.ToolTipIcon.Info);
 
     public void SetHidden(bool hidden) => _hideItem.Text = hidden ? "다시 보이기\tCtrl+Alt+Shift+H" : "전부 숨기기\tCtrl+Alt+Shift+H";

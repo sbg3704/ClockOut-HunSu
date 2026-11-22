@@ -1,4 +1,4 @@
-// 기능: 한 수(hunsu-hansu, docs/22)의 함수 사전 파일(functions.ko.json)을 읽고 검사한다. 함수마다 뜻, 찾기 낱말, 빈칸(인자) 목록, 예시, 쓸 수 있는 엑셀 판.
+// 기능: 한 수(hunsu-hansu, docs/23)의 함수 사전 파일(functions.ko.json)을 읽고 검사한다. 함수마다 뜻, 찾기 낱말, 빈칸(인자) 목록, 예시, 쓸 수 있는 엑셀 판.
 // 사용법: var (cat, errors) = FunctionCatalog.Parse(json);  cat.Find("SUMIFS") → FunctionDef,  def.Args → 빈칸 목록
 //   파일 모양: {"functions":[{"name":"SUMIFS","group":"더하기·세기","say":"…","words":["조건 합"],"args":[{"key":"sum","label":"더할 범위","kind":"range"}],"example":"=SUMIFS(…)","needs":"2007","popular":true}]}
 //   kind: range(끌어서 범위) · value(숫자·칸) · text(따옴표를 붙이는 글자) · criteria(조건, 칸 주소가 아니면 따옴표) · bool(참·거짓) · any(그대로).
