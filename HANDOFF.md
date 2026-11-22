@@ -1,5 +1,11 @@
 # 인수인계 (2026-11-22 갱신)
 
+## 2026-11-22 칼퇴 최근 패치(v0.1.265~289)에 맞추기 (판 0.0.266, 클라우드, 브랜치 claude/project-thread-yv5sna)
+- 칼퇴 쪽에서 새로 생긴 것 중 훈수꾼 몫은 칼퇴 PR#59(claude-workspace `bridge/inbox-hunsu/2026-11-22-003-clockout-modules-dir.md`) 두 가지뿐이었다. [지금 다시 켜기]·모두 끔 안내·설정만 떠 있을 때 [켜기]는 칼퇴가 했고(002 쪽지), 칼퇴 `settings`/`CLOCKOUT_SETTINGS_FILE`은 훈수꾼이 `settingsArgs`를 써서 해당 없음.
+- 한 것: ① `CLOCKOUT_MODULES_DIR\<id>\<판>\`(표시 파일 `.clockout-module`)에서 받은 모듈 읽기, id마다 가장 높은 판, 기본 모듈과 같은 id면 선언 판이 높은 쪽(`Core/Manifest/ModuleSources`, `Shell/ModuleCatalog.Sources`). ② 준비될 때 기록에 `load` 줄(startMs, memoryMb 실측). `assets/load.json`이 있으면 pack_app이 선언 `memoryMb`·`startMs`에 넣고, 없으면 비움(지어낸 값 금지). 결정과 근거 docs/22 9·10장.
+- 확인: 클라우드 dotnet 10 WPF 포함 빌드 0경고·0오류, 시험 371개 통과(새 ModuleSourcesTests). 못 본 것: 실제 칼퇴가 받은 모듈로 켜기(아직 카탈로그에 훈수꾼 모듈 zip이 없음), pack_app(pwsh·엑셀), load 줄 값.
+- 다음: PC에서 `--log`로 몇 번 켜 load 줄 값을 보고 `assets/load.json`을 만든다(사용자 확인 뒤). 카탈로그에 첫 훈수꾼 모듈을 올릴 때 module.json 규격(칼퇴 docs/10 2·3장)을 맞춘다.
+
 ## 2026-11-22 한 수(함수도우미) 1단계 (판 0.0.256, 다리 0.0.021, main 0.0.246 위, PR#78 머지)
 - 사용자 결정: 수식 **만드는** 도우미 "찾기 + 짜 주기 한 흐름", 이름 **한 수**(`hunsu-hansu`). 설계와 구현 결정 `docs/23` 7장.
 - 한 것: 함수 사전 48개(`modules/hunsu-hansu/functions.ko.json`), Core 찾기(이름·낱말·초성)·수식 짜기·검사, 한 수 창(따로 뜨는 창, 듣는 빈칸, $ 돌리기, ＋ 조건), 다리 `write.formula.set`·`undo`(계획 때 값 미리 계산). 클라우드 빌드 0경고·0오류, 시험 전부 통과(새 FormulaTests 15개). **엑셀 화면은 못 봄.**
