@@ -51,6 +51,9 @@ internal sealed partial class ShellController
                 _log.Write("settings_request", ("recv", at));
                 OpenManager("general");
                 break;
+            case AppMessages.Start:
+                LeaveSettingsOnly("clockout"); // 설정만 띄워 둔 사이 칼퇴 [켜기]
+                break;
             case BenchMessages.Quit:
             case AppMessages.Quit:
                 Quit();

@@ -101,6 +101,7 @@ internal sealed partial class ShellController
 
     private void RefreshDocks()
     {
+        if (_settingsOnly) return; // 설정만 모드: 도크는 아직 띄우지 않았다(켜면 StartOverlay가 놓는다)
         // 기본 모양: 왼쪽 창에는 런처(훈 원, 반쯤 숨음)만, 패널은 모두 오른쪽 창에 쌓는다. 오른쪽에 아이콘을 둔 모듈(edge-right)은 오른쪽 런처도 쓴다.
         var docked = _modules.Where(m => m.InDock && !m.Placement.Hidden).ToList();
         var minimizedPins = _modules.Where(m => !m.Placement.Hidden && IsPinMinimized(m)).ToList(); // 떼어 낸 채 줄인 것은 왼쪽 런처에 아이콘으로
