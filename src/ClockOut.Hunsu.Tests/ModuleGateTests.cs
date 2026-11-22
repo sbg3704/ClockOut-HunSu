@@ -90,4 +90,21 @@ public class ModuleGateTests
         Assert.False(ModuleGate.IsValidId("한글"));
         Assert.False(ModuleGate.IsValidId(""));
     }
+
+    // 칼퇴 계약(칼퇴 docs/11, 2026-11-22): 칼퇴가 주는 파일·선언에 모르는 칸이 더해져도 죽지 않고 무시한다.
+    [Fact]
+    public void UnknownFields_AreIgnored()
+    {
+        const string enabled = """{"spec":0,"enabled":["hunsu-errors"],"future":{"x":1},"note":"새 칸"}""";
+        const string app = """
+            {"spec":0,"contract_version":1,"commands":{"settings":["--settings"]},"id":"hunsu","layout":{"w":3},
+             "modules":[{"id":"hunsu-errors","name":"오류","default":false,"memoryMb":3,"icon":"x"},{"id":"hunsu-selection","name":"선택"}]}
+            """;
+        var gate = ModuleGate.Decide(enabled, app);
+        Assert.Equal("clockout", gate.Source);
+        Assert.True(gate.Allows("hunsu-errors"));
+        Assert.False(gate.Allows("hunsu-selection"));
+        Assert.Equal("default", ModuleGate.Decide(null, app).Source);
+        Assert.False(ModuleGate.Decide(null, app).Allows("hunsu-errors"));
+    }
 }

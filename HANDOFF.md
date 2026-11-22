@@ -1,5 +1,9 @@
 # 인수인계 (2026-11-22 갱신)
 
+## 2026-11-22 칼퇴 모듈 계약 규격 맞춤 (판 0.0.267)
+- 칼퇴 쪽지 `bridge/inbox-hunsu/2026-11-22-004-clockout-contract.md`(workspace PR#22, 칼퇴 docs/11). pack_app 선언에 `contract_version: 1`·`commands.settings` 추가(`settingsArgs`는 옛 칼퇴용으로 남김). 읽는 쪽은 이미 모르는 칸을 무시해 시험만 더함. docs/22 11장.
+- 확인: 클라우드 빌드·시험. 못 본 것: pack_app 실행(pwsh), 칼퇴 docs/11 원문(칼퇴 main에 아직 없음, 쪽지 기준으로 맞춤).
+
 ## 2026-11-22 칼퇴 최근 패치(v0.1.265~289)에 맞추기 (판 0.0.266, 클라우드, 브랜치 claude/project-thread-yv5sna)
 - 칼퇴 쪽에서 새로 생긴 것 중 훈수꾼 몫은 칼퇴 PR#59(claude-workspace `bridge/inbox-hunsu/2026-11-22-003-clockout-modules-dir.md`) 두 가지뿐이었다. [지금 다시 켜기]·모두 끔 안내·설정만 떠 있을 때 [켜기]는 칼퇴가 했고(002 쪽지), 칼퇴 `settings`/`CLOCKOUT_SETTINGS_FILE`은 훈수꾼이 `settingsArgs`를 써서 해당 없음.
 - 한 것: ① `CLOCKOUT_MODULES_DIR\<id>\<판>\`(표시 파일 `.clockout-module`)에서 받은 모듈 읽기, id마다 가장 높은 판, 기본 모듈과 같은 id면 선언 판이 높은 쪽(`Core/Manifest/ModuleSources`, `Shell/ModuleCatalog.Sources`). ② 준비될 때 기록에 `load` 줄(startMs, memoryMb 실측). `assets/load.json`이 있으면 pack_app이 선언 `memoryMb`·`startMs`에 넣고, 없으면 비움(지어낸 값 금지). 결정과 근거 docs/22 9·10장.
