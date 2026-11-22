@@ -6,6 +6,7 @@
                                        id = 모듈 id, name = 이름, summary = 설명의 첫 문장, default = true(훈수꾼 안의 보이기·숨기기와 따로)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
         addins\clockout-hunsu.zip      다리 추가기능 패키지(clockout-hunsu.xlam + clockout-hunsu.clockout.json). 칼퇴가 기존 추가기능 흐름으로 설치
+        hunsu.ico                      칼퇴 레일 아이콘(assets\icon\hunsu.ico, 칼퇴 docs/11 6장: 묶음 맨 위 <id>.ico를 이름으로 찾음)
         hunsu.guide.md, hunsu.changes.md   칼퇴 소개 화면의 사용법·패치노트(assets\guide에서 복사, 규칙은 claude-workspace docs/하위프로그램_안내문_규칙.md)
         LICENSE.txt, README.txt
       zip을 만든 직후 tools\check_guide.ps1이 안내문 규칙을 검사하고, 어기면 포장이 실패한다.
@@ -90,6 +91,9 @@ foreach ($g in 'hunsu.guide.md', 'hunsu.changes.md') {
     if (-not (Test-Path $src)) { Write-Host "[중단] $src 가 없습니다(칼퇴 안내문 규칙)." -ForegroundColor Red; exit 1 }
     Copy-Item $src (Join-Path $stage $g)
 }
+$icon = Join-Path $repo 'assets\icon\hunsu.ico'   # 칼퇴 레일 아이콘(칼퇴 docs/11 6장). 없으면 칼퇴는 글자 아이콘을 쓰지만, 있어야 할 파일이라 없으면 멈춘다
+if (-not (Test-Path $icon)) { Write-Host "[중단] $icon 이 없습니다(칼퇴 레일 아이콘)." -ForegroundColor Red; exit 1 }
+Copy-Item $icon (Join-Path $stage 'hunsu.ico')
 Copy-Item (Join-Path $repo 'LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
 [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), "훈수꾼 $Version`r`n칼퇴 좌측 레일에서 설치·켜기·끄기를 합니다. 직접 실행: app\ClockOut.Hunsu.exe`r`n.NET 런타임을 따로 설치하지 않아도 됩니다(self-contained).`r`n", $utf8)
 
