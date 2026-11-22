@@ -1,7 +1,7 @@
 ﻿<#
 기능: 칼퇴 레일로 나눠 줄 훈수꾼 묶음(hunsu.zip)을 만든다. 칼퇴의 "apps 전용 설치 길"(칼퇴 docs/03 apps, 2026-11-12) 규격을 따른다.
       묶음 구성(zip 맨 위 기준):
-        hunsu.app.json                 묶음 선언(id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs, modules, memoryMb·startMs는 assets\load.json이 있을 때만)
+        hunsu.app.json                 묶음 선언(contract_version 1, id, version, name, exe, addins, runtime, quitMessage, settingsMessage, settingsArgs·commands.settings, modules, memoryMb·startMs는 assets\load.json이 있을 때만)
                                        modules = 칼퇴 [모듈 관리]에서 켜고 끄는 하위 모듈 목록(칼퇴 docs/10 1장). modules\<id>\<id>.hunsu.json에서 만든다:
                                        id = 모듈 id, name = 이름, summary = 설명의 첫 문장, default = true(훈수꾼 안의 보이기·숨기기와 따로)
         app\ClockOut.Hunsu.exe 외      self-contained win-x64 publish(.NET 10 런타임을 따로 설치하지 않아도 됨 = "필수 lib"), ReadyToRun
@@ -48,10 +48,11 @@ try {
 
 Write-Host "== 3) 묶음 선언, 라이선스, 안내"
 $manifest = [ordered]@{
-    spec = 0; id = 'hunsu'; version = $Version; name = '훈수꾼'
+    spec = 0; contract_version = 1; id = 'hunsu'; version = $Version; name = '훈수꾼'   # 계약 판(칼퇴 docs/11, 2026-11-22)
     exe = 'app/ClockOut.Hunsu.exe'; addins = @('addins/clockout-hunsu.zip')
     runtime = 'self-contained'; quitMessage = 'ClockOut.App.Quit'
-    settingsMessage = 'ClockOut.App.Settings'; settingsArgs = @('--settings')   # 칼퇴 레일 [설정](2026-11-22, Core/AppMessages)
+    settingsMessage = 'ClockOut.App.Settings'; settingsArgs = @('--settings')   # 칼퇴 레일 [설정](2026-11-22, Core/AppMessages). 옛 칼퇴용으로 남김
+    commands = [ordered]@{ settings = @('--settings') }                            # 새 계약(칼퇴 docs/11): 둘 다 있으면 commands 우선
 }
 # 하위 모듈 목록: 모듈 선언 하나가 출처다(이름·설명을 두 번 적지 않음). 설명이 길어 첫 문장만 한 줄 설명으로 쓴다.
 $subs = foreach ($d in Get-ChildItem (Join-Path $repo 'modules') -Directory) {
