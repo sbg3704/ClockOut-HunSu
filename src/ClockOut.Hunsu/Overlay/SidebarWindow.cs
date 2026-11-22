@@ -276,6 +276,7 @@ internal sealed partial class SidebarWindow : Window
             ("modules", "☰", "모듈 관리"),
             ("look", "✎", "모양 바꾸기"),
             ("profiles", "▣", "작업 프로필"),
+            ("wizard", "✦", "설정 마법사 (처음처럼 차근차근)"),
             ("view", _tabs ? "≣" : "▤", _tabs ? "쌓아 보기로 바꾸기" : "탭 보기로 바꾸기"),
             ("link", "🔗", "엑셀 연결 (직접 고르기)"),
             ("cleanup", "🧹", "남은 엑셀 정리"),

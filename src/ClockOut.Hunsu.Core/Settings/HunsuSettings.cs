@@ -38,6 +38,9 @@ public sealed class HunsuSettings
     /// <summary>시작할 때 모듈 관리자 창을 바로 연다(처음 써 볼 때 편함).</summary>
     public bool ManagerOnStart { get; init; }
 
+    /// <summary>끝내거나 닫은 설정 마법사 판(Core/Setup/SetupWizard.Version). 이보다 작으면 다음 실행 때 마법사를 한 번 보인다. 0(기본) = 아직 안 봄.</summary>
+    public int SetupSeen { get; init; }
+
     /// <summary>화면 테마: "dark"(기본), "light", "auto"(Windows 앱 모드를 따름). 켤 때 한 번 정한다(바꾸면 껐다 켬).</summary>
     public string Theme { get; init; } = ThemeChoice.Dark;
 
@@ -189,6 +192,7 @@ public sealed class HunsuSettings
             ListMaxRows = InRange(ListMaxRows, 5, 200) ? ListMaxRows : d.ListMaxRows,
             EnabledByDefault = EnabledByDefault ?? d.EnabledByDefault,
             ManagerOnStart = ManagerOnStart,
+            SetupSeen = Math.Max(0, SetupSeen),
             Theme = ThemeChoice.Normalize(Theme),
             Skin = SkinChoice.Normalize(Skin),
             PanelWidth = InRange(PanelWidth, 200, 480) ? PanelWidth : d.PanelWidth,

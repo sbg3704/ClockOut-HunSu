@@ -66,7 +66,7 @@ internal sealed partial class ShellController
 
     private System.Windows.Threading.DispatcherTimer? _sidebarOff;
 
-    /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 탭↔쌓기, 엑셀 정리, 사이드바 접기·펴기.</summary>
+    /// <summary>활동 막대 맨 아래 일반 단추: 설정 창, 모듈 관리, 모양, 작업 프로필, 설정 마법사, 탭↔쌓기, 엑셀 정리, 사이드바 접기·펴기.</summary>
     private void OnSidebarFooter(string key)
     {
         switch (key)
@@ -75,6 +75,7 @@ internal sealed partial class ShellController
             case "modules": OpenManager("modules"); break;
             case "look": OpenManager("look"); break;
             case "profiles": OpenManager("profiles"); break;
+            case "wizard": OpenWizard(); break;
             case "view": ApplySetting("sidebarTabs", !_settings.SidebarTabs); break;
             case "cleanup": OpenExcelCleanup(); break;
             case "link": OpenExcelLink(); break;

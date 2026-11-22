@@ -1,4 +1,4 @@
-// 기능: 모듈 관리자가 쓰는 동작(ShellController의 일부). 켜기·끄기, 순서 바꾸기, 자리 옮기기, 배치 처음으로, 도크 모양 바꾸기, 관리자 창 열기.
+// 기능: 모듈 관리자가 쓰는 동작(ShellController의 일부). 켜기·끄기, 순서 바꾸기, 자리 옮기기, 배치 처음으로, 도크 모양 바꾸기, 관리자 창·설정 마법사 열기.
 // 사용법: ManagerWindow가 shell.SetEnabled / MoveOrder / PlaceFromManager / ResetLayout 을 부르고 shell.ModulesChanged로 목록을 다시 그린다(docs/07).
 // 의존: ShellController.Modules.cs(Save, Pin, MoveToDock, RefreshDocks), Core/Layout/OrderPlan, Core/TopicRouting, Shell/ManagerWindow.
 using ClockOut.Hunsu.Core;
@@ -7,6 +7,7 @@ using System.Windows;
 using ClockOut.Hunsu.Ui.Frame;
 using ClockOut.Hunsu.Ui.Theme;
 using ClockOut.Hunsu.Core.Settings;
+using ClockOut.Hunsu.Core.Setup;
 using ClockOut.Hunsu.Overlay;
 using ClockOut.Hunsu.Ui.Controls;
 
@@ -184,12 +185,26 @@ internal sealed partial class ShellController
 
     private IEnumerable<PinWindow> ActivePins() => _pins.Where(kv => !_modules.Any(m => m.Id == kv.Key && (m.Placement.Hidden || m.Placement.Collapsed))).Select(kv => kv.Value);
 
-    /// <summary>설정 창을 연다(page: "modules" | "look"). 이미 열려 있으면 그 쪽으로 넘기고 앞으로 가져온다.</summary>
-    private void OpenManager(string page = "modules")
+    /// <summary>설정 창을 연다(page: "modules" | "look" | "general" | "profiles" | "options", "wizard"면 설정 마법사). 이미 열려 있으면 그 쪽으로 넘기고 앞으로 가져온다.</summary>
+    internal void OpenManager(string page = "modules")
     {
+        if (SetupWizard.IsWizardPage(page)) { OpenWizard(); return; }
         if (_manager is { IsLoaded: true }) { _manager.ShowPage(page); _manager.Activate(); return; }
         _manager = new ManagerWindow(this, page);
         _manager.Show();
         _manager.Activate();
+    }
+
+    private SetupWizardWindow? _wizard;
+
+    /// <summary>설정 마법사를 연다(처음 실행, 설정 창 머리글, 메뉴). 이미 열려 있으면 앞으로 가져온다.</summary>
+    internal void OpenWizard()
+    {
+        if (_wizard is { IsLoaded: true }) { _wizard.Activate(); return; }
+        _wizard = new SetupWizardWindow(this);
+        _wizard.Closed += (_, _) => _wizard = null;
+        _wizard.Show();
+        _wizard.Activate();
+        _log.Write("setup_wizard", ("seen", _settings.SetupSeen));
     }
 }

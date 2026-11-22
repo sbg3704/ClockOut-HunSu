@@ -1,4 +1,4 @@
-// 기능: 훈수꾼 설정 창. 위의 [모듈] [프로필] [옵션] [모양] [일반] 쪽. 머리글은 두 줄(제목·요약 / 쪽 단추)이라 좁아도 글씨가 가리지 않는다. [모듈]: 설치된 모듈을 분류 묶음별 한 줄씩 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
+// 기능: 훈수꾼 설정 창. 위의 [모듈] [프로필] [옵션] [모양] [일반] 쪽과 [✦ 설정 마법사](Shell/SetupWizardWindow) 단추. 머리글은 두 줄(제목·요약 / 쪽 단추)이라 좁아도 글씨가 가리지 않는다. [모듈]: 설치된 모듈을 분류 묶음별 한 줄씩 보여 주고 켜기·끄기, 자리(왼쪽 도크·오른쪽 도크·떼어 냄), 순서(위·아래)를 바꾸고, 배치를 처음으로 되돌리거나 설정 파일·모듈 폴더를 연다.
 //       새 모듈을 받는 일은 칼퇴 왼쪽 레일(카탈로그 modules 구역)이 맡고, 여기서는 받은 모듈을 다룬다(docs/07).
 //       [모양]: 도크 배치 모양·묶음·크기·아이콘 세트·쉴 때 진하기를 미리보기와 함께 고른다(Shell/LookPage).
 // 사용법: 알림 영역 아이콘 → "모듈 관리…", 훈 원 우클릭 → "모듈 관리…" / "모양 바꾸기…", 또는 settings.json의 managerOnStart. new ManagerWindow(shell, "look").Show()
@@ -85,6 +85,10 @@ internal sealed class ManagerWindow : Window
         _tabs.Children.Add(ManagerParts.Chip(this, "옵션", _page == "options", () => ShowPage("options")));
         _tabs.Children.Add(ManagerParts.Chip(this, "모양", _page == "look", () => ShowPage("look")));
         _tabs.Children.Add(ManagerParts.Chip(this, "일반", _page == "general", () => ShowPage("general")));
+        var wizard = ManagerParts.Chip(this, "✦ 설정 마법사", false, _shell.OpenWizard);
+        wizard.ToolTip = "하는 일·자리·모양·쓰는 법을 차근차근 다시 고릅니다";
+        wizard.Margin = new Thickness(10, 0, 0, 0);
+        _tabs.Children.Add(wizard);
     }
 
     /// <summary>룩·테마가 바뀌면 창 안을 새 색으로 다시 짓는다. 부품들이 만들 때 색을 한 번 읽으므로(FindResource) 옛 색이 남아

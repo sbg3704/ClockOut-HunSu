@@ -1,4 +1,4 @@
-// 기능: 알림 영역(작업 표시줄 오른쪽) 아이콘과 메뉴: 부르기·닫기, 전부 숨기기·다시 보이기, 모듈 관리, 끄기. 끄는 단추가 없다는 0단계 지적을 메운다.
+// 기능: 알림 영역(작업 표시줄 오른쪽) 아이콘과 메뉴: 부르기·닫기, 전부 숨기기·다시 보이기, 모듈 관리, 설정 마법사, 끄기. 끄는 단추가 없다는 0단계 지적을 메운다.
 // 사용법: using var tray = new TrayIcon(); tray.SummonClicked += ...; tray.HideAllClicked += ...; tray.QuitClicked += ...
 // 의존: WinForms NotifyIcon(WPF에 없음), System.Drawing. 아이콘은 실행 파일에 넣은 hunsu.ico(고양이, assets/icon)를 읽고, 못 읽으면 "훈" 원을 그려 대신한다. 이름은 다 적어 쓴다(WPF 이름과 겹치지 않게).
 namespace ClockOut.Hunsu.Shell;
@@ -21,6 +21,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(_hideItem);
         menu.Items.Add("모듈 관리…", null, (_, _) => ManagerClicked?.Invoke());
         menu.Items.Add("모양 바꾸기…", null, (_, _) => LookClicked?.Invoke());
+        menu.Items.Add("설정 마법사…", null, (_, _) => WizardClicked?.Invoke());
         menu.Items.Add("엑셀 연결…", null, (_, _) => ExcelLinkClicked?.Invoke());
         menu.Items.Add("남은 엑셀 정리…", null, (_, _) => ExcelCleanupClicked?.Invoke());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
@@ -34,6 +35,7 @@ internal sealed class TrayIcon : IDisposable
     public event Action? QuitClicked;
     public event Action? ManagerClicked;
     public event Action? LookClicked;
+    public event Action? WizardClicked;
     public event Action? ExcelCleanupClicked;
     public event Action? ExcelLinkClicked;
 
