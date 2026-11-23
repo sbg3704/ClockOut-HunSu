@@ -10,6 +10,13 @@ namespace ClockOut.Hunsu.Core.Settings;
 
 public sealed class HunsuSettings
 {
+    /// <summary>설정 파일과 같은 이름 규칙(camelCase)으로 값 하나를 바꿀 때 쓴다(설정 창 ApplySetting).</summary>
+    public static JsonSerializerOptions JsonOptions => Json;
+
+    /// <summary>내 프로필 최대 수와 이름 길이.</summary>
+    public const int MaxCustomProfiles = 20;
+    public const int MaxProfileName = 24;
+
     private static readonly JsonSerializerOptions Json = new()
     {
         WriteIndented = true,
@@ -82,6 +89,9 @@ public sealed class HunsuSettings
 
     /// <summary>마지막으로 적용한 작업 프로필 id(Core/Layout/Profiles). 비어 있으면 직접 고른 상태.</summary>
     public string Profile { get; init; } = "";
+
+    /// <summary>사용자가 만든 프로필(이름 + 켤 모듈 id 순서). 설정 창 [프로필]·마법사 [하는 일]에서 "지금 켜진 모듈로 만들기". 최대 20개.</summary>
+    public List<CustomProfile> CustomProfiles { get; init; } = [];
 
     /// <summary>패널에 마우스를 올리면 투명도와 상관없이 선명해진다(true, 기본). false면 정한 투명도를 올려도 그대로 둔다.</summary>
     public bool HoverSharpen { get; init; } = true;
@@ -213,6 +223,7 @@ public sealed class HunsuSettings
             SidebarStay = SidebarStay,
             SidebarIntro = Math.Max(0, SidebarIntro),
             Profile = Profile ?? "",
+            CustomProfiles = CleanCustom(CustomProfiles),
             QuickBar = QuickBar,
             CursorHud = CursorHud,
             HudAnchor = (HudAnchor ?? "").Trim().ToLowerInvariant() == "cell" ? "cell" : "cursor",
@@ -225,6 +236,23 @@ public sealed class HunsuSettings
         };
     }
 
+    /// <summary>내 프로필 다듬기: id는 my-로 시작, 이름은 비지 않게 자르고, 모듈은 hunsu- id만, 겹친 id는 처음 것만, 최대 20개.</summary>
+    private static List<CustomProfile> CleanCustom(List<CustomProfile>? list)
+    {
+        var result = new List<CustomProfile>();
+        foreach (var c in list ?? [])
+        {
+            if (c?.Id is not string id || !id.StartsWith(Layout.Profiles.MinePrefix, StringComparison.Ordinal) || result.Any(r => r.Id == id)) continue;
+            string name = (c.Name ?? "").Trim();
+            if (name.Length == 0) name = "내 프로필";
+            if (name.Length > MaxProfileName) name = name[..MaxProfileName];
+            var mods = (c.Modules ?? []).Where(m => m != null && m.StartsWith("hunsu-", StringComparison.Ordinal)).Distinct().ToList();
+            result.Add(new CustomProfile(id, name, mods, c.Look));
+            if (result.Count == MaxCustomProfiles) break;
+        }
+        return result;
+    }
+
     private static bool InRange(int v, int lo, int hi) => v >= lo && v <= hi;
 }
 
@@ -232,4 +260,27 @@ public sealed class HunsuSettings
 public sealed record DockLook(string Shape, bool Groups, string Size, string IconProfile, double IdleOpacity)
 {
     public static DockLook Default { get; } = new HunsuSettings().Look;
+}
+
+/// <summary>내 프로필 하나: id(my-1 …), 이름, 켤 모듈 id(위에서부터 순서), 함께 저장한 모양(없으면 모양은 안 바꿈).</summary>
+public sealed record CustomProfile(string Id, string Name, List<string> Modules, ProfileLook? Look = null);
+
+/// <summary>내 프로필에 함께 담는 모양: 패널 룩, 자리(사이드바), 도크 모양·크기, 아이콘 세트, 수식 흐름 그림.</summary>
+public sealed record ProfileLook(string Skin, string Sidebar, string DockShape, string DockSize, string IconProfile, string PencilLook)
+{
+    /// <summary>지금 설정의 모양을 찍어 둔다.</summary>
+    public static ProfileLook From(HunsuSettings s) => new(s.Skin, s.Sidebar, s.DockShape, s.DockSize, s.IconProfile, s.PencilLook);
+
+    /// <summary>모양만 이 값으로 바꾼 새 설정(범위 밖 값은 기본값, 나머지 칸은 그대로).</summary>
+    public HunsuSettings ApplyTo(HunsuSettings s)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(s.ToJson())!;
+        node["skin"] = Skin;
+        node["sidebar"] = Sidebar;
+        node["dockShape"] = DockShape;
+        node["dockSize"] = DockSize;
+        node["iconProfile"] = IconProfile;
+        node["pencilLook"] = PencilLook;
+        return HunsuSettings.FromJson(node.ToJsonString());
+    }
 }

@@ -25,7 +25,7 @@ internal sealed class SetupWizardWindow : Window
         _shell = shell;
         _pages = new SetupWizardPages(shell, this);
         Title = "훈수꾼 · 설정 마법사";
-        Width = 780;
+        Width = 860; // [모양] 쪽 고르는 칸 옆에 수식 흐름 미리보기가 들어가는 폭
         Height = 600;
         MinWidth = 520;
         MinHeight = 460;

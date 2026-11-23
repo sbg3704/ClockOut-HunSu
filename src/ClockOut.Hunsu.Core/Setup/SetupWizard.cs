@@ -2,7 +2,7 @@
 //       단계 이동(앞·뒤, 범위 밖은 막음), 마지막 쪽에 보일 고른 것 요약, 쓰는 법 안내 줄을 정한다. 화면(Shell/SetupWizardWindow)은 이 값을 그리기만 한다.
 // 사용법: if (SetupWizard.ShouldShowOnStart(settings)) …;  SetupWizard.Steps[i].Title;  SetupWizard.Move(i, +1);  SetupWizard.Summary(settings)
 //   다 보거나 닫으면 settings의 setupSeen에 SetupWizard.Version을 적는다. 마법사 내용을 크게 바꿔 다시 보이고 싶으면 Version을 올린다.
-// 의존: Core/Settings(HunsuSettings, SkinChoice), Core/Layout(Profiles). 화면과 엑셀 없이 시험된다(ClockOut.Hunsu.Tests/SetupWizardTests).
+// 의존: Core/Settings(HunsuSettings, SkinChoice), Core/Layout(Profiles, 여러 개·내 프로필), Core/Marks(SketchLook). 화면과 엑셀 없이 시험된다(ClockOut.Hunsu.Tests/SetupWizardTests).
 using ClockOut.Hunsu.Core.Layout;
 using ClockOut.Hunsu.Core.Settings;
 
@@ -22,9 +22,9 @@ public static class SetupWizard
     public static readonly IReadOnlyList<SetupStep> Steps =
     [
         new("hello", "시작", "반가워요, 훈수꾼입니다", "엑셀 옆에서 조용히 지켜보다가 필요할 때만 한 수 거듭니다. 1분이면 내 일에 맞게 맞춰 드릴게요. 고르는 대로 바로 바뀌고, 나중에 설정 창에서 언제든 다시 바꿀 수 있어요."),
-        new("work", "하는 일", "주로 어떤 일을 하세요?", "고르면 그 일에 맞는 모듈만 켜고 순서를 맞춥니다. 나머지는 꺼질 뿐 지워지지 않아요."),
+        new("work", "하는 일", "주로 어떤 일을 하세요?", "여러 개 고를 수 있어요. 고른 일에 맞는 모듈을 합쳐 켜고 순서를 맞춥니다. 나머지는 꺼질 뿐 지워지지 않고, 지금 상태를 내 프로필로 저장해 둘 수도 있어요."),
         new("place", "자리", "어디에 둘까요?", "사이드바는 화면 가장자리에 붙고 엑셀 창이 남은 곳으로 줄어듭니다. 엑셀 위에 띄우고 싶으면 '엑셀 안 도크'를 고르세요."),
-        new("look", "모양", "어떤 느낌이 좋아요?", "패널 룩과 아이콘 세트를 고르면 바로 바뀝니다. 마음에 드는 걸 눌러 보세요."),
+        new("look", "모양", "어떤 느낌이 좋아요?", "패널 룩, 아이콘, 수식 흐름 그림을 고르면 바로 바뀝니다. 오른쪽 미리보기에서 수식 흐름이 어떻게 그려지는지 볼 수 있어요."),
         new("tour", "쓰는 법", "이것만 알면 됩니다", "자주 쓰는 길과 단축키입니다. 오른쪽 스위치로 바로 켜고 끌 수 있어요."),
         new("done", "끝", "준비 끝!", "이렇게 맞췄습니다. 더 자세한 것은 설정 창에서 바꿀 수 있어요."),
     ];
@@ -59,17 +59,18 @@ public static class SetupWizard
     /// <summary>마지막 쪽 요약: (칸 이름, 고른 값) 줄들.</summary>
     public static IReadOnlyList<(string Label, string Value)> Summary(HunsuSettings s)
     {
-        var profile = Profiles.Find(s.Profile);
+        var chosen = Profiles.FindMany(s.Profile, Profiles.Mine(s.CustomProfiles));
         var skin = SkinChoice.All.FirstOrDefault(k => k.Name == s.Skin) ?? SkinChoice.All[0];
         string place = PlaceName(s.Sidebar);
         if (s.Sidebar == "off") place += " · " + DockShapeName(s.DockShape);
         var extras = Tips.Where(t => t.SettingKey != null && IsOn(s, t.SettingKey)).Select(t => t.Title).ToList();
         return
         [
-            ("하는 일", profile?.Name ?? "직접 고름 (지금 켜진 모듈 그대로)"),
+            ("하는 일", chosen.Count == 0 ? "직접 고름 (지금 켜진 모듈 그대로)" : string.Join(" + ", chosen.Select(p => p.Name))),
             ("자리", place),
             ("패널 룩", skin.Label),
             ("아이콘", IconSetName(s.IconProfile)),
+            ("수식 흐름 그림", Marks.SketchLook.ByName(s.PencilLook).Label),
             ("켜 둔 도움", extras.Count == 0 ? "없음" : string.Join(", ", extras)),
         ];
     }

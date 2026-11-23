@@ -1,14 +1,15 @@
-// 기능: 설정 마법사의 쪽마다 고르는 칸. 시작(무엇을 맞추는지), 하는 일(작업 프로필 카드), 자리(사이드바 오른쪽·왼쪽·엑셀 안 도크 + 도크 모양),
-//       모양(패널 룩 4종, 아이콘 세트 6종, 크기), 쓰는 법(단축키·우클릭·켜고 끄는 도움), 끝(고른 것 요약).
-//       고르면 설정 창과 같은 길(ApplyProfile, ApplySetting, ApplyLook)로 바로 반영·저장된다. 창(SetupWizardWindow)이 바뀐 값을 받아 다시 짓는다.
+// 기능: 설정 마법사의 쪽마다 고르는 칸. 시작(무엇을 맞추는지), 하는 일(작업 프로필·내 프로필 카드 여러 개 고르기, 내 프로필 저장), 자리(사이드바 오른쪽·왼쪽·엑셀 안 도크 + 도크 모양),
+//       모양(패널 룩 4종, 수식 흐름 그림 3종, 아이콘 세트 6종, 크기 + 옆에 수식 흐름 미리보기), 쓰는 법(단축키·우클릭·켜고 끄는 도움), 끝(고른 것 요약).
+//       고르면 설정 창과 같은 길(ToggleProfile, ApplyProfiles, ApplySetting, ApplyLook)로 바로 반영·저장된다. 창(SetupWizardWindow)이 바뀐 값을 받아 다시 짓는다.
 // 사용법: new SetupWizardPages(shell, window).Build("work") → 그 쪽 내용 부품
-// 의존: Shell/ShellController(SkippedModules: 칼퇴에서 끈 모듈), Core/Setup/SetupWizard, Core/Layout/Profiles, Core/Settings(SkinChoice, DockLook), Shell/ManagerParts, Ui/Icons/IconFactory, Ui Theme.
+// 의존: Shell/ShellController(SkippedModules: 칼퇴에서 끈 모듈, MyProfiles), Shell/ProfileSaveRow, Shell/FlowPreview, Core/Marks/SketchLook, Core/Setup/SetupWizard, Core/Layout/Profiles, Core/Settings(SkinChoice, DockLook), Shell/ManagerParts, Ui/Icons/IconFactory, Ui Theme.
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using ClockOut.Hunsu.Core.Layout;
+using ClockOut.Hunsu.Core.Marks;
 using ClockOut.Hunsu.Core.Settings;
 using ClockOut.Hunsu.Core.Setup;
 using ClockOut.Hunsu.Ui.Icons;
@@ -73,22 +74,28 @@ internal sealed class SetupWizardPages
     }
 
     // ---- 하는 일 ----
+    /// <summary>미리 짠 프로필 + 내 프로필 카드. 누르면 고른 목록에 넣거나 빼고(여러 개), 고른 것들의 모듈을 합쳐 켠다. 아래에서 지금 상태를 내 프로필로 저장.</summary>
     private FrameworkElement Work()
     {
+        var box = new StackPanel();
         var wrap = new WrapPanel();
         var names = _shell.Modules.ToDictionary(m => m.Id, m => m.Module.Manifest.Name);
-        foreach (var p in Profiles.All)
+        var mine = _shell.MyProfiles;
+        var chosen = Profiles.ParseIds(S.Profile, mine);
+        foreach (var p in Profiles.All.Concat(mine))
         {
             string list = string.Join(" · ", p.Modules.Select(id => names.TryGetValue(id, out var n) ? n : null).Where(n => n != null));
-            wrap.Children.Add(Card(p.Name, p.Description, list, S.Profile == p.Id, () => _shell.ApplyProfile(p.Id)));
+            string id = p.Id;
+            wrap.Children.Add(Card(p.Name, p.Description, list, chosen.Contains(id), () => _shell.ToggleProfile(id)));
         }
-        wrap.Children.Add(Card("직접 고를게요", "지금 켜진 모듈을 그대로 둡니다. 설정 창 [모듈]에서 하나씩 켜고 끕니다.", "", S.Profile == "", () => _shell.ApplySetting("profile", "")));
-        int skipped = _shell.SkippedModules.Count;
-        if (skipped == 0) return wrap;
-        // 칼퇴에서 끈 모듈은 불러오지 않아 프로필에 있어도 켜지지 않는다(docs/22). 어디서 켜는지 알려 준다.
-        var box = new StackPanel();
+        wrap.Children.Add(Card("직접 고를게요", "고른 것을 모두 빼고 지금 켜진 모듈을 그대로 둡니다. 설정 창 [모듈]에서 하나씩 켜고 끕니다.", "", chosen.Count == 0, () => _shell.ApplyProfiles([])));
         box.Children.Add(wrap);
-        box.Children.Add(Note($"칼퇴에서 끈 모듈 {skipped}개는 여기서 켜지 않아요. 쓰려면 칼퇴 [모듈 관리]에서 켠 뒤 훈수꾼을 껐다 켜세요."));
+        if (chosen.Count > 1) box.Children.Add(Note($"{chosen.Count}개를 합쳐 켰어요. 겹치는 모듈은 한 번만 켜집니다."));
+        int skipped = _shell.SkippedModules.Count;
+        // 칼퇴에서 끈 모듈은 불러오지 않아 프로필에 있어도 켜지지 않는다(docs/22). 어디서 켜는지 알려 준다.
+        if (skipped > 0) box.Children.Add(Note($"칼퇴에서 끈 모듈 {skipped}개는 여기서 켜지 않아요. 쓰려면 칼퇴 [모듈 관리]에서 켠 뒤 훈수꾼을 껐다 켜세요."));
+        box.Children.Add(ManagerParts.Caption(_r, "내 프로필로 저장"));
+        box.Children.Add(ProfileSaveRow.Build(_r, _shell));
         return box;
     }
 
@@ -150,14 +157,21 @@ internal sealed class SetupWizardPages
     }
 
     // ---- 모양 ----
+    /// <summary>왼쪽은 고르는 칸(패널 룩, 아이콘 세트, 크기, 수식 흐름 그림), 오른쪽은 수식 흐름 미리보기(Shell/FlowPreview). 좁으면 미리보기가 아래로 내려간다.</summary>
     private FrameworkElement Look()
     {
         var box = new StackPanel();
         box.Children.Add(ManagerParts.Caption(_r, "패널 룩"));
         var skins = new WrapPanel();
         foreach (var k in SkinChoice.All)
-            skins.Children.Add(Card(k.Label, k.Note, "", S.Skin == k.Name, () => _shell.ApplySetting("skin", k.Name), width: 222));
+            skins.Children.Add(Card(k.Label, k.Note, "", S.Skin == k.Name, () => _shell.ApplySetting("skin", k.Name), width: 186));
         box.Children.Add(skins);
+
+        box.Children.Add(ManagerParts.Caption(_r, "수식 흐름 그림"));
+        var pens = new WrapPanel();
+        foreach (var l in SketchLook.All)
+            pens.Children.Add(Spaced(ManagerParts.Chip(_r, l.Label, S.PencilLook == l.Name, () => _shell.ApplySetting("pencilLook", l.Name))));
+        box.Children.Add(pens);
 
         box.Children.Add(ManagerParts.Caption(_r, "아이콘 세트"));
         var sets = new WrapPanel();
@@ -167,12 +181,12 @@ internal sealed class SetupWizardPages
             var icons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
             foreach (string icon in SampleIcons)
             {
-                var el = IconFactory.Create(key, icon, 18, ink, "·");
-                el.Margin = new Thickness(0, 0, 7, 0);
+                var el = IconFactory.Create(key, icon, 16, ink, "·");
+                el.Margin = new Thickness(0, 0, 6, 0);
                 icons.Children.Add(el);
             }
             string k = key;
-            sets.Children.Add(Card(SetupWizard.IconSetName(key), "", "", S.IconProfile == key, () => _shell.ApplyLook(S.Look with { IconProfile = k }), icons, width: 150));
+            sets.Children.Add(Card(SetupWizard.IconSetName(key), "", "", S.IconProfile == key, () => _shell.ApplyLook(S.Look with { IconProfile = k }), icons, width: 124));
         }
         box.Children.Add(sets);
 
@@ -181,7 +195,17 @@ internal sealed class SetupWizardPages
         foreach (var (key, name) in new[] { ("s", "작게"), ("m", "보통"), ("l", "크게") })
             sizes.Children.Add(Spaced(ManagerParts.Chip(_r, name, S.DockSize == key, () => _shell.ApplyLook(S.Look with { Size = key }))));
         box.Children.Add(sizes);
-        return box;
+
+        var preview = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
+        preview.Children.Add(ManagerParts.Caption(_r, "미리보기 · 수식 흐름"));
+        preview.Children.Add(FlowPreview.Build(_r, S.PencilLook));
+        // 넓으면 오른쪽 옆에, 좁으면 위에 (WrapPanel이 폭에 따라 줄을 바꾼다)
+        var side = new WrapPanel();
+        box.Width = 400;
+        box.Margin = new Thickness(0, 0, 24, 0);
+        side.Children.Add(box);
+        side.Children.Add(preview);
+        return side;
     }
 
     // ---- 쓰는 법 ----

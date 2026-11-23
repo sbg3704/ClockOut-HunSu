@@ -61,3 +61,49 @@ public class SetupWizardTests
             Assert.Contains($"\"{t.SettingKey}\"", json);
     }
 }
+
+// 여러 프로필 함께 고르기와 내 프로필(2026-11-22 사용자 요청).
+public class ProfileComboTests
+{
+    [Fact]
+    public void ParseIds_KeepsKnownInOrder_AndToggleAddsOrRemoves()
+    {
+        Assert.Equal(["review", "accounting"], Core.Layout.Profiles.ParseIds(" review,nope,accounting,review "));
+        Assert.Equal(["review"], Core.Layout.Profiles.Toggle(["review", "basic"], "basic"));
+        Assert.Equal(["review", "basic"], Core.Layout.Profiles.Toggle(["review"], "basic"));
+    }
+
+    [Fact]
+    public void PlanMany_MergesModules_OnceEach()
+    {
+        var a = new Core.Layout.Profile("a", "a", "", ["hunsu-x", "hunsu-y"]);
+        var b = new Core.Layout.Profile("b", "b", "", ["hunsu-y", "hunsu-z"]);
+        var plan = Core.Layout.Profiles.PlanMany([a, b], ["hunsu-x", "hunsu-y", "hunsu-z", "hunsu-w"]);
+        Assert.Equal((true, (int?)100), plan["hunsu-x"]);
+        Assert.Equal((true, (int?)110), plan["hunsu-y"]);
+        Assert.Equal((true, (int?)120), plan["hunsu-z"]);
+        Assert.Equal((false, (int?)null), plan["hunsu-w"]);
+    }
+
+    [Fact]
+    public void MyProfiles_AreCleaned_FoundAndSummarized()
+    {
+        var s = HunsuSettings.FromJson("""
+        {"profile":"accounting,my-2","customProfiles":[
+          {"id":"my-2","name":"  마감 세트  ","modules":["hunsu-errors","bad","hunsu-errors"],"look":{"skin":"chalk","sidebar":"left","dockShape":"rail","dockSize":"m","iconProfile":"lucide","pencilLook":"ink"}},
+          {"id":"basic","name":"가짜","modules":[]},
+          {"id":"my-2","name":"겹침","modules":[]}]}
+        """);
+        var c = Assert.Single(s.CustomProfiles);
+        Assert.Equal("마감 세트", c.Name);
+        Assert.Equal(["hunsu-errors"], c.Modules);
+        Assert.Equal("ink", c.Look!.PencilLook);
+        var mine = Core.Layout.Profiles.Mine(s.CustomProfiles);
+        Assert.Equal(["accounting", "my-2"], Core.Layout.Profiles.ParseIds(s.Profile, mine));
+        Assert.Equal("my-1", Core.Layout.Profiles.NextMineId(["my-2"]));
+        Assert.Equal("정산·회계 마감 + 마감 세트", SetupWizard.Summary(s).First().Value);
+        var applied = c.Look.ApplyTo(new HunsuSettings());
+        Assert.Equal(("chalk", "left", "ink", "lucide"), (applied.Skin, applied.Sidebar, applied.PencilLook, applied.IconProfile));
+        Assert.Equal(c, HunsuSettings.FromJson(s.ToJson()).CustomProfiles.Single() with { Modules = c.Modules }); // 저장 뒤에도 남는다
+    }
+}

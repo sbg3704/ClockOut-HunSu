@@ -49,7 +49,7 @@ internal sealed partial class ShellController
     internal void ApplySetting(string key, object value)
     {
         var node = System.Text.Json.Nodes.JsonNode.Parse(_settings.ToJson())!;
-        node[key] = System.Text.Json.JsonSerializer.SerializeToNode(value);
+        node[key] = System.Text.Json.JsonSerializer.SerializeToNode(value, HunsuSettings.JsonOptions); // 내 프로필 같은 묶음 값도 파일과 같은 이름 규칙으로
         var next = HunsuSettings.FromJson(node.ToJsonString());
         _settings = next;
         Parts.ListMaxRows = next.ListMaxRows;
@@ -127,24 +127,79 @@ internal sealed partial class ShellController
         RefreshDocks();
     }
 
-    /// <summary>작업 프로필 적용: 프로필의 모듈은 켜고 순서대로 왼쪽 도크(떼어 둔 것은 그대로)에, 나머지는 끈다. 켜고 끄기는 설정 창 [모듈]에서 언제든 바꿀 수 있다.</summary>
-    internal void ApplyProfile(string id)
+    /// <summary>작업 프로필 하나만 적용(예전 길).</summary>
+    internal void ApplyProfile(string id) => ApplyProfiles([id]);
+
+    /// <summary>작업 프로필 하나를 고른 목록에 넣거나 뺀다(설정 창 [프로필]·마법사 카드). 바뀐 목록 전체로 다시 맞춘다.</summary>
+    internal void ToggleProfile(string id) => ApplyProfiles(Profiles.Toggle(Profiles.ParseIds(_settings.Profile, MyProfiles), id));
+
+    /// <summary>내 프로필(사용자가 만든 것)을 프로필 모양으로.</summary>
+    internal IReadOnlyList<Profile> MyProfiles => Profiles.Mine(_settings.CustomProfiles);
+
+    /// <summary>지금 켜진 모듈(순서대로)과, withLook이면 지금 모양(룩·자리·도크·아이콘·수식 흐름 그림)을 이름 붙여 내 프로필로 저장하고 그 프로필을 고른 상태로 둔다. 같은 이름이 있으면 덮어쓴다.</summary>
+    internal void SaveMyProfile(string name, bool withLook)
     {
-        var profile = Profiles.Find(id);
-        if (profile == null) return;
-        var plan = Profiles.Plan(profile, _modules.Select(m => m.Id));
-        foreach (var mv in _modules)
+        name = name.Trim();
+        if (name.Length == 0) return;
+        var list = _settings.CustomProfiles.ToList();
+        var mods = _modules.Where(m => !m.Placement.Hidden).OrderBy(m => m.Placement.Order).Select(m => m.Id).ToList();
+        int same = list.FindIndex(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
+        string id = same >= 0 ? list[same].Id : Profiles.NextMineId(list.Select(c => c.Id));
+        var item = new CustomProfile(id, name, mods, withLook ? ProfileLook.From(_settings) : null);
+        if (same >= 0) list[same] = item;
+        else if (list.Count < HunsuSettings.MaxCustomProfiles) list.Add(item);
+        else return;
+        ApplySetting("customProfiles", list);
+        ApplySetting("profile", id);
+        _log.Write("profile_saved", ("id", id), ("modules", mods.Count), ("look", withLook));
+    }
+
+    /// <summary>내 프로필 지우기(고른 목록에서도 뺀다). 켜진 모듈과 모양은 그대로 둔다.</summary>
+    internal void DeleteMyProfile(string id)
+    {
+        var list = _settings.CustomProfiles.Where(c => c.Id != id).ToList();
+        var chosen = Profiles.ParseIds(_settings.Profile, MyProfiles).Where(x => x != id).ToList();
+        ApplySetting("customProfiles", list);
+        ApplySetting("profile", Profiles.JoinIds(chosen));
+        _log.Write("profile_deleted", ("id", id));
+    }
+
+    /// <summary>작업 프로필 여러 개 적용: 고른 프로필의 모듈을 합쳐(겹치면 한 번) 켜고 순서대로 왼쪽 도크(떼어 둔 것은 그대로)에, 나머지는 끈다.
+    /// 빈 목록이면 모듈은 그대로 두고 "직접 고름"으로만 적는다. 켜고 끄기는 설정 창 [모듈]에서 언제든 바꿀 수 있다.</summary>
+    internal void ApplyProfiles(IReadOnlyList<string> ids)
+    {
+        var profiles = Profiles.FindMany(Profiles.JoinIds(ids), MyProfiles);
+        if (profiles.Count > 0)
         {
-            if (!plan.TryGetValue(mv.Id, out var step)) continue;
-            if (step.Order is int order)
+            var plan = Profiles.PlanMany(profiles, _modules.Select(m => m.Id));
+            foreach (var mv in _modules)
             {
-                Save(mv, p => p with { Order = order, Place = mv.InDock ? Places.EdgeLeft : p.Place });
+                if (!plan.TryGetValue(mv.Id, out var step)) continue;
+                if (step.Order is int order)
+                {
+                    Save(mv, p => p with { Order = order, Place = mv.InDock ? Places.EdgeLeft : p.Place });
+                }
+                if (mv.Placement.Hidden == step.Enabled) SetEnabled(mv, step.Enabled);
             }
-            if (mv.Placement.Hidden == step.Enabled) SetEnabled(mv, step.Enabled);
+            RefreshDocks();
         }
-        RefreshDocks();
-        ApplySetting("profile", profile.Id);
-        _log.Write("profile", ("id", profile.Id));
+        // 모양을 함께 저장한 내 프로필이면 그 모양도 입힌다(여럿이면 마지막에 고른 것).
+        var withLook = profiles.LastOrDefault(p => _settings.CustomProfiles.Any(c => c.Id == p.Id && c.Look != null));
+        var look = withLook == null ? null : _settings.CustomProfiles.First(c => c.Id == withLook.Id).Look;
+        if (look != null) ApplyProfileLook(look);
+        string joined = Profiles.JoinIds(profiles.Select(p => p.Id));
+        ApplySetting("profile", joined);
+        _log.Write("profile", ("id", joined));
+    }
+
+    /// <summary>내 프로필의 모양을 입힌다: 도크 모양은 ApplyLook, 룩·자리·수식 흐름 그림은 ApplySetting(바뀐 칸만).</summary>
+    private void ApplyProfileLook(ProfileLook look)
+    {
+        var target = look.ApplyTo(_settings);
+        ApplyLook(target.Look);
+        if (target.Skin != _settings.Skin) ApplySetting("skin", target.Skin);
+        if (target.Sidebar != _settings.Sidebar) ApplySetting("sidebar", target.Sidebar);
+        if (target.PencilLook != _settings.PencilLook) ApplySetting("pencilLook", target.PencilLook);
     }
 
     /// <summary>패널 투명도를 한 단계 바꾼다(제목줄 단추와 설정 창 ◐ 단추가 같이 씀). 5단계를 돌아 처음으로 간다.</summary>
